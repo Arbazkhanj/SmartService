@@ -4,11 +4,23 @@
 ================================================================*/
 
 // Global client-side Auth Check
+const isLoggedIn = localStorage.getItem("smartservice_logged_in") === "true";
 (function() {
-    const isLoginPage = window.location.pathname.endsWith("login.html");
-    const isLoggedIn = localStorage.getItem("smartservice_logged_in") === "true";
+    const currentPath = window.location.pathname.split("/").pop() || "index.html";
+    const isLoginPage = currentPath === "login.html";
+    
+    // Define pages that require login (special services)
+    const specialPages = [
+        "govt-id-print.html",
+        "farmer-data-extractor.html",
+        "id-card-maker.html"
+    ];
+    
+    const requiresLogin = specialPages.includes(currentPath);
 
-    if (!isLoggedIn && !isLoginPage) {
+    if (requiresLogin && !isLoggedIn && !isLoginPage) {
+        // Remember where the user wanted to go
+        localStorage.setItem("smartservice_redirect_target", currentPath);
         window.location.href = "login.html";
     }
 })();
@@ -18,6 +30,15 @@ class SiteHeader extends HTMLElement {
     connectedCallback() {
         // Highlight active page
         const currentPath = window.location.pathname.split("/").pop() || "index.html";
+        
+        const isLoggedIn = localStorage.getItem("smartservice_logged_in") === "true";
+        const authLink = isLoggedIn 
+            ? `<a href="#" class="nav-link" id="btnLogout" style="color: #ef4444;"><i class="fas fa-sign-out-alt"></i> Logout</a>`
+            : `<a href="login.html" class="nav-link" style="color: var(--primary); font-weight: 700;"><i class="fas fa-sign-in-alt"></i> VLE Login</a>`;
+
+        const mobileAuthLink = isLoggedIn
+            ? `<a href="#" class="nav-link" id="btnMobileLogout" style="color: #ef4444; margin-top: auto;"><i class="fas fa-sign-out-alt"></i> Logout</a>`
+            : `<a href="login.html" class="nav-link" style="color: var(--primary); margin-top: auto; font-weight: 700;"><i class="fas fa-sign-in-alt"></i> VLE Login</a>`;
         
         const headerHTML = `
             <style>
@@ -103,7 +124,7 @@ class SiteHeader extends HTMLElement {
                 .mobile-menu .nav-link {
                     font-size: 1.2rem;
                 }
-
+ 
                 @media (max-width: 768px) {
                     .nav-links {
                         display: none;
@@ -136,7 +157,7 @@ class SiteHeader extends HTMLElement {
                         <a href="whatsapp-direct.html" class="nav-link ${currentPath === 'whatsapp-direct.html' ? 'active' : ''}">WhatsApp Direct</a>
                         <a href="about.html" class="nav-link ${currentPath === 'about.html' ? 'active' : ''}">About Us</a>
                         <a href="contact.html" class="nav-link ${currentPath === 'contact.html' ? 'active' : ''}">Contact</a>
-                        <a href="#" class="nav-link" id="btnLogout" style="color: #ef4444;"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                        ${authLink}
                     </nav>
                     <button class="hamburger" id="menuToggle">
                         <span></span>
@@ -153,7 +174,7 @@ class SiteHeader extends HTMLElement {
                 <a href="whatsapp-direct.html" class="nav-link ${currentPath === 'whatsapp-direct.html' ? 'active' : ''}">WhatsApp Direct</a>
                 <a href="about.html" class="nav-link ${currentPath === 'about.html' ? 'active' : ''}">About Us</a>
                 <a href="contact.html" class="nav-link ${currentPath === 'contact.html' ? 'active' : ''}">Contact</a>
-                <a href="#" class="nav-link" id="btnMobileLogout" style="color: #ef4444; margin-top: auto;"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                ${mobileAuthLink}
             </div>
         `;
         
@@ -365,3 +386,62 @@ function showToast(message, type = 'success') {
         setTimeout(() => container.remove(), 300);
     }, 3500);
 }
+
+// Dynamic VLE locks overlay scan on DOMContentLoaded
+document.addEventListener("DOMContentLoaded", () => {
+    const isLoggedIn = localStorage.getItem("smartservice_logged_in") === "true";
+    if (!isLoggedIn) {
+        // List of pages/queries that require user session
+        const protectedHrefs = [
+            "govt-id-print.html",
+            "farmer-data-extractor.html",
+            "id-card-maker.html"
+        ];
+        
+        const cards = document.querySelectorAll(".interactive-card");
+        cards.forEach(card => {
+            const link = card.querySelector("a");
+            if (!link) return;
+
+            const href = link.getAttribute("href");
+            const isProtected = protectedHrefs.some(p => href && href.includes(p));
+
+            if (isProtected) {
+                // Style button to indicate it is locked
+                link.innerHTML = `<i class="fas fa-lock"></i> Unlock Service`;
+                link.style.background = "linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)";
+                link.style.boxShadow = "0 4px 12px rgba(245, 158, 11, 0.25)";
+                link.style.border = "none";
+                link.style.color = "#ffffff";
+
+                // Add a cute floating lock badge in the visual header
+                const imgBox = card.querySelector(".card-image-box");
+                if (imgBox) {
+                    const lockBadge = document.createElement("div");
+                    lockBadge.className = "card-lock-badge";
+                    lockBadge.style.cssText = `
+                        position: absolute;
+                        top: 12px;
+                        left: 12px;
+                        background: rgba(15, 23, 42, 0.82);
+                        color: #fbbf24;
+                        padding: 5px 10px;
+                        border-radius: var(--radius-sm, 6px);
+                        font-size: 0.72rem;
+                        font-weight: 800;
+                        display: flex;
+                        align-items: center;
+                        gap: 5px;
+                        border: 1px solid rgba(251, 191, 36, 0.25);
+                        backdrop-filter: blur(6px);
+                        -webkit-backdrop-filter: blur(6px);
+                        box-shadow: var(--shadow-sm);
+                        z-index: 5;
+                    `;
+                    lockBadge.innerHTML = `<i class="fas fa-lock"></i> VLE LOGIN`;
+                    imgBox.appendChild(lockBadge);
+                }
+            }
+        });
+    }
+});

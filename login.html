@@ -407,8 +407,10 @@
                             localStorage.removeItem("smartservice_remembered_vle");
                         }
 
-                        // Redirect to index
-                        window.location.href = "index.html";
+                        // Redirect to target or index
+                        const target = localStorage.getItem("smartservice_redirect_target") || "index.html";
+                        localStorage.removeItem("smartservice_redirect_target");
+                        window.location.href = target;
                     } else {
                         // Failure
                         errorMessage.innerText = "Authentication Failed: Incorrect ID or Password";
