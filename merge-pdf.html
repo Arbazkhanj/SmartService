@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Merger - SmartService</title>
+    <link rel="stylesheet" href="assets/css/global.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- pdf-lib CDN -->
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+
+    <style>
+        .pdf-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 32px;
+            margin-top: 32px;
+        }
+
+        .upload-panel {
+            background: white;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            padding: 32px;
+            box-shadow: var(--shadow-md);
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            margin-bottom: 24px;
+        }
+        .upload-panel:hover {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+        .upload-panel i {
+            font-size: 3rem;
+            color: var(--text-light);
+            margin-bottom: 16px;
+        }
+
+        .sort-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        .sort-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: white;
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+        }
+        .item-actions {
+            margin-left: auto;
+            display: flex;
+            gap: 8px;
+        }
+        .sort-action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-light);
+            padding: 4px;
+            font-size: 1rem;
+            transition: var(--transition-fast);
+        }
+        .sort-action-btn:hover {
+            color: var(--primary);
+        }
+
+        .config-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            padding: 32px;
+            box-shadow: var(--shadow-md);
+            height: fit-content;
+        }
+    </style>
+</head>
+<body style="padding-top: 70px;">
+    <site-header></site-header>
+
+    <main class="container section-padding" style="padding-top: 20px;">
+        <!-- Header -->
+        <div style="margin-bottom: 24px;">
+            <a href="index.html" style="color: var(--primary); font-weight: 600;"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+            <h1 style="font-size: 2.2rem; margin-top: 12px; color: var(--text-main);"><i class="fas fa-object-group mr-2 text-primary"></i>PDF Merger</h1>
+            <p style="color: var(--text-muted);">Combine multiple PDF files into a single, structured document securely in your browser.</p>
+        </div>
+
+        <div class="pdf-grid">
+            <!-- Left Side: Uploads & sorting list -->
+            <div>
+                <input type="file" id="pdfFiles" accept="application/pdf" multiple style="display: none;">
+                <div class="upload-panel" onclick="document.getElementById('pdfFiles').click()">
+                    <i class="fas fa-file-upload"></i>
+                    <h3>Select Multiple PDF Files</h3>
+                    <p style="color: var(--text-light); margin-top: 8px;">Upload PDF files to merge together (Max 20MB per file)</p>
+                </div>
+
+                <div class="glass-panel" style="padding: 24px; display: none;" id="filesPanel">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h4 style="font-size: 1.1rem; color: var(--text-main);">Uploaded PDFs List (<span id="fileCount">0</span>)</h4>
+                        <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem; color: #ef4444;" id="btnClearAll"><i class="fas fa-trash"></i> Clear All</button>
+                    </div>
+                    
+                    <div class="sort-list" id="filesList">
+                        <!-- Dynamic items -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side: Action CTA -->
+            <div class="config-card">
+                <h3 style="font-size: 1.1rem; margin-bottom: 24px; color: var(--text-main);">Merge Options</h3>
+                <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 24px;">
+                    We process your files directly inside your browser. No files are uploaded to our servers, keeping your documents 100% secure.
+                </p>
+
+                <button id="btnMerge" class="btn btn-success" style="width: 100%; font-size: 1.05rem;" disabled>
+                    <i class="fas fa-object-group"></i> Merge & Download PDF
+                </button>
+            </div>
+        </div>
+
+        <!-- Word to PDF Information -->
+        <div class="card" style="padding: 24px; margin-top: 32px; background: var(--primary-light); border-color: rgba(37,99,235,0.15);">
+            <h4 style="margin-bottom: 8px; font-size: 1.1rem; color: var(--primary);"><i class="fas fa-file-word"></i> Looking for Word to PDF Converter?</h4>
+            <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.6;">
+                Standard office suites like Microsoft Word and Google Docs offer built-in, 100% offline PDF export. To convert: <br>
+                1. Open your document in Microsoft Word or LibreOffice. <br>
+                2. Click on <strong>File -> Save As</strong> or <strong>Export As</strong>. <br>
+                3. Choose <strong>PDF (*.pdf)</strong> format and click Save. This creates a high-fidelity PDF locally, preserving your formatting.
+            </p>
+        </div>
+    </main>
+
+    <site-footer></site-footer>
+
+    <script src="assets/js/components.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const pdfFiles = document.getElementById("pdfFiles");
+            const filesPanel = document.getElementById("filesPanel");
+            const filesList = document.getElementById("filesList");
+            const fileCount = document.getElementById("fileCount");
+            const btnClearAll = document.getElementById("btnClearAll");
+            const btnMerge = document.getElementById("btnMerge");
+
+            let loadedPdfs = [];
+
+            pdfFiles.addEventListener("change", handleFileSelect);
+
+            function handleFileSelect() {
+                const files = Array.from(pdfFiles.files);
+                if (files.length === 0) return;
+
+                files.forEach((file) => {
+                    loadedPdfs.push({
+                        id: Math.random().toString(36).substr(2, 9),
+                        name: file.name,
+                        size: file.size,
+                        fileRef: file // Keep file reference for arrayBuffer reading
+                    });
+                });
+                renderFilesList();
+                showToast("Added PDF files to listing.", "success");
+            }
+
+            function renderFilesList() {
+                filesList.innerHTML = "";
+                fileCount.innerText = loadedPdfs.length;
+
+                if (loadedPdfs.length > 0) {
+                    filesPanel.style.display = "block";
+                    btnMerge.removeAttribute("disabled");
+                } else {
+                    filesPanel.style.display = "none";
+                    btnMerge.setAttribute("disabled", "true");
+                }
+
+                loadedPdfs.forEach((file, idx) => {
+                    const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
+                    filesList.innerHTML += `
+                        <div class="sort-item">
+                            <div style="background: var(--primary-light); color: var(--primary); padding: 8px 12px; border-radius: 4px; font-weight: 800;">
+                                PDF
+                            </div>
+                            <div>
+                                <h5 style="font-size: 0.9rem; font-weight: 700; margin-bottom: 2px;">File ${idx + 1}: ${file.name.substring(0, 24)}...</h5>
+                                <p style="font-size: 0.75rem; color: var(--text-light);">${sizeMb} MB</p>
+                            </div>
+                            <div class="item-actions">
+                                <button class="sort-action-btn" onclick="window.movePdf(${idx}, -1)" title="Move Up"><i class="fas fa-arrow-up"></i></button>
+                                <button class="sort-action-btn" onclick="window.movePdf(${idx}, 1)" title="Move Down"><i class="fas fa-arrow-down"></i></button>
+                                <button class="sort-action-btn" onclick="window.deletePdf('${file.id}')" title="Delete" style="color: #ef4444;"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            // Expose sorting utilities
+            window.movePdf = (index, direction) => {
+                const target = index + direction;
+                if (target < 0 || target >= loadedPdfs.length) return;
+
+                const temp = loadedPdfs[index];
+                loadedPdfs[index] = loadedPdfs[target];
+                loadedPdfs[target] = temp;
+                renderFilesList();
+            };
+
+            window.deletePdf = (id) => {
+                loadedPdfs = loadedPdfs.filter(item => item.id !== id);
+                renderFilesList();
+                showToast("PDF removed from list.", "info");
+            };
+
+            btnClearAll.addEventListener("click", () => {
+                loadedPdfs = [];
+                renderFilesList();
+                showToast("Cleared all files.", "info");
+            });
+
+            // pdf-lib merger pipeline
+            btnMerge.addEventListener("click", async () => {
+                if (loadedPdfs.length === 0) return;
+
+                showToast("Merging PDFs... Please wait.", "info");
+
+                try {
+                    const mergedPdf = await PDFLib.PDFDocument.create();
+
+                    for (const pdfItem of loadedPdfs) {
+                        const arrayBuffer = await pdfItem.fileRef.arrayBuffer();
+                        const srcDoc = await PDFLib.PDFDocument.load(arrayBuffer);
+                        const pageIndices = srcDoc.getPageIndices();
+                        const copiedPages = await mergedPdf.copyPages(srcDoc, pageIndices);
+                        
+                        copiedPages.forEach((page) => {
+                            mergedPdf.addPage(page);
+                        });
+                    }
+
+                    const mergedPdfBytes = await mergedPdf.save();
+                    const blob = new Blob([mergedPdfBytes], { type: 'application/pdf' });
+                    
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `smartservice_merged_${Date.now()}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+
+                    showToast("PDFs successfully merged and downloaded.", "success");
+                } catch (err) {
+                    console.error(err);
+                    showToast("Failed to merge PDF files. Please ensure files are not corrupted or password-protected.", "error");
+                }
+            });
+        });
+    </script>
+</body>
+</html>

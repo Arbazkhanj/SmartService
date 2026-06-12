@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multilingual Typing Test Speed Tester - SmartService</title>
+    <link rel="stylesheet" href="assets/css/global.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .test-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+            margin-top: 24px;
+        }
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+        }
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+        .text-display-box {
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 24px;
+            font-size: 1.25rem;
+            line-height: 1.6;
+            min-height: 120px;
+            max-height: 200px;
+            overflow-y: auto;
+            user-select: none;
+            margin-bottom: 16px;
+        }
+        .text-display-box span {
+            position: relative;
+            padding: 0 1px;
+        }
+        .char-correct {
+            color: #10b981;
+            background: #d1fae5;
+        }
+        .char-incorrect {
+            color: #ef4444;
+            background: #fee2e2;
+        }
+        .char-current {
+            background: #bfdbfe;
+            border-bottom: 2px solid var(--primary);
+        }
+        .typing-input {
+            width: 100%;
+            height: 120px;
+            padding: 16px;
+            font-size: 1.15rem;
+            border-radius: var(--radius-md);
+            border: 2px solid var(--border-color);
+            outline: none;
+            resize: none;
+            transition: var(--transition-normal);
+        }
+        .typing-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(37,99,235,0.15);
+        }
+        .results-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15,23,42,0.6);
+            backdrop-filter: blur(8px);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 32px;
+            width: 90%;
+            max-width: 500px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-xl);
+            text-align: center;
+        }
+    </style>
+</head>
+<body style="padding-top: 70px;">
+    <site-header></site-header>
+
+    <main class="container section-padding" style="padding-top: 20px;">
+        <!-- Header -->
+        <div style="margin-bottom: 24px;">
+            <a href="index.html" style="color: var(--primary); font-weight: 600;"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+            <h1 style="font-size: 2.2rem; margin-top: 12px; color: var(--text-main);"><i class="fas fa-keyboard mr-2 text-primary"></i>Typing Speed Test</h1>
+            <p style="color: var(--text-muted);">Measure your typing speed and accuracy in English and Hindi. Local calculations with full metrics.</p>
+        </div>
+
+        <!-- Settings Bar -->
+        <div class="card" style="padding: 24px; margin-bottom: 24px; display: flex; flex-wrap: wrap; gap: 20px; align-items: center; justify-content: space-between;">
+            <div style="display: flex; gap: 16px; align-items: center;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label" style="font-size: 0.8rem;">Practice Language</label>
+                    <select id="langSelect" class="form-control" style="width: 150px;">
+                        <option value="en">English (US)</option>
+                        <option value="hi">Hindi (हिन्दी)</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label" style="font-size: 0.8rem;">Time Duration</label>
+                    <select id="timeSelect" class="form-control" style="width: 120px;">
+                        <option value="60">1 Minute</option>
+                        <option value="180">3 Minutes</option>
+                        <option value="300">5 Minutes</option>
+                        <option value="600">10 Minutes</option>
+                    </select>
+                </div>
+            </div>
+            <div style="display: flex; gap: 12px;">
+                <button id="startBtn" class="btn btn-primary"><i class="fas fa-play"></i> Start Test</button>
+                <button id="resetBtn" class="btn btn-secondary"><i class="fas fa-redo"></i> Reset Test</button>
+            </div>
+        </div>
+
+        <!-- Testing Grid Area -->
+        <div class="test-container">
+            <!-- Stats -->
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-value" id="timerVal">01:00</div>
+                    <div class="stat-label">Time Remaining</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="wpmVal">0</div>
+                    <div class="stat-label">Net WPM</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="accuracyVal">100%</div>
+                    <div class="stat-label">Accuracy</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="errorsVal">0</div>
+                    <div class="stat-label">Typing Errors</div>
+                </div>
+            </div>
+
+            <!-- Typing Field Sheet -->
+            <div class="card" style="padding: 24px;">
+                <div class="text-display-box" id="textDisplay">
+                    Click 'Start Test' to load your typing practice prompt.
+                </div>
+                <textarea id="typingInput" class="typing-input" placeholder="Start typing here when test begins..." disabled></textarea>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Results -->
+    <div class="results-modal" id="resultsModal">
+        <div class="modal-card">
+            <i class="fas fa-trophy" style="font-size: 4rem; color: #fbbf24; margin-bottom: 16px;"></i>
+            <h2 style="font-size: 1.5rem; margin-bottom: 8px;">Typing Test Completed!</h2>
+            <p style="color: var(--text-muted); margin-bottom: 24px;">Here are your speed and accuracy stats details:</p>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+                <div class="stat-card" style="background: var(--bg-light);">
+                    <div class="stat-value" id="finalWpm">0</div>
+                    <div class="stat-label">Net WPM</div>
+                </div>
+                <div class="stat-card" style="background: var(--bg-light);">
+                    <div class="stat-value" id="finalAccuracy">0%</div>
+                    <div class="stat-label">Accuracy</div>
+                </div>
+            </div>
+            
+            <button onclick="closeModal()" class="btn btn-primary" style="width: 100%;">Close Results</button>
+        </div>
+    </div>
+
+    <site-footer></site-footer>
+
+    <script src="assets/js/components.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const enTexts = [
+                "Common Service Centres are multiple-services-delivery points for providing public utilities, social welfare schemes, healthcare, financial, education, and agriculture services in rural areas.",
+                "Typing speed is a key metric measured in words per minute. Developing high accuracy alongside high speed is the gold standard for office executives, developers, and data entry specialists.",
+                "Technology has transformed rural areas by empowering local entrepreneurs to run local CSC centers. These hubs bridge the digital divide between metropolitan and remote areas in developing countries."
+            ];
+
+            const hiTexts = [
+                "भारत में डिजिटल सेवा केंद्रों के माध्यम से ग्रामीण नागरिकों को सरकारी योजनाएं और बैंकिंग सुविधाएं प्रदान की जाती हैं। यह ग्रामीण विकास का मुख्य स्तंभ है।",
+                "टाइपिंग की गति और सटीकता बढ़ाने के लिए दैनिक अभ्यास अत्यंत महत्वपूर्ण है। बिना देखे कीबोर्ड पर उंगलियों को सही स्थान पर रखना इसका आधार है।",
+                "डिजिटल साक्षरता आज के युग में हर व्यक्ति के लिए आवश्यक हो चुकी है। कंप्यूटर और मोबाइल के सही उपयोग से हम अपने समय की बचत कर सकते हैं।"
+            ];
+
+            let activeText = "";
+            let timer = null;
+            let timeRemaining = 60;
+            let testActive = false;
+            let testDuration = 60;
+            let totalTyped = 0;
+            let totalErrors = 0;
+
+            const langSelect = document.getElementById("langSelect");
+            const timeSelect = document.getElementById("timeSelect");
+            const startBtn = document.getElementById("startBtn");
+            const resetBtn = document.getElementById("resetBtn");
+            const timerVal = document.getElementById("timerVal");
+            const wpmVal = document.getElementById("wpmVal");
+            const accuracyVal = document.getElementById("accuracyVal");
+            const errorsVal = document.getElementById("errorsVal");
+            const textDisplay = document.getElementById("textDisplay");
+            const typingInput = document.getElementById("typingInput");
+
+            const resultsModal = document.getElementById("resultsModal");
+            const finalWpm = document.getElementById("finalWpm");
+            const finalAccuracy = document.getElementById("finalAccuracy");
+
+            function formatTime(seconds) {
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }
+
+            function loadText() {
+                const lang = langSelect.value;
+                const pool = lang === "hi" ? hiTexts : enTexts;
+                activeText = pool[Math.floor(Math.random() * pool.length)];
+                
+                // Wrap chars inside spans
+                textDisplay.innerHTML = activeText.split("").map((char, index) => {
+                    return `<span id="char-${index}">${char}</span>`;
+                }).join("");
+            }
+
+            function startTest() {
+                if (testActive) return;
+                testActive = true;
+                typingInput.disabled = false;
+                typingInput.value = "";
+                typingInput.focus();
+                
+                testDuration = parseInt(timeSelect.value);
+                timeRemaining = testDuration;
+                timerVal.innerText = formatTime(timeRemaining);
+                
+                wpmVal.innerText = "0";
+                accuracyVal.innerText = "100%";
+                errorsVal.innerText = "0";
+                totalErrors = 0;
+                totalTyped = 0;
+
+                loadText();
+
+                startBtn.disabled = true;
+                langSelect.disabled = true;
+                timeSelect.disabled = true;
+
+                timer = setInterval(() => {
+                    timeRemaining--;
+                    timerVal.innerText = formatTime(timeRemaining);
+
+                    if (timeRemaining <= 0) {
+                        endTest();
+                    }
+                }, 1000);
+            }
+
+            function endTest() {
+                clearInterval(timer);
+                testActive = false;
+                typingInput.disabled = true;
+
+                startBtn.disabled = false;
+                langSelect.disabled = false;
+                timeSelect.disabled = false;
+
+                // Calculate Final WPM
+                const minutes = testDuration / 60;
+                const netWpm = Math.max(0, Math.round((totalTyped / 5 - totalErrors) / minutes));
+                const acc = totalTyped > 0 ? Math.round(((totalTyped - totalErrors) / totalTyped) * 100) : 100;
+
+                finalWpm.innerText = netWpm;
+                finalAccuracy.innerText = acc + "%";
+                resultsModal.style.display = "flex";
+            }
+
+            function resetTest() {
+                clearInterval(timer);
+                testActive = false;
+                typingInput.disabled = true;
+                typingInput.value = "";
+                startBtn.disabled = false;
+                langSelect.disabled = false;
+                timeSelect.disabled = false;
+                
+                timerVal.innerText = "01:00";
+                wpmVal.innerText = "0";
+                accuracyVal.innerText = "100%";
+                errorsVal.innerText = "0";
+                textDisplay.innerText = "Click 'Start Test' to load your typing practice prompt.";
+            }
+
+            typingInput.addEventListener("input", (e) => {
+                const typedVal = e.target.value;
+                totalTyped = typedVal.length;
+
+                let errors = 0;
+                const spanChars = textDisplay.querySelectorAll("span");
+
+                spanChars.forEach((span, idx) => {
+                    span.className = "";
+                    if (idx < typedVal.length) {
+                        if (typedVal[idx] === activeText[idx]) {
+                            span.classList.add("char-correct");
+                        } else {
+                            span.classList.add("char-incorrect");
+                            errors++;
+                        }
+                    } else if (idx === typedVal.length) {
+                        span.classList.add("char-current");
+                    }
+                });
+
+                totalErrors = errors;
+                errorsVal.innerText = totalErrors;
+
+                // Live WPM calculation
+                const timePassed = testDuration - timeRemaining;
+                if (timePassed > 0) {
+                    const minutesPassed = timePassed / 60;
+                    const netWpm = Math.max(0, Math.round((totalTyped / 5 - totalErrors) / minutesPassed));
+                    wpmVal.innerText = netWpm;
+                }
+
+                // Live Accuracy
+                const accuracy = totalTyped > 0 ? Math.round(((totalTyped - totalErrors) / totalTyped) * 100) : 100;
+                accuracyVal.innerText = accuracy + "%";
+
+                // Auto-complete trigger
+                if (typedVal.length >= activeText.length) {
+                    endTest();
+                }
+            });
+
+            startBtn.addEventListener("click", startTest);
+            resetBtn.addEventListener("click", resetTest);
+
+            window.closeModal = () => {
+                resultsModal.style.display = "none";
+                resetTest();
+            };
+        });
+    </script>
+</body>
+</html>

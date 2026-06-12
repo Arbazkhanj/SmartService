@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSC Stamp Maker - SmartService</title>
+    <link rel="stylesheet" href="assets/css/global.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        .stamp-grid {
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 32px;
+            margin-top: 32px;
+        }
+
+        .settings-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            padding: 32px;
+            box-shadow: var(--shadow-md);
+            height: fit-content;
+        }
+
+        .preview-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            padding: 32px;
+            box-shadow: var(--shadow-md);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .canvas-box {
+            background: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 24px;
+            width: 100%;
+            min-height: 350px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        #renderCanvas {
+            max-width: 100%;
+            max-height: 350px;
+            background: transparent;
+            box-shadow: var(--shadow-md);
+        }
+    </style>
+</head>
+<body style="padding-top: 70px;">
+    <site-header></site-header>
+
+    <main class="container section-padding" style="padding-top: 20px;">
+        <!-- Header -->
+        <div style="margin-bottom: 24px;">
+            <a href="index.html" style="color: var(--primary); font-weight: 600;"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+            <h1 style="font-size: 2.2rem; margin-top: 12px; color: var(--text-main);"><i class="fas fa-stamp mr-2 text-primary"></i>CSC Stamp Maker</h1>
+            <p style="color: var(--text-muted);">Generate realistic circular rubber seals/stamps with customized text overlays and ink presets.</p>
+        </div>
+
+        <div class="stamp-grid">
+            <!-- Left Side: Custom Settings -->
+            <div class="settings-card fade-in">
+                <h3 style="font-size: 1.1rem; margin-bottom: 20px; color: var(--text-main);">Stamp Texts</h3>
+                
+                <div class="form-group">
+                    <label class="form-label" for="stampTopText">Top Header Text</label>
+                    <input type="text" id="stampTopText" class="form-control" value="COMMON SERVICE CENTRE">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="stampBottomText">Bottom Footer Text</label>
+                    <input type="text" id="stampBottomText" class="form-control" value="* DIGITAL SEVA *">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="stampCenterText">Center Seal Text</label>
+                    <input type="text" id="stampCenterText" class="form-control" value="APPROVED">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="stampColor">Stamp Ink Color</label>
+                    <select id="stampColor" class="form-control" style="font-weight: 600;">
+                        <option value="#2563eb">Blue Ink</option>
+                        <option value="#dc2626">Red Ink</option>
+                        <option value="#15803d">Green Ink</option>
+                        <option value="#0f172a">Black Ink</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="display: flex; align-items: center; gap: 8px; margin-top: 16px;">
+                    <input type="checkbox" id="stampDistress" checked style="width: 18px; height: 18px; cursor: pointer;">
+                    <label class="form-label" for="stampDistress" style="margin-bottom: 0; cursor: pointer; user-select: none; font-weight: 600;">Apply Ink Distress (Realistic Seal)</label>
+                </div>
+            </div>
+
+            <!-- Right Side: Preview & Action -->
+            <div class="preview-card fade-in" style="animation-delay: 0.1s;">
+                <h3 style="font-size: 1.1rem; margin-bottom: 24px; color: var(--text-main); align-self: flex-start;">Live Stamp Preview</h3>
+                
+                <div class="canvas-box">
+                    <canvas id="renderCanvas"></canvas>
+                </div>
+
+                <button id="btnDownload" class="btn btn-success" style="width: 100%; font-size: 1.05rem;">
+                    <i class="fas fa-download"></i> Download Transparent Stamp (PNG)
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <site-footer></site-footer>
+
+    <script src="assets/js/components.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const topText = document.getElementById("stampTopText");
+            const bottomText = document.getElementById("stampBottomText");
+            const centerText = document.getElementById("stampCenterText");
+            const stampColor = document.getElementById("stampColor");
+            const stampDistress = document.getElementById("stampDistress");
+            const renderCanvas = document.getElementById("renderCanvas");
+            const btnDownload = document.getElementById("btnDownload");
+
+            const ctx = renderCanvas.getContext("2d");
+
+            renderCanvas.width = 400;
+            renderCanvas.height = 400;
+
+            function drawStamp() {
+                const color = stampColor.value;
+                const top = topText.value.toUpperCase();
+                const bottom = bottomText.value.toUpperCase();
+                const center = centerText.value.toUpperCase();
+                const enableDistress = stampDistress.checked;
+
+                // Clear canvas (keep it transparent for high quality PNG stamps)
+                ctx.clearRect(0, 0, 400, 400);
+
+                // Draw outer concentric circles
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.arc(200, 200, 160, 0, Math.PI * 2);
+                ctx.stroke();
+
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(200, 200, 150, 0, Math.PI * 2);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.arc(200, 200, 95, 0, Math.PI * 2);
+                ctx.stroke();
+
+                // Center Text
+                ctx.fillStyle = color;
+                ctx.font = "bold 24px 'Plus Jakarta Sans'";
+                ctx.textAlign = "center";
+                ctx.fillText(center, 200, 208);
+
+                // Circular Top text
+                ctx.font = "bold 16px 'Plus Jakarta Sans'";
+                drawCircularText(top, 200, 200, 120, Math.PI * 1.5, false);
+
+                // Circular Bottom text
+                drawCircularText(bottom, 200, 200, 120, Math.PI * 0.5, true);
+
+                // Apply dynamic transparent distress / ink texture if checked
+                if (enableDistress) {
+                    ctx.save();
+                    // Use destination-out to genuinely erase speckles and make them transparent
+                    ctx.globalCompositeOperation = "destination-out";
+                    ctx.fillStyle = "rgba(0, 0, 0, 1)";
+                    
+                    // Draw random tiny speckles to simulate ink voids
+                    // Seeded random-like generation or just loop
+                    for (let i = 0; i < 65; i++) {
+                        let rx = Math.random() * 400;
+                        let ry = Math.random() * 400;
+                        let rSize = 0.5 + Math.random() * 1.8;
+                        ctx.beginPath();
+                        ctx.arc(rx, ry, rSize, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    
+                    // Draw some small scratches/scuffs
+                    ctx.strokeStyle = "rgba(0, 0, 0, 1)";
+                    ctx.lineWidth = 1 + Math.random() * 1.2;
+                    for (let i = 0; i < 10; i++) {
+                        let rx = Math.random() * 400;
+                        let ry = Math.random() * 400;
+                        let rLen = 4 + Math.random() * 12;
+                        let rAngle = Math.random() * Math.PI * 2;
+                        ctx.beginPath();
+                        ctx.moveTo(rx, ry);
+                        ctx.lineTo(rx + Math.cos(rAngle) * rLen, ry + Math.sin(rAngle) * rLen);
+                        ctx.stroke();
+                    }
+                    
+                    ctx.restore();
+                }
+            }
+
+            function drawCircularText(text, x, y, radius, startAngle, isReversed) {
+                const charCount = text.length;
+                if (charCount === 0) return;
+
+                // Adjust letter spacing dynamically
+                // Standard spacing is ~16px along the arc
+                const desiredPixelSpacing = 16; 
+                let angleStep = desiredPixelSpacing / radius;
+
+                // Limit total angle to a semi-circle (max 180 degrees)
+                let totalAngle = charCount * angleStep;
+                const maxArc = Math.PI - 0.4; // leave some gap on the sides
+                if (totalAngle > maxArc) {
+                    angleStep = maxArc / charCount;
+                    totalAngle = maxArc;
+                }
+
+                ctx.save();
+                ctx.translate(x, y);
+
+                // Center the text around startAngle
+                let initialAngle = startAngle - (totalAngle / 2) + (angleStep / 2);
+
+                for (let i = 0; i < charCount; i++) {
+                    let charAngle;
+                    if (!isReversed) {
+                        charAngle = initialAngle + (i * angleStep);
+                    } else {
+                        // For bottom text, to read left-to-right clockwise:
+                        charAngle = startAngle - (totalAngle / 2) + (i * angleStep) + (angleStep / 2);
+                    }
+
+                    ctx.save();
+                    ctx.rotate(charAngle);
+                    
+                    // Translate along the radial direction
+                    ctx.translate(0, isReversed ? radius : -radius);
+                    
+                    if (isReversed) {
+                        ctx.rotate(Math.PI); // flip character to stand upright
+                    }
+                    
+                    ctx.fillText(text[i], 0, 0);
+                    ctx.restore();
+                }
+                ctx.restore();
+            }
+
+            // Input binds
+            const inputs = [topText, bottomText, centerText, stampColor, stampDistress];
+            inputs.forEach(i => i.addEventListener("input", drawStamp));
+            stampColor.addEventListener("change", drawStamp);
+            stampDistress.addEventListener("change", drawStamp);
+
+            btnDownload.addEventListener("click", () => {
+                const url = renderCanvas.toDataURL("image/png");
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `smartservice_stamp_${Date.now()}.png`;
+                a.click();
+                showToast("Rubber stamp downloaded successfully.", "success");
+            });
+
+            // Initial render
+            drawStamp();
+
+            // Redraw when the font is fully loaded to ensure Plus Jakarta Sans applies
+            if (document.fonts) {
+                document.fonts.ready.then(() => {
+                    drawStamp();
+                });
+            }
+        });
+    </script>
+</body>
+</html>

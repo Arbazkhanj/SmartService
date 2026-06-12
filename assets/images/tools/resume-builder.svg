@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 140" width="280" height="140">
+    <defs>
+        
+        <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#fdf2f8" />
+            <stop offset="100%" stop-color="#fce7f3" />
+        </linearGradient>
+        <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+            <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#0f172a" flood-opacity="0.08" />
+        </filter>
+    </defs>
+    
+    <rect width="280" height="140" fill="url(#bgGrad)" />
+    
+    <g opacity="0.08">
+        <pattern id="grid-pink" width="16" height="16" patternUnits="userSpaceOnUse">
+            <path d="M 16 0 L 0 0 0 16" fill="none" stroke="#db2777" stroke-width="1"/>
+        </pattern>
+        <rect width="280" height="140" fill="url(#grid-pink)" />
+    </g>
+    
+    <!-- Abstract background circles -->
+    <circle cx="30" cy="110" r="30" fill="none" stroke="#db2777" stroke-width="1" opacity="0.1" />
+    <circle cx="250" cy="30" r="40" fill="none" stroke="#db2777" stroke-width="1" opacity="0.1" />
+    
+    <!-- Central Content Group -->
+    <g filter="url(#shadow)">
+        
+    <!-- A4 Page layout sheet -->
+    <rect x="95" y="20" width="90" height="100" rx="4" fill="#ffffff" stroke="#db2777" stroke-width="2" />
+    <!-- Photo placeholder -->
+    <rect x="107" y="32" width="22" height="26" rx="2" fill="#fce7f3" stroke="#fbcfe8" />
+    <!-- Lines for header information -->
+    <rect x="136" y="34" width="40" height="4" rx="2" fill="#cbd5e1" />
+    <rect x="136" y="42" width="30" height="3" rx="1.5" fill="#cbd5e1" />
+    <rect x="136" y="49" width="44" height="3" rx="1.5" fill="#cbd5e1" />
+    <!-- Horizontal section borders -->
+    <line x1="107" y1="68" x2="173" y2="68" stroke="#db2777" stroke-width="1.5" />
+    <!-- Grid items for body -->
+    <rect x="107" y="76" width="66" height="4" rx="2" fill="#fbcfe8" />
+    <rect x="107" y="84" width="60" height="3" rx="1.5" fill="#cbd5e1" />
+    <rect x="107" y="90" width="66" height="3" rx="1.5" fill="#cbd5e1" />
+    <rect x="107" y="96" width="45" height="3" rx="1.5" fill="#cbd5e1" />
+    <!-- Tiny star/check circle tag in corner -->
+    <circle cx="178" cy="28" r="8" fill="#10b981" />
+    <path d="M175,28 L177,30 L181,26" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" />
+
+    </g>
+</svg>

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 140" width="280" height="140">
+    <defs>
+        
+        <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#fffbeb" />
+            <stop offset="100%" stop-color="#fef3c7" />
+        </linearGradient>
+        <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+            <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#0f172a" flood-opacity="0.08" />
+        </filter>
+    </defs>
+    
+    <rect width="280" height="140" fill="url(#bgGrad)" />
+    
+    <g opacity="0.08">
+        <pattern id="grid-amber" width="16" height="16" patternUnits="userSpaceOnUse">
+            <path d="M 16 0 L 0 0 0 16" fill="none" stroke="#f59e0b" stroke-width="1"/>
+        </pattern>
+        <rect width="280" height="140" fill="url(#grid-amber)" />
+    </g>
+    
+    <!-- Abstract background circles -->
+    <circle cx="30" cy="110" r="30" fill="none" stroke="#f59e0b" stroke-width="1" opacity="0.1" />
+    <circle cx="250" cy="30" r="40" fill="none" stroke="#f59e0b" stroke-width="1" opacity="0.1" />
+    
+    <!-- Central Content Group -->
+    <g filter="url(#shadow)">
+        
+    <!-- Calculator body -->
+    <rect x="80" y="25" width="70" height="90" rx="8" fill="#ffffff" stroke="#d97706" stroke-width="2" />
+    <!-- Screen -->
+    <rect x="88" y="33" width="54" height="18" rx="3" fill="#fef3c7" />
+    <!-- Screen text digits -->
+    <rect x="115" y="40" width="20" height="4" fill="#b45309" />
+    <!-- Buttons grid -->
+    <rect x="90" y="60" width="12" height="8" rx="1.5" fill="#f59e0b" />
+    <rect x="108" y="60" width="12" height="8" rx="1.5" fill="#cbd5e1" />
+    <rect x="126" y="60" width="12" height="8" rx="1.5" fill="#cbd5e1" />
+    <rect x="90" y="74" width="12" height="8" rx="1.5" fill="#cbd5e1" />
+    <rect x="108" y="74" width="12" height="8" rx="1.5" fill="#cbd5e1" />
+    <rect x="126" y="74" width="12" height="8" rx="1.5" fill="#cbd5e1" />
+    <rect x="90" y="88" width="30" height="10" rx="2" fill="#d97706" />
+    <!-- Gold Coin stack next to it -->
+    <g transform="translate(160, 60)">
+        <ellipse cx="20" cy="30" rx="20" ry="6" fill="#fbbf24" stroke="#b45309" stroke-width="1.5" />
+        <rect x="0" y="20" width="40" height="10" fill="#fbbf24" stroke="#b45309" stroke-width="1.5" />
+        <ellipse cx="20" cy="20" rx="20" ry="6" fill="#f59e0b" stroke="#b45309" stroke-width="1.5" />
+        <rect x="0" y="10" width="40" height="10" fill="#f59e0b" stroke="#b45309" stroke-width="1.5" />
+        <ellipse cx="20" cy="10" rx="20" ry="6" fill="#fbbf24" stroke="#b45309" stroke-width="1.5" />
+        <!-- Percent symbol on center coin -->
+        <text x="20" y="13" fill="#b45309" font-family="sans-serif" font-size="10" font-weight="bold" text-anchor="middle">%</text>
+    </g>
+
+    </g>
+</svg>

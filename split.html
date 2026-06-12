@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Splitter - SmartService</title>
+    <link rel="stylesheet" href="assets/css/global.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- pdf-lib CDN -->
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+
+    <style>
+        .split-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 32px;
+            margin-top: 32px;
+        }
+
+        .upload-panel {
+            background: white;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            padding: 32px;
+            box-shadow: var(--shadow-md);
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            margin-bottom: 24px;
+        }
+        .upload-panel:hover {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+        .upload-panel i {
+            font-size: 3rem;
+            color: var(--text-light);
+            margin-bottom: 16px;
+        }
+
+        .config-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            padding: 32px;
+            box-shadow: var(--shadow-md);
+            height: fit-content;
+        }
+
+        .info-box {
+            background: var(--primary-light);
+            color: var(--primary);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body style="padding-top: 70px;">
+    <site-header></site-header>
+
+    <main class="container section-padding" style="padding-top: 20px;">
+        <!-- Header -->
+        <div style="margin-bottom: 24px;">
+            <a href="index.html" style="color: var(--primary); font-weight: 600;"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+            <h1 style="font-size: 2.2rem; margin-top: 12px; color: var(--text-main);"><i class="fas fa-columns mr-2 text-primary"></i>PDF Splitter</h1>
+            <p style="color: var(--text-muted);">Extract specific pages or page ranges from a multi-page PDF document locally in your browser.</p>
+        </div>
+
+        <div class="split-grid">
+            <!-- Left Side: Upload & Info -->
+            <div>
+                <input type="file" id="pdfFileInput" accept="application/pdf" style="display: none;">
+                
+                <!-- Upload slot -->
+                <div class="upload-panel" id="uploadSlot" onclick="document.getElementById('pdfFileInput').click()">
+                    <i class="fas fa-file-pdf"></i>
+                    <h3>Select PDF File to Split</h3>
+                    <p style="color: var(--text-light); margin-top: 8px;">Upload a PDF document to begin (Max 30MB)</p>
+                </div>
+
+                <!-- Info panel (Hidden initially) -->
+                <div class="glass-panel" style="padding: 24px; display: none;" id="pdfInfoPanel">
+                    <div class="info-box">
+                        <i class="fas fa-info-circle" style="font-size: 1.5rem;"></i>
+                        <div>
+                            <div style="font-size: 1.05rem;" id="lblPdfName">document.pdf</div>
+                            <div style="font-size: 0.8rem; font-weight: normal; color: var(--text-muted); margin-top: 2px;">
+                                Total Pages: <span id="lblTotalPages" style="font-weight: 700; color: var(--primary);">0</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn btn-secondary" style="color: #ef4444;" id="btnChangeFile"><i class="fas fa-sync"></i> Select Different File</button>
+                </div>
+            </div>
+
+            <!-- Right Side: Configs -->
+            <div class="config-card">
+                <h3 style="font-size: 1.1rem; margin-bottom: 24px; color: var(--text-main);">Extraction Settings</h3>
+                
+                <div class="form-group">
+                    <label class="form-label" for="pageRange">Pages to Extract</label>
+                    <input type="text" id="pageRange" class="form-control" placeholder="e.g. 1, 3-5, 7" disabled>
+                    <p style="font-size: 0.75rem; color: var(--text-light); margin-top: 8px; line-height: 1.5;">
+                        Specify page numbers or ranges separated by commas. For example: <br>
+                        <strong>1, 3-5</strong> extracts page 1, and pages 3, 4, 5.
+                    </p>
+                </div>
+
+                <button id="btnSplit" class="btn btn-success" style="width: 100%; font-size: 1.05rem; margin-top: 16px;" disabled>
+                    <i class="fas fa-cut"></i> Split & Download PDF
+                </button>
+            </div>
+        </div>
+
+        <!-- Word to PDF Information -->
+        <div class="card" style="padding: 24px; margin-top: 32px; background: var(--primary-light); border-color: rgba(37,99,235,0.15);">
+            <h4 style="margin-bottom: 8px; font-size: 1.1rem; color: var(--primary);"><i class="fas fa-file-word"></i> Looking for Word to PDF Converter?</h4>
+            <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.6;">
+                Standard office suites like Microsoft Word and Google Docs offer built-in, 100% offline PDF export. To convert: <br>
+                1. Open your document in Microsoft Word or LibreOffice. <br>
+                2. Click on <strong>File -> Save As</strong> or <strong>Export As</strong>. <br>
+                3. Choose <strong>PDF (*.pdf)</strong> format and click Save. This creates a high-fidelity PDF locally, preserving your formatting.
+            </p>
+        </div>
+    </main>
+
+    <site-footer></site-footer>
+
+    <script src="assets/js/components.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const pdfFileInput = document.getElementById("pdfFileInput");
+            const uploadSlot = document.getElementById("uploadSlot");
+            const pdfInfoPanel = document.getElementById("pdfInfoPanel");
+            const lblPdfName = document.getElementById("lblPdfName");
+            const lblTotalPages = document.getElementById("lblTotalPages");
+            const btnChangeFile = document.getElementById("btnChangeFile");
+
+            const pageRange = document.getElementById("pageRange");
+            const btnSplit = document.getElementById("btnSplit");
+
+            let loadedPdfBytes = null;
+            let loadedPdfDoc = null;
+            let totalPageCount = 0;
+
+            pdfFileInput.addEventListener("change", handleFileSelect);
+
+            async function handleFileSelect() {
+                const file = pdfFileInput.files[0];
+                if (!file) return;
+
+                showToast("Loading PDF file details...", "info");
+
+                try {
+                    loadedPdfBytes = await file.arrayBuffer();
+                    loadedPdfDoc = await PDFLib.PDFDocument.load(loadedPdfBytes);
+                    totalPageCount = loadedPdfDoc.getPageCount();
+
+                    lblPdfName.innerText = file.name.substring(0, 30) + (file.name.length > 30 ? "..." : "");
+                    lblTotalPages.innerText = totalPageCount;
+
+                    // Toggle panel views
+                    uploadSlot.style.display = "none";
+                    pdfInfoPanel.style.display = "block";
+
+                    // Enable configs
+                    pageRange.removeAttribute("disabled");
+                    btnSplit.removeAttribute("disabled");
+                    pageRange.value = `1-${totalPageCount}`; // pre-populate with all pages
+
+                    showToast("PDF file parsed successfully.", "success");
+                } catch (err) {
+                    console.error(err);
+                    showToast("Failed to read PDF file. Make sure it is not corrupted or password-protected.", "error");
+                    resetUploader();
+                }
+            }
+
+            btnChangeFile.addEventListener("click", resetUploader);
+
+            function resetUploader() {
+                pdfFileInput.value = "";
+                loadedPdfBytes = null;
+                loadedPdfDoc = null;
+                totalPageCount = 0;
+
+                uploadSlot.style.display = "block";
+                pdfInfoPanel.style.display = "none";
+
+                pageRange.setAttribute("disabled", "true");
+                pageRange.value = "";
+                btnSplit.setAttribute("disabled", "true");
+            }
+
+            // pdf-lib splitter logic
+            btnSplit.addEventListener("click", async () => {
+                if (!loadedPdfBytes || !loadedPdfDoc) return;
+
+                const rangeStr = pageRange.value.trim();
+                if (!rangeStr) {
+                    showToast("Please specify page numbers to extract.", "error");
+                    return;
+                }
+
+                // Parse page range indices (0-indexed)
+                const indices = parsePageRange(rangeStr, totalPageCount);
+                if (indices.length === 0) {
+                    showToast("Invalid page range specified or page numbers out of bounds.", "error");
+                    return;
+                }
+
+                showToast("Extracting pages...", "info");
+
+                try {
+                    const newPdfDoc = await PDFLib.PDFDocument.create();
+                    const copiedPages = await newPdfDoc.copyPages(loadedPdfDoc, indices);
+                    
+                    copiedPages.forEach((page) => {
+                        newPdfDoc.addPage(page);
+                    });
+
+                    const splitPdfBytes = await newPdfDoc.save();
+                    const blob = new Blob([splitPdfBytes], { type: 'application/pdf' });
+
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `smartservice_split_${Date.now()}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+
+                    showToast("Split PDF successfully downloaded.", "success");
+                } catch (err) {
+                    console.error(err);
+                    showToast("An error occurred while splitting the PDF.", "error");
+                }
+            });
+
+            // Helper to parse page range strings e.g. "1, 3-5" -> [0, 2, 3, 4]
+            function parsePageRange(rangeStr, maxPages) {
+                const parts = rangeStr.split(",");
+                const indices = new Set();
+
+                for (let part of parts) {
+                    part = part.trim();
+                    if (/^\d+$/.test(part)) {
+                        const page = parseInt(part);
+                        if (page >= 1 && page <= maxPages) {
+                            indices.add(page - 1); // 0-indexed conversion
+                        }
+                    } else if (/^\d+-\d+$/.test(part)) {
+                        const bounds = part.split("-");
+                        const start = parseInt(bounds[0]);
+                        const end = parseInt(bounds[1]);
+
+                        if (start <= end && start >= 1 && end <= maxPages) {
+                            for (let p = start; p <= end; p++) {
+                                indices.add(p - 1);
+                            }
+                        }
+                    }
+                }
+
+                // Return sorted unique indices array
+                return Array.from(indices).sort((a, b) => a - b);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Invoice Generator | Free Professional Invoice Maker Online - SmartService</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Create professional invoices online free. GST invoice generator with tax, discount, logo upload, signature, UPI payment. Download PDF & share.">
+    
+    <!-- Style and Library Assets -->
+    <link rel="stylesheet" href="assets/css/global.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+            box-sizing: border-box;
+        }
+
+        /* Invoice Theme Colors */
+        :root {
+            --invoice-primary: #3b82f6;
+            --invoice-secondary: #1e40af;
+            --invoice-accent: #dbeafe;
+        }
+
+        .theme-blue {
+            --invoice-primary: #3b82f6;
+            --invoice-secondary: #1e40af;
+            --invoice-accent: #dbeafe;
+        }
+
+        .theme-green {
+            --invoice-primary: #10b981;
+            --invoice-secondary: #047857;
+            --invoice-accent: #d1fae5;
+        }
+
+        .theme-red {
+            --invoice-primary: #ef4444;
+            --invoice-secondary: #b91c1c;
+            --invoice-accent: #fee2e2;
+        }
+
+        /* A4 Size Fix for Print/PDF */
+        .invoice-sheet {
+            background-color: white;
+            box-shadow: var(--shadow-xl);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+            width: 100%;
+            max-width: 21cm; /* A4 width */
+            margin: 0 auto;
+            padding: 1.5cm 1.5cm 1cm 1.5cm;
+            min-height: 29.7cm; /* A4 height */
+            position: relative;
+            overflow: hidden;
+            color: #1f2937;
+        }
+
+        /* Print overrides to force single A4 page and color adjustments */
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 0;
+            }
+            body {
+                background: white !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            .no-print, site-header, site-footer, nav, footer, .toast-message, #toastContainer {
+                display: none !important;
+            }
+            .invoice-sheet {
+                box-shadow: none !important;
+                border: none !important;
+                border-radius: 0 !important;
+                padding: 1.2cm !important;
+                min-height: 29.7cm !important;
+                width: 210mm !important;
+                height: 297mm !important;
+                page-break-inside: avoid !important;
+                page-break-after: avoid !important;
+                background: white !important;
+                color: #111827 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            /* Show static print values and hide input boxes */
+            input, select, textarea, button, .upload-box, .payment-tab, .btn-remove-item {
+                display: none !important;
+            }
+            .print-value {
+                display: block !important;
+                font-size: 10pt !important;
+                color: #111827 !important;
+            }
+            .print-table {
+                display: table !important;
+                width: 100% !important;
+            }
+            #logoPrintContainer, #signaturePrintContainer {
+                display: block !important;
+            }
+            #qrcode canvas, #qrcode img {
+                display: inline-block !important;
+                max-width: 80px !important;
+                max-height: 80px !important;
+            }
+        }
+
+        /* PDF generation helper styles */
+        .pdf-mode .invoice-sheet {
+            padding: 1.2cm !important;
+            box-shadow: none !important;
+            border: none !important;
+            border-radius: 0 !important;
+            width: 210mm !important;
+            height: 297mm !important;
+        }
+        .pdf-mode .no-print {
+            display: none !important;
+        }
+        .pdf-mode .print-value {
+            display: block !important;
+        }
+        .pdf-mode input, .pdf-mode select, .pdf-mode textarea, .pdf-mode button, .pdf-mode .upload-box, .pdf-mode .payment-tab {
+            display: none !important;
+        }
+        .pdf-mode .print-table {
+            display: table !important;
+            width: 100% !important;
+        }
+        .pdf-mode #logoPrintContainer, .pdf-mode #signaturePrintContainer {
+            display: block !important;
+        }
+
+        .print-value {
+            display: none;
+        }
+
+        .upload-box {
+            border: 2px dashed #cbd5e1;
+            border-radius: 8px;
+            padding: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: #f8fafc;
+        }
+        .upload-box:hover {
+            border-color: var(--invoice-primary);
+            background: #f1f5f9;
+        }
+
+        .watermark {
+            position: relative;
+        }
+        .watermark::after {
+            content: "PAID";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 90px;
+            font-weight: 900;
+            color: rgba(16, 185, 129, 0.12);
+            border: 10px double rgba(16, 185, 129, 0.15);
+            padding: 10px 40px;
+            border-radius: 12px;
+            pointer-events: none;
+            z-index: 1;
+            white-space: nowrap;
+        }
+
+        /* Contenteditable styling */
+        [contenteditable="true"] {
+            outline: none;
+            border-radius: 4px;
+            padding: 2px 4px;
+            transition: background 0.15s ease;
+        }
+        [contenteditable="true"]:hover {
+            background: #f1f5f9;
+        }
+        [contenteditable="true"]:focus {
+            background: #f1f5f9;
+            box-shadow: 0 0 0 2px var(--invoice-primary);
+        }
+
+        .payment-tab.active {
+            border-bottom: 2px solid var(--invoice-primary);
+            color: var(--invoice-primary);
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 transition-colors duration-300" id="body" style="padding-top: 70px;">
+    
+    <site-header class="no-print"></site-header>
+    
+    <!-- Main Area -->
+    <main class="container mx-auto px-4 py-6 max-w-5xl">
+        <!-- Breadcrumb & Title -->
+        <div style="margin-bottom: 24px;" class="no-print">
+            <a href="index.html" style="color: var(--primary); font-weight: 600;"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+            <h1 style="font-size: 2.2rem; margin-top: 12px; color: var(--text-main);"><i class="fas fa-file-invoice-dollar mr-2 text-primary"></i>Smart Invoice Generator</h1>
+            <p style="color: var(--text-muted);">Create, customize, and print/download clean A4 GST business invoices offline.</p>
+        </div>
+
+        <!-- Toolbar controls -->
+        <div class="flex flex-wrap gap-3 justify-between items-center mb-6 bg-white p-4 rounded-xl shadow-sm no-print">
+            <div class="flex flex-wrap gap-2">
+                <!-- Theme Select -->
+                <select id="themeSelector" class="border rounded-lg px-3 py-2 text-sm bg-slate-50 font-medium">
+                    <option value="blue" selected>Corporate Blue Theme</option>
+                    <option value="green">Ecology Green Theme</option>
+                    <option value="red">Royal Red Theme</option>
+                </select>
+                
+                <!-- Currency Select -->
+                <select id="currencySelector" class="border rounded-lg px-3 py-2 text-sm bg-slate-50 font-medium">
+                    <option value="₹">₹ INR (Rupees)</option>
+                    <option value="$">$ USD (Dollars)</option>
+                    <option value="€">€ EUR (Euros)</option>
+                    <option value="£">£ GBP (Pounds)</option>
+                </select>
+                
+                <!-- Watermark -->
+                <button id="toggleWatermarkBtn" class="px-3 py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-semibold hover:bg-slate-200 transition">
+                    <i class="fas fa-water mr-1"></i> Toggle Paid Stamp
+                </button>
+            </div>
+
+            <div class="flex gap-2">
+                <button id="saveInvoiceBtn" class="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition">
+                    <i class="fas fa-save mr-1"></i> Save
+                </button>
+                <button id="loadInvoiceBtn" class="px-3 py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-semibold hover:bg-slate-200 transition">
+                    <i class="fas fa-folder-open mr-1"></i> Load Saved
+                </button>
+                <button id="resetInvoiceBtn" class="px-3 py-2 bg-red-50 text-red-700 rounded-lg text-sm font-semibold hover:bg-red-100 transition">
+                    <i class="fas fa-redo mr-1"></i> Reset All
+                </button>
+            </div>
+        </div>
+
+        <!-- A4 Page Container Wrapper -->
+        <div class="invoice-sheet" id="invoice-sheet">
+            <!-- Header Section -->
+            <div class="flex justify-between items-start mb-6">
+                <!-- Left: Vendor Info / Logo -->
+                <div class="flex items-start gap-4">
+                    <!-- Screen Upload Box -->
+                    <div class="upload-box w-20 h-20 flex flex-col items-center justify-center no-print" id="logoUploadZone">
+                        <img id="logoPreview" class="max-w-full max-h-full hidden object-contain" alt="Logo">
+                        <i class="fas fa-cloud-upload-alt text-2xl text-slate-400" id="logoIcon"></i>
+                        <span class="text-[9px] text-slate-400 font-semibold mt-1">Logo</span>
+                    </div>
+                    <!-- Print Display Box -->
+                    <div class="hidden" id="logoPrintContainer">
+                        <img id="logoPrintImg" class="max-w-20 max-h-20 object-contain" alt="Logo">
+                    </div>
+                    <input type="file" id="logoInput" accept="image/*" class="hidden">
+
+                    <div>
+                        <div contenteditable="true" class="text-xl font-extrabold outline-none text-slate-800" id="businessName" style="color: var(--invoice-primary);">Your Company Name</div>
+                        <div contenteditable="true" class="text-slate-500 text-xs mt-1 leading-relaxed" id="businessAddress">123 Street Lane, City - Pin Code</div>
+                        <div contenteditable="true" class="text-slate-500 text-xs" id="businessPhone">Phone: +91 9876543210</div>
+                        <div contenteditable="true" class="text-slate-500 text-xs" id="businessGstin">GSTIN: 07AAAAA1111A1Z1</div>
+                    </div>
+                </div>
+
+                <!-- Right: Invoice Metadata -->
+                <div class="text-right">
+                    <h2 class="text-2xl font-black tracking-tight" style="color: var(--invoice-primary);">TAX INVOICE</h2>
+                    <div class="grid grid-cols-2 gap-1 mt-3 text-xs">
+                        <span class="text-slate-500 font-medium">Invoice No:</span>
+                        <span class="font-bold print-value" id="printInvoiceNo">INV-2026-001</span>
+                        <input type="text" id="invoiceNo" value="INV-2026-001" class="border rounded px-1.5 py-0.5 text-xs w-28 text-right font-semibold no-print">
+
+                        <span class="text-slate-500 font-medium">Date:</span>
+                        <span class="font-bold print-value" id="printInvoiceDate"></span>
+                        <input type="date" id="invoiceDate" class="border rounded px-1.5 py-0.5 text-xs w-28 text-right font-semibold no-print">
+
+                        <span class="text-slate-500 font-medium">Due Date:</span>
+                        <span class="font-bold print-value" id="printDueDate"></span>
+                        <input type="date" id="dueDate" class="border rounded px-1.5 py-0.5 text-xs w-28 text-right font-semibold no-print">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Client Billing and Shipping Details -->
+            <div class="grid grid-cols-2 gap-6 mb-6">
+                <!-- Billed To -->
+                <div class="bg-slate-50/50 p-3 rounded-lg border border-slate-100">
+                    <h4 class="font-bold text-xs mb-2 uppercase tracking-wider" style="color: var(--invoice-primary);">Billed To:</h4>
+                    <div class="print-value font-bold" id="printCustomerName">-</div>
+                    <div class="print-value text-slate-500 text-[11px] mt-1" id="printCustomerAddress">-</div>
+                    <div class="print-value text-slate-500 text-[11px]" id="printCustomerPhone">-</div>
+
+                    <input type="text" id="customerName" placeholder="Client / Customer Name" class="w-full border rounded p-1 mb-1 text-xs font-semibold no-print">
+                    <input type="text" id="customerAddress" placeholder="Billing Address" class="w-full border rounded p-1 mb-1 text-xs no-print">
+                    <input type="text" id="customerPhone" placeholder="Mobile / GSTIN / Details" class="w-full border rounded p-1 text-xs no-print">
+                </div>
+
+                <!-- Shipped To -->
+                <div class="bg-slate-50/50 p-3 rounded-lg border border-slate-100">
+                    <h4 class="font-bold text-xs mb-2 uppercase tracking-wider" style="color: var(--invoice-primary);">Shipped To:</h4>
+                    <div class="print-value font-bold" id="printShipName">-</div>
+                    <div class="print-value text-slate-500 text-[11px] mt-1" id="printShipAddress">-</div>
+                    <div class="print-value text-slate-500 text-[11px]" id="printShipPhone">-</div>
+
+                    <input type="text" id="shipName" placeholder="Recipient Name" class="w-full border rounded p-1 mb-1 text-xs font-semibold no-print">
+                    <input type="text" id="shipAddress" placeholder="Shipping Address" class="w-full border rounded p-1 mb-1 text-xs no-print">
+                    <input type="text" id="shipPhone" placeholder="Mobile / Details" class="w-full border rounded p-1 text-xs no-print">
+                </div>
+            </div>
+
+            <!-- Items Table Section -->
+            <div class="mb-4">
+                <table class="w-full text-xs no-print border border-slate-200 rounded-lg overflow-hidden">
+                    <thead>
+                        <tr class="bg-slate-50 border-b border-slate-200">
+                            <th class="p-2 text-left w-8">#</th>
+                            <th class="p-2 text-left">Description of Service/Goods</th>
+                            <th class="p-2 text-right w-16">Qty</th>
+                            <th class="p-2 text-right w-24">Unit Rate</th>
+                            <th class="p-2 text-right w-24">GST %</th>
+                            <th class="p-2 text-right w-28">Total</th>
+                            <th class="p-2 text-center w-10"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="itemsBody">
+                        <!-- Dynamic screen rows here -->
+                    </tbody>
+                </table>
+
+                <!-- Print values table (only shown on PDF download and print view) -->
+                <table class="w-full text-xs print-table border border-slate-200" style="display: none;">
+                    <thead>
+                        <tr class="bg-slate-50 border-b">
+                            <th class="p-2 text-left font-bold" style="width: 5%;">#</th>
+                            <th class="p-2 text-left font-bold" style="width: 45%;">Description</th>
+                            <th class="p-2 text-right font-bold" style="width: 10%;">Qty</th>
+                            <th class="p-2 text-right font-bold" style="width: 15%;">Rate</th>
+                            <th class="p-2 text-right font-bold" style="width: 10%;">GST</th>
+                            <th class="p-2 text-right font-bold" style="width: 15%;">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="itemsBodyPrint">
+                        <!-- Print rows mapped dynamically -->
+                    </tbody>
+                </table>
+
+                <button id="addItemBtn" class="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg text-xs font-bold hover:bg-slate-200 transition mt-2 no-print">
+                    <i class="fas fa-plus mr-1"></i> Add Billing Item
+                </button>
+            </div>
+
+            <!-- Split Payments & Summary Totals -->
+            <div class="grid grid-cols-2 gap-6 mb-4">
+                <!-- Left: Payment Options & QR Code -->
+                <div>
+                    <h4 class="font-bold text-xs mb-2 uppercase tracking-wider" style="color: var(--invoice-primary);">Payment Details:</h4>
+                    
+                    <!-- Tabs (Screen view only) -->
+                    <div class="flex border-b border-slate-200 mb-2 no-print gap-3">
+                        <button class="payment-tab active px-2 py-1 text-xs font-semibold" data-payment="bank">Bank Account</button>
+                        <button class="payment-tab px-2 py-1 text-xs font-semibold" data-payment="upi">UPI / Scan</button>
+                        <button class="payment-tab px-2 py-1 text-xs font-semibold" data-payment="cash">Cash Payment</button>
+                    </div>
+
+                    <!-- Print payment method tag -->
+                    <div class="print-value font-bold" id="printPaymentMethod">Bank Transfer Details</div>
+
+                    <!-- Bank Details Container -->
+                    <div id="bankDetailsContainer" class="payment-details space-y-1">
+                        <div class="print-value text-xs" id="printBankName">-</div>
+                        <div class="print-value text-xs" id="printAccountNo">-</div>
+                        <div class="print-value text-xs" id="printIfscCode">-</div>
+
+                        <input type="text" id="bankName" placeholder="Bank Name" class="w-full border rounded p-1 text-xs no-print">
+                        <input type="text" id="accountNo" placeholder="Account Number" class="w-full border rounded p-1 text-xs no-print">
+                        <input type="text" id="ifscCode" placeholder="IFSC / RTGS Code" class="w-full border rounded p-1 text-xs no-print">
+                    </div>
+
+                    <!-- UPI Details Container -->
+                    <div id="upiDetailsContainer" class="payment-details hidden space-y-1">
+                        <div class="print-value text-xs font-semibold" id="printUpiId">-</div>
+                        
+                        <input type="text" id="upiId" placeholder="UPI ID / Payee VPA" class="w-full border rounded p-1 text-xs no-print">
+                        
+                        <!-- QR Code generating tool -->
+                        <div class="flex flex-col items-start gap-2 mt-2 no-print">
+                            <button id="generateQrBtn" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[11px] font-bold transition">
+                                <i class="fas fa-qrcode mr-1"></i> Generate Pay QR Code
+                            </button>
+                            <div id="qrcode" class="mt-1"></div>
+                        </div>
+
+                        <!-- QR Code for Print -->
+                        <div class="print-value mt-2" id="printQRCode"></div>
+                    </div>
+
+                    <!-- Cash Details Container -->
+                    <div id="cashDetailsContainer" class="payment-details hidden">
+                        <p class="text-xs text-slate-500 no-print">Cash payment collected. No balance due required.</p>
+                        <div class="print-value text-xs italic">Cash Paid in Full</div>
+                    </div>
+                </div>
+
+                <!-- Right: Totals splits -->
+                <div class="space-y-1.5 text-xs text-slate-700">
+                    <div class="flex justify-between items-center border-b border-slate-100 pb-1.5">
+                        <span class="font-medium text-slate-500">Subtotal (Before Tax):</span>
+                        <span id="subtotal" class="font-bold">₹0.00</span>
+                    </div>
+                    <div class="flex justify-between items-center border-b border-slate-100 pb-1.5">
+                        <span class="font-medium text-slate-500">CGST Amount:</span>
+                        <span id="cgstSplit" class="font-semibold text-slate-600">₹0.00</span>
+                    </div>
+                    <div class="flex justify-between items-center border-b border-slate-100 pb-1.5">
+                        <span class="font-medium text-slate-500">SGST Amount:</span>
+                        <span id="sgstSplit" class="font-semibold text-slate-600">₹0.00</span>
+                    </div>
+                    <div class="flex justify-between items-center border-b border-slate-100 pb-1.5">
+                        <span class="font-medium text-slate-500">Discount (%):</span>
+                        <div class="flex items-center gap-1 font-semibold">
+                            <span class="print-value" id="printDiscountPercent">0</span>
+                            <input type="number" id="discountPercent" value="0" min="0" max="100" class="border rounded px-1 w-12 text-right text-xs no-print font-bold">
+                            <span id="discountAmount">₹0.00</span>
+                        </div>
+                    </div>
+                    <div class="pt-2">
+                        <div class="flex justify-between items-center font-extrabold text-sm border-b-2 border-slate-800 pb-1.5">
+                            <span class="text-slate-800">Grand Total:</span>
+                            <span id="total" style="color: var(--invoice-primary);">₹0.00</span>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center pt-1">
+                        <span class="font-medium text-slate-500">Amount Paid:</span>
+                        <div class="flex items-center gap-1 font-semibold">
+                            <span class="print-value" id="printAmountPaid">0</span>
+                            <input type="number" id="amountPaid" value="0" min="0" class="border rounded px-1.5 py-0.5 w-24 text-right text-xs no-print font-bold">
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center pt-1 font-bold">
+                        <span class="text-slate-500">Balance Due:</span>
+                        <span id="balanceDue" class="text-red-600 text-sm">₹0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notes & Signature Footer -->
+            <div class="grid grid-cols-2 gap-6 mt-6 pt-3 border-t border-slate-100">
+                <!-- Notes -->
+                <div>
+                    <h4 class="font-bold text-xs mb-1 uppercase tracking-wider" style="color: var(--invoice-primary);">Billing Notes:</h4>
+                    <div class="print-value text-[11px] text-slate-500 leading-relaxed" id="printNotes">Thank you for your business!</div>
+                    <textarea id="invoiceNotes" rows="2" class="w-full border rounded p-1.5 text-xs no-print" placeholder="Thank you for your business!">Thank you for your business!</textarea>
+                </div>
+
+                <!-- Signature -->
+                <div class="text-right flex flex-col items-end justify-between">
+                    <h4 class="font-bold text-xs mb-2 uppercase tracking-wider" style="color: var(--invoice-primary);">Authorized Signature:</h4>
+                    <!-- Screen Box -->
+                    <div class="upload-box w-28 h-12 flex items-center justify-center no-print" id="signatureUploadZone">
+                        <img id="signaturePreview" class="max-w-full max-h-full hidden object-contain" alt="Signature">
+                        <i class="fas fa-pen text-lg text-slate-400" id="signatureIcon"></i>
+                    </div>
+                    <!-- Print Box -->
+                    <div class="hidden" id="signaturePrintContainer">
+                        <img id="signaturePrintImg" class="max-w-28 max-h-12 object-contain" alt="Signature">
+                    </div>
+                    <input type="file" id="signatureInput" accept="image/*" class="hidden">
+                </div>
+            </div>
+
+            <!-- Bottom legal terms -->
+            <div class="text-[8px] text-slate-400 text-center mt-8 pt-4 border-t border-slate-100">
+                This is a computer-generated tax invoice and requires no physical seal or signature. Processing powered offline by SmartService.
+            </div>
+        </div>
+
+        <!-- Action Row (Hidden in print) -->
+        <div class="flex flex-wrap gap-3 justify-center no-print mt-8">
+            <button id="downloadPdfBtn" class="px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold shadow-md hover:-translate-y-0.5 transition flex items-center gap-2">
+                <i class="fas fa-file-pdf"></i> Download PDF Document
+            </button>
+            <button id="printBtn" class="px-5 py-3 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-sm font-bold shadow-md hover:-translate-y-0.5 transition flex items-center gap-2">
+                <i class="fas fa-print"></i> Print Invoice Sheet
+            </button>
+            <button id="downloadPngBtn" class="px-5 py-3 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl text-sm font-bold shadow-md hover:-translate-y-0.5 transition flex items-center gap-2">
+                <i class="fas fa-image"></i> Save as Image
+            </button>
+            <button id="shareWhatsAppBtn" class="px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold shadow-md hover:-translate-y-0.5 transition flex items-center gap-2">
+                <i class="fab fa-whatsapp"></i> Share on WhatsApp
+            </button>
+        </div>
+
+        <!-- FAQs Section -->
+        <div class="bg-white p-6 rounded-xl shadow-sm no-print mt-12 border border-slate-200">
+            <h2 class="text-2xl font-black mb-6 text-slate-800">Frequently Asked Questions</h2>
+            
+            <div class="space-y-4">
+                <div class="border rounded-lg p-4 bg-slate-50/50">
+                    <h3 class="font-bold text-slate-800 mb-2">Is this invoice generator free and private?</h3>
+                    <p class="text-slate-600 text-sm">Yes! SmartService Invoice Generator runs entirely inside your local web browser. No data is sent to our servers, keeping your business records completely private.</p>
+                </div>
+                <div class="border rounded-lg p-4 bg-slate-50/50">
+                    <h3 class="font-bold text-slate-800 mb-2">How can my clients pay using the QR code?</h3>
+                    <p class="text-slate-600 text-sm">Simply toggle the payment method to UPI / Scan, enter your UPI ID, and click Generate Pay QR Code. The generator creates a payment-string QR code containing the invoice amount. Any Indian UPI app (GPay, PhonePe, Paytm, BHIM) can scan and complete the transaction.</p>
+                </div>
+                <div class="border rounded-lg p-4 bg-slate-50/50">
+                    <h3 class="font-bold text-slate-800 mb-2">How to load previous invoice records?</h3>
+                    <p class="text-slate-600 text-sm">Click the "Save" button to save details in local cache. When you return or open the tool, click "Load Saved" to instantly restore your layout and entries.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <site-footer class="no-print"></site-footer>
+
+    <script src="assets/js/components.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            let itemCount = 0;
+            let currentTheme = "blue";
+            let watermarkEnabled = false;
+            let logoDataURL = "";
+            let signatureDataURL = "";
+
+            // DOM Selectors
+            const themeSelector = document.getElementById("themeSelector");
+            const currencySelector = document.getElementById("currencySelector");
+            const toggleWatermarkBtn = document.getElementById("toggleWatermarkBtn");
+            const saveInvoiceBtn = document.getElementById("saveInvoiceBtn");
+            const loadInvoiceBtn = document.getElementById("loadInvoiceBtn");
+            const resetInvoiceBtn = document.getElementById("resetInvoiceBtn");
+
+            const logoUploadZone = document.getElementById("logoUploadZone");
+            const logoInput = document.getElementById("logoInput");
+            const logoPreview = document.getElementById("logoPreview");
+            const logoIcon = document.getElementById("logoIcon");
+            const logoPrintContainer = document.getElementById("logoPrintContainer");
+            const logoPrintImg = document.getElementById("logoPrintImg");
+
+            const signatureUploadZone = document.getElementById("signatureUploadZone");
+            const signatureInput = document.getElementById("signatureInput");
+            const signaturePreview = document.getElementById("signaturePreview");
+            const signatureIcon = document.getElementById("signatureIcon");
+            const signaturePrintContainer = document.getElementById("signaturePrintContainer");
+            const signaturePrintImg = document.getElementById("signaturePrintImg");
+
+            const itemsBody = document.getElementById("itemsBody");
+            const addItemBtn = document.getElementById("addItemBtn");
+
+            const subtotalEl = document.getElementById("subtotal");
+            const cgstSplitEl = document.getElementById("cgstSplit");
+            const sgstSplitEl = document.getElementById("sgstSplit");
+            const discountPercentEl = document.getElementById("discountPercent");
+            const discountAmountEl = document.getElementById("discountAmount");
+            const totalEl = document.getElementById("total");
+            const amountPaidEl = document.getElementById("amountPaid");
+            const balanceDueEl = document.getElementById("balanceDue");
+
+            const downloadPdfBtn = document.getElementById("downloadPdfBtn");
+            const printBtn = document.getElementById("printBtn");
+            const downloadPngBtn = document.getElementById("downloadPngBtn");
+            const shareWhatsAppBtn = document.getElementById("shareWhatsAppBtn");
+
+            const generateQrBtn = document.getElementById("generateQrBtn");
+            const qrcodeEl = document.getElementById("qrcode");
+            const upiIdEl = document.getElementById("upiId");
+
+            // Init state
+            const todayStr = new Date().toISOString().split("T")[0];
+            document.getElementById("invoiceDate").value = todayStr;
+            
+            const due = new Date();
+            due.setDate(due.getDate() + 15);
+            document.getElementById("dueDate").value = due.toISOString().split("T")[0];
+
+            // Setup editable listener updates
+            const editables = ["businessName", "businessAddress", "businessPhone", "businessGstin"];
+            editables.forEach(id => {
+                document.getElementById(id).addEventListener("input", updatePrintValues);
+            });
+
+            // Date formatting
+            function formatDate(str) {
+                if(!str) return "-";
+                const p = str.split("-");
+                return `${p[2]}-${p[1]}-${p[0]}`;
+            }
+
+            // Sync inputs to print targets
+            function updatePrintValues() {
+                document.getElementById("printInvoiceNo").innerText = document.getElementById("invoiceNo").value || "-";
+                document.getElementById("printInvoiceDate").innerText = formatDate(document.getElementById("invoiceDate").value);
+                document.getElementById("printDueDate").innerText = formatDate(document.getElementById("dueDate").value);
+
+                document.getElementById("printCustomerName").innerText = document.getElementById("customerName").value || "-";
+                document.getElementById("printCustomerAddress").innerText = document.getElementById("customerAddress").value || "-";
+                document.getElementById("printCustomerPhone").innerText = document.getElementById("customerPhone").value || "-";
+
+                document.getElementById("printShipName").innerText = document.getElementById("shipName").value || "-";
+                document.getElementById("printShipAddress").innerText = document.getElementById("shipAddress").value || "-";
+                document.getElementById("printShipPhone").innerText = document.getElementById("shipPhone").value || "-";
+
+                document.getElementById("printBankName").innerText = `Bank: ${document.getElementById("bankName").value || "-"}`;
+                document.getElementById("printAccountNo").innerText = `A/C: ${document.getElementById("accountNo").value || "-"}`;
+                document.getElementById("printIfscCode").innerText = `IFSC: ${document.getElementById("ifscCode").value || "-"}`;
+                document.getElementById("printUpiId").innerText = `UPI: ${document.getElementById("upiId").value || "-"}`;
+
+                document.getElementById("printDiscountPercent").innerText = document.getElementById("discountPercent").value || "0";
+                document.getElementById("printAmountPaid").innerText = document.getElementById("amountPaid").value || "0";
+                document.getElementById("printNotes").innerText = document.getElementById("invoiceNotes").value || "Thank you for your business!";
+                
+                updateItemsPrintTable();
+            }
+
+            function updateItemsPrintTable() {
+                const printBody = document.getElementById("itemsBodyPrint");
+                printBody.innerHTML = "";
+                
+                const cur = currencySelector.value;
+                const rows = itemsBody.querySelectorAll(".item-row");
+                rows.forEach((row, idx) => {
+                    const desc = row.querySelector(".item-desc").value || "Custom Service Item";
+                    const qty = parseFloat(row.querySelector(".item-qty").value) || 1;
+                    const rate = parseFloat(row.querySelector(".item-rate").value) || 0;
+                    const gst = parseFloat(row.querySelector(".item-gst").value) || 0;
+                    
+                    const itemSub = rate * qty;
+                    const itemTax = (itemSub * gst) / 100;
+                    const itemTotal = itemSub + itemTax;
+
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td class="p-2 border-b">${idx + 1}</td>
+                        <td class="p-2 border-b">${escapeHtml(desc)}</td>
+                        <td class="p-2 border-b text-right">${qty}</td>
+                        <td class="p-2 border-b text-right">${cur}${rate.toFixed(2)}</td>
+                        <td class="p-2 border-b text-right">${gst}%</td>
+                        <td class="p-2 border-b text-right font-semibold">${cur}${itemTotal.toFixed(2)}</td>
+                    `;
+                    printBody.appendChild(tr);
+                });
+            }
+
+            function escapeHtml(str) {
+                if(!str) return "";
+                return String(str).replace(/[&<>]/g, m => {
+                    if(m === "&") return "&amp;";
+                    if(m === "<") return "&lt;";
+                    if(m === ">") return "&gt;";
+                    return m;
+                });
+            }
+
+            // Calculations logic
+            function calculateInvoice() {
+                let subtotalSum = 0;
+                let taxSum = 0;
+
+                const rows = itemsBody.querySelectorAll(".item-row");
+                rows.forEach(row => {
+                    const qty = parseFloat(row.querySelector(".item-qty").value) || 0;
+                    const rate = parseFloat(row.querySelector(".item-rate").value) || 0;
+                    const gst = parseFloat(row.querySelector(".item-gst").value) || 0;
+
+                    const rowSub = rate * qty;
+                    const rowTax = (rowSub * gst) / 100;
+                    const rowTotal = rowSub + rowTax;
+
+                    row.querySelector("td:nth-last-child(2) span").innerText = rowTotal.toFixed(2);
+                    
+                    subtotalSum += rowSub;
+                    taxSum += rowTax;
+                });
+
+                const discountPct = parseFloat(discountPercentEl.value) || 0;
+                const discountVal = subtotalSum * (discountPct / 100);
+                const grandTotal = subtotalSum + taxSum - discountVal;
+
+                const amountPaid = parseFloat(amountPaidEl.value) || 0;
+                const balanceDue = grandTotal - amountPaid;
+
+                // Format values
+                const cur = currencySelector.value;
+                const fmt = (num) => cur + num.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+                subtotalEl.innerText = fmt(subtotalSum);
+                cgstSplitEl.innerText = fmt(taxSum / 2);
+                sgstSplitEl.innerText = fmt(taxSum / 2);
+                discountAmountEl.innerText = fmt(discountVal);
+                totalEl.innerText = fmt(grandTotal);
+                balanceDueEl.innerText = fmt(balanceDue);
+
+                updatePrintValues();
+            }
+
+            // Items management
+            function addBillingRow(descText = "", rateVal = 0, qtyVal = 1, gstVal = 18) {
+                itemCount++;
+                const tr = document.createElement("tr");
+                tr.className = "item-row";
+                tr.id = `item-row-${itemCount}`;
+                tr.innerHTML = `
+                    <td class="p-2 border-b text-slate-500 font-medium">${itemsBody.children.length + 1}</td>
+                    <td class="p-2 border-b">
+                        <input type="text" class="item-desc w-full border rounded px-2 py-1 text-xs outline-none focus:border-blue-500" placeholder="Service description" value="${escapeHtml(descText)}">
+                    </td>
+                    <td class="p-2 border-b">
+                        <input type="number" class="item-qty w-14 border rounded px-1.5 py-1 text-right text-xs outline-none focus:border-blue-500 font-semibold" value="${qtyVal}" min="1">
+                    </td>
+                    <td class="p-2 border-b">
+                        <input type="number" class="item-rate w-24 border rounded px-1.5 py-1 text-right text-xs outline-none focus:border-blue-500 font-semibold" value="${rateVal}" min="0">
+                    </td>
+                    <td class="p-2 border-b">
+                        <select class="item-gst w-full border rounded p-1 text-xs outline-none bg-slate-50 font-semibold">
+                            <option value="0" ${gstVal === 0 ? "selected" : ""}>0%</option>
+                            <option value="5" ${gstVal === 5 ? "selected" : ""}>5%</option>
+                            <option value="12" ${gstVal === 12 ? "selected" : ""}>12%</option>
+                            <option value="18" ${gstVal === 18 ? "selected" : ""}>18%</option>
+                            <option value="28" ${gstVal === 28 ? "selected" : ""}>28%</option>
+                        </select>
+                    </td>
+                    <td class="p-2 border-b text-right font-bold text-slate-700">
+                        <span class="item-total">0.00</span>
+                    </td>
+                    <td class="p-2 border-b text-center">
+                        <button class="btn-remove-item text-red-500 hover:text-red-700 p-1" onclick="this.closest('tr').remove(); window.reindexRows();"><i class="fas fa-trash-alt"></i></button>
+                    </td>
+                `;
+
+                // Add calculation hooks
+                tr.querySelectorAll("input, select").forEach(el => {
+                    el.addEventListener("input", calculateInvoice);
+                });
+
+                itemsBody.appendChild(tr);
+                reindexRows();
+                calculateInvoice();
+            }
+
+            window.reindexRows = () => {
+                const rows = itemsBody.querySelectorAll(".item-row");
+                rows.forEach((row, idx) => {
+                    row.querySelector("td:first-child").innerText = idx + 1;
+                });
+                calculateInvoice();
+            };
+
+            addItemBtn.addEventListener("click", () => {
+                addBillingRow("Document Work / Service Details", 100, 1, 18);
+                showToast("Added itemized row.", "info");
+            });
+
+            // Images Handlers
+            logoUploadZone.addEventListener("click", () => logoInput.click());
+            logoInput.addEventListener("change", (e) => {
+                if (e.target.files && e.target.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        logoDataURL = ev.target.result;
+                        logoPreview.src = logoDataURL;
+                        logoPreview.classList.remove("hidden");
+                        logoIcon.classList.add("hidden");
+                        
+                        logoPrintImg.src = logoDataURL;
+                        logoPrintContainer.classList.remove("hidden");
+                        showToast("Company logo uploaded.", "success");
+                    };
+                    reader.readAsDataURL(e.target.files[0]);
+                }
+            });
+
+            signatureUploadZone.addEventListener("click", () => signatureInput.click());
+            signatureInput.addEventListener("change", (e) => {
+                if (e.target.files && e.target.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        signatureDataURL = ev.target.result;
+                        signaturePreview.src = signatureDataURL;
+                        signaturePreview.classList.remove("hidden");
+                        signatureIcon.classList.add("hidden");
+                        
+                        signaturePrintImg.src = signatureDataURL;
+                        signaturePrintContainer.classList.remove("hidden");
+                        showToast("Signature loaded.", "success");
+                    };
+                    reader.readAsDataURL(e.target.files[0]);
+                }
+            });
+
+            // Payment Option Tabs
+            document.querySelectorAll(".payment-tab").forEach(tab => {
+                tab.addEventListener("click", function() {
+                    document.querySelectorAll(".payment-tab").forEach(t => t.classList.remove("active"));
+                    this.classList.add("active");
+
+                    const key = this.dataset.payment;
+                    document.querySelectorAll(".payment-details").forEach(d => d.classList.add("hidden"));
+                    document.getElementById(`${key}DetailsContainer`).classList.remove("hidden");
+
+                    const printTitle = document.getElementById("printPaymentMethod");
+                    if (key === "bank") printTitle.innerText = "Bank Account Transfer Details";
+                    else if (key === "upi") printTitle.innerText = "UPI Mobile Pay / Scan Details";
+                    else printTitle.innerText = "Cash Receipt Details";
+
+                    updatePrintValues();
+                });
+            });
+
+            // QR code UPI pay-string drawer
+            generateQrBtn.addEventListener("click", () => {
+                const upi = upiIdEl.value.trim();
+                if (!upi || !upi.includes("@")) {
+                    showToast("Please enter a valid UPI ID (e.g. upi@bank)", "error");
+                    return;
+                }
+
+                // Get clean total digits
+                const total = totalEl.innerText.replace(/[^0-9.]/g, "");
+                const amount = parseFloat(total) || 0;
+                
+                const payee = document.getElementById("businessName").innerText || "Business";
+                const upiString = `upi://pay?pa=${encodeURIComponent(upi)}&pn=${encodeURIComponent(payee)}&am=${amount.toFixed(2)}&cu=INR`;
+
+                qrcodeEl.innerHTML = "";
+                const printQR = document.getElementById("printQRCode");
+                printQR.innerHTML = "";
+
+                try {
+                    showToast("Generating scan QR Code...", "info");
+                    // Renders on screen preview
+                    QRCode.toCanvas(document.createElement("canvas"), upiString, { width: 110, margin: 1 }, (err, canvas) => {
+                        if (!err) {
+                            qrcodeEl.appendChild(canvas);
+                        }
+                    });
+
+                    // Renders for print
+                    const pCanvas = document.createElement("canvas");
+                    QRCode.toCanvas(pCanvas, upiString, { width: 85, margin: 1 }, (err) => {
+                        if (!err) {
+                            const img = document.createElement("img");
+                            img.src = pCanvas.toDataURL("image/png");
+                            img.style.maxWidth = "75px";
+                            printQR.appendChild(img);
+                        }
+                    });
+                    showToast("QR Code generated successfully.", "success");
+                } catch(e) {
+                    console.error("QR Draw Error:", e);
+                    // Google Charts fallback
+                    qrcodeEl.innerHTML = `<img src="https://chart.googleapis.com/chart?chs=110x110&cht=qr&chl=${encodeURIComponent(upiString)}" alt="UPI QR">`;
+                    printQR.innerHTML = `<img src="https://chart.googleapis.com/chart?chs=85x85&cht=qr&chl=${encodeURIComponent(upiString)}" alt="UPI QR" style="max-width: 75px;">`;
+                }
+            });
+
+            // Theme switching
+            themeSelector.addEventListener("change", (e) => {
+                const theme = e.target.value;
+                document.body.classList.remove("theme-blue", "theme-green", "theme-red");
+                document.body.classList.add(`theme-${theme}`);
+                
+                const root = document.documentElement;
+                if (theme === "blue") {
+                    root.style.setProperty("--invoice-primary", "#3b82f6");
+                    root.style.setProperty("--invoice-secondary", "#1e40af");
+                } else if (theme === "green") {
+                    root.style.setProperty("--invoice-primary", "#10b981");
+                    root.style.setProperty("--invoice-secondary", "#047857");
+                } else {
+                    root.style.setProperty("--invoice-primary", "#ef4444");
+                    root.style.setProperty("--invoice-secondary", "#b91c1c");
+                }
+                showToast(`Switched color palette.`, "info");
+            });
+
+            currencySelector.addEventListener("change", calculateInvoice);
+            discountPercentEl.addEventListener("input", calculateInvoice);
+            amountPaidEl.addEventListener("input", calculateInvoice);
+
+            // Watermark paid stamp toggle
+            toggleWatermarkBtn.addEventListener("click", () => {
+                watermarkEnabled = !watermarkEnabled;
+                const sheet = document.getElementById("invoice-sheet");
+                if (watermarkEnabled) {
+                    sheet.classList.add("watermark");
+                    showToast("Paid stamp enabled.", "success");
+                } else {
+                    sheet.classList.remove("watermark");
+                    showToast("Paid stamp disabled.", "info");
+                }
+            });
+
+            // LocalStorage handlers
+            saveInvoiceBtn.addEventListener("click", () => {
+                const data = {
+                    businessName: document.getElementById("businessName").innerText,
+                    businessAddress: document.getElementById("businessAddress").innerText,
+                    businessPhone: document.getElementById("businessPhone").innerText,
+                    businessGstin: document.getElementById("businessGstin").innerText,
+                    invoiceNo: document.getElementById("invoiceNo").value,
+                    invoiceDate: document.getElementById("invoiceDate").value,
+                    dueDate: document.getElementById("dueDate").value,
+                    customerName: document.getElementById("customerName").value,
+                    customerAddress: document.getElementById("customerAddress").value,
+                    customerPhone: document.getElementById("customerPhone").value,
+                    shipName: document.getElementById("shipName").value,
+                    shipAddress: document.getElementById("shipAddress").value,
+                    shipPhone: document.getElementById("shipPhone").value,
+                    discountPercent: discountPercentEl.value,
+                    amountPaid: amountPaidEl.value,
+                    bankName: document.getElementById("bankName").value,
+                    accountNo: document.getElementById("accountNo").value,
+                    ifscCode: document.getElementById("ifscCode").value,
+                    upiId: upiIdEl.value,
+                    notes: document.getElementById("invoiceNotes").value,
+                    logo: logoDataURL,
+                    signature: signatureDataURL,
+                    theme: themeSelector.value,
+                    currency: currencySelector.value,
+                    items: []
+                };
+
+                itemsBody.querySelectorAll(".item-row").forEach(row => {
+                    data.items.push({
+                        desc: row.querySelector(".item-desc").value,
+                        rate: row.querySelector(".item-rate").value,
+                        qty: row.querySelector(".item-qty").value,
+                        gst: row.querySelector(".item-gst").value
+                    });
+                });
+
+                localStorage.setItem("smartservice_saved_invoice", JSON.stringify(data));
+                showToast("Invoice saved successfully in local cache.", "success");
+            });
+
+            loadInvoiceBtn.addEventListener("click", () => {
+                const saved = localStorage.getItem("smartservice_saved_invoice");
+                if (!saved) {
+                    showToast("No saved invoice found in browser cache.", "error");
+                    return;
+                }
+
+                try {
+                    const data = JSON.parse(saved);
+                    document.getElementById("businessName").innerText = data.businessName || "Your Company Name";
+                    document.getElementById("businessAddress").innerText = data.businessAddress || "";
+                    document.getElementById("businessPhone").innerText = data.businessPhone || "";
+                    document.getElementById("businessGstin").innerText = data.businessGstin || "";
+                    
+                    document.getElementById("invoiceNo").value = data.invoiceNo || "";
+                    document.getElementById("invoiceDate").value = data.invoiceDate || "";
+                    document.getElementById("dueDate").value = data.dueDate || "";
+
+                    document.getElementById("customerName").value = data.customerName || "";
+                    document.getElementById("customerAddress").value = data.customerAddress || "";
+                    document.getElementById("customerPhone").value = data.customerPhone || "";
+
+                    document.getElementById("shipName").value = data.shipName || "";
+                    document.getElementById("shipAddress").value = data.shipAddress || "";
+                    document.getElementById("shipPhone").value = data.shipPhone || "";
+
+                    discountPercentEl.value = data.discountPercent || 0;
+                    amountPaidEl.value = data.amountPaid || 0;
+
+                    document.getElementById("bankName").value = data.bankName || "";
+                    document.getElementById("accountNo").value = data.accountNo || "";
+                    document.getElementById("ifscCode").value = data.ifscCode || "";
+                    upiIdEl.value = data.upiId || "";
+
+                    document.getElementById("invoiceNotes").value = data.notes || "";
+                    
+                    themeSelector.value = data.theme || "blue";
+                    themeSelector.dispatchEvent(new Event("change"));
+
+                    currencySelector.value = data.currency || "₹";
+
+                    // Rebuild items
+                    itemsBody.innerHTML = "";
+                    if (data.items && data.items.length) {
+                        data.items.forEach(itm => {
+                            addBillingRow(itm.desc, parseFloat(itm.rate), parseFloat(itm.qty), parseFloat(itm.gst));
+                        });
+                    } else {
+                        addBillingRow("Document Printing & Xerox", 50, 1, 0);
+                    }
+
+                    // Restore logo
+                    if (data.logo) {
+                        logoDataURL = data.logo;
+                        logoPreview.src = logoDataURL;
+                        logoPreview.classList.remove("hidden");
+                        logoIcon.classList.add("hidden");
+                        logoPrintImg.src = logoDataURL;
+                        logoPrintContainer.classList.remove("hidden");
+                    } else {
+                        logoDataURL = "";
+                        logoPreview.src = "";
+                        logoPreview.classList.add("hidden");
+                        logoIcon.classList.remove("hidden");
+                        logoPrintImg.src = "";
+                        logoPrintContainer.classList.add("hidden");
+                    }
+
+                    // Restore signature
+                    if (data.signature) {
+                        signatureDataURL = data.signature;
+                        signaturePreview.src = signatureDataURL;
+                        signaturePreview.classList.remove("hidden");
+                        signatureIcon.classList.add("hidden");
+                        signaturePrintImg.src = signatureDataURL;
+                        signaturePrintContainer.classList.remove("hidden");
+                    } else {
+                        signatureDataURL = "";
+                        signaturePreview.src = "";
+                        signaturePreview.classList.add("hidden");
+                        signatureIcon.classList.remove("hidden");
+                        signaturePrintImg.src = "";
+                        signaturePrintContainer.classList.add("hidden");
+                    }
+
+                    calculateInvoice();
+                    showToast("Restored saved invoice details.", "success");
+                } catch(e) {
+                    console.error("Restore Error:", e);
+                    showToast("Failed to restore cached invoice details.", "error");
+                }
+            });
+
+            resetInvoiceBtn.addEventListener("click", () => {
+                if (confirm("Reset current entries and logo files?")) {
+                    location.reload();
+                }
+            });
+
+            // Action Triggers: PDF download
+            downloadPdfBtn.addEventListener("click", async () => {
+                updatePrintValues();
+                document.querySelector(".print-table").style.display = "table";
+
+                const element = document.getElementById("invoice-sheet");
+                element.classList.add("pdf-mode");
+
+                const opt = {
+                    margin: 0,
+                    filename: `invoice_${document.getElementById("invoiceNo").value}.pdf`,
+                    image: { type: "jpeg", quality: 1.0 },
+                    html2canvas: { 
+                        scale: 4, // 4x scale for crisp print quality
+                        letterRendering: true, 
+                        useCORS: true,
+                        scrollY: 0,
+                        scrollX: 0
+                    },
+                    jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+                };
+
+                try {
+                    showToast("Generating high-res A4 PDF document...", "info");
+                    await html2pdf().set(opt).from(element).save();
+                    showToast("PDF document downloaded successfully.", "success");
+                } catch (err) {
+                    console.error("PDF Compilation Error:", err);
+                    showToast("Failed to download PDF. Try using print menu instead.", "error");
+                } finally {
+                    element.classList.remove("pdf-mode");
+                    document.querySelector(".print-table").style.display = "none";
+                }
+            });
+
+            // Action Triggers: Print
+            printBtn.addEventListener("click", () => {
+                updatePrintValues();
+                // Temporarily force print table visible (for print preview rendering)
+                document.querySelector(".print-table").style.display = "table";
+                window.print();
+                setTimeout(() => {
+                    document.querySelector(".print-table").style.display = "none";
+                }, 1000);
+            });
+
+            // Action Triggers: PNG download
+            downloadPngBtn.addEventListener("click", () => {
+                showToast("Generating image download...", "info");
+                const element = document.getElementById("invoice-sheet");
+                
+                // Show print table temporarily to snap clean text rows
+                document.querySelector(".print-table").style.display = "table";
+                
+                html2canvas(element, {
+                    scale: 3,
+                    useCORS: true,
+                    backgroundColor: "#ffffff",
+                    logging: false
+                }).then(canvas => {
+                    const link = document.createElement("a");
+                    link.download = `invoice_${document.getElementById("invoiceNo").value}.png`;
+                    link.href = canvas.toDataURL("image/png");
+                    link.click();
+                    showToast("PNG downloaded successfully.", "success");
+                    document.querySelector(".print-table").style.display = "none";
+                }).catch(e => {
+                    console.error(e);
+                    showToast("Failed to compile image download.", "error");
+                    document.querySelector(".print-table").style.display = "none";
+                });
+            });
+
+            // Action Triggers: Share to WhatsApp
+            shareWhatsAppBtn.addEventListener("click", () => {
+                const invNo = document.getElementById("invoiceNo").value;
+                const total = totalEl.innerText;
+                const shop = document.getElementById("businessName").innerText;
+                const client = document.getElementById("customerName").value || "Client";
+                const message = `Hello ${client},\nHere is the billing invoice detail from *${shop}*:\nInvoice No: *${invNo}*\nGrand Total: *${total}*\nThank you for choosing our service!`;
+                
+                window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank");
+            });
+
+            // Init call additions
+            addBillingRow("Online Application Form Charge", 150, 1, 18);
+            addBillingRow("High Quality PVC Card Printing", 70, 2, 18);
+        });
+    </script>
+</body>
+</html>

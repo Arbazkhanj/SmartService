@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo & Signature Joiner - SmartService</title>
+    <link rel="stylesheet" href="assets/css/global.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        .joiner-grid {
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 32px;
+            margin-top: 32px;
+        }
+
+        .settings-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            padding: 32px;
+            box-shadow: var(--shadow-md);
+            height: fit-content;
+        }
+
+        .preview-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            padding: 32px;
+            box-shadow: var(--shadow-md);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .canvas-box {
+            background: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 24px;
+            width: 100%;
+            min-height: 480px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        #renderCanvas {
+            box-shadow: var(--shadow-md);
+            background: white;
+        }
+
+        .upload-row {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .upload-slot {
+            border: 2px dashed var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            background: var(--bg-light);
+            transition: var(--transition-fast);
+        }
+        .upload-slot:hover {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+    </style>
+</head>
+<body style="padding-top: 70px;">
+    <site-header></site-header>
+
+    <main class="container section-padding" style="padding-top: 20px;">
+        <!-- Header -->
+        <div style="margin-bottom: 24px;">
+            <a href="index.html" style="color: var(--primary); font-weight: 600;"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+            <h1 style="font-size: 2.2rem; margin-top: 12px; color: var(--text-main);"><i class="fas fa-link mr-2 text-primary"></i>Photo & Signature Joiner</h1>
+            <p style="color: var(--text-muted);">Combine passport photos and sign captures vertically for online government exam submissions.</p>
+        </div>
+
+        <div class="joiner-grid">
+            <!-- Left Side: Custom Settings -->
+            <div class="settings-card fade-in">
+                <h3 style="font-size: 1.1rem; margin-bottom: 20px; color: var(--text-main);">Upload Files</h3>
+                
+                <div class="upload-row">
+                    <!-- Photo slot -->
+                    <input type="file" id="photoFile" accept="image/*" style="display: none;">
+                    <div class="upload-slot" onclick="document.getElementById('photoFile').click()">
+                        <i class="fas fa-user-circle" style="font-size: 1.5rem; color: var(--text-light); margin-bottom: 6px; display: block;"></i>
+                        <span id="lblPhoto">Select Photo</span>
+                    </div>
+
+                    <!-- Sign slot -->
+                    <input type="file" id="signFile" accept="image/*" style="display: none;">
+                    <div class="upload-slot" onclick="document.getElementById('signFile').click()">
+                        <i class="fas fa-file-signature" style="font-size: 1.5rem; color: var(--text-light); margin-bottom: 6px; display: block;"></i>
+                        <span id="lblSign">Select Signature</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="borderPadding">Border Padding (px)</label>
+                    <input type="number" id="borderPadding" class="form-control" value="10">
+                </div>
+            </div>
+
+            <!-- Right Side: Preview & Action -->
+            <div class="preview-card fade-in" style="animation-delay: 0.1s;">
+                <h3 style="font-size: 1.1rem; margin-bottom: 24px; color: var(--text-main); align-self: flex-start;">Live Output Preview</h3>
+                
+                <div class="canvas-box">
+                    <canvas id="renderCanvas"></canvas>
+                </div>
+
+                <button id="btnDownload" class="btn btn-success" style="width: 100%; font-size: 1.05rem;" disabled>
+                    <i class="fas fa-download"></i> Combine & Download JPEG
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <site-footer></site-footer>
+
+    <script src="assets/js/components.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const photoFile = document.getElementById("photoFile");
+            const signFile = document.getElementById("signFile");
+            const borderPadding = document.getElementById("borderPadding");
+            const renderCanvas = document.getElementById("renderCanvas");
+            const btnDownload = document.getElementById("btnDownload");
+
+            const ctx = renderCanvas.getContext("2d");
+
+            renderCanvas.width = 350;
+            renderCanvas.height = 450;
+
+            let photoImg = null;
+            let signImg = null;
+
+            function stitchImages() {
+                // Clear and paint base sheet
+                ctx.fillStyle = "#ffffff";
+                ctx.fillRect(0, 0, 350, 450);
+
+                const pad = parseInt(borderPadding.value) || 10;
+                
+                // Draw borders
+                ctx.strokeStyle = "#cbd5e1";
+                ctx.lineWidth = 2;
+                ctx.strokeRect(pad, pad, 350 - (pad * 2), 450 - (pad * 2));
+
+                // Draw section divider line
+                ctx.beginPath();
+                ctx.moveTo(pad, 310);
+                ctx.lineTo(350 - pad, 310);
+                ctx.stroke();
+
+                // Draw items
+                if (photoImg) {
+                    ctx.drawImage(photoImg, pad + 10, pad + 10, 350 - (pad * 2) - 20, 290 - pad - 10);
+                } else {
+                    ctx.fillStyle = "#94a3b8";
+                    ctx.font = "14px 'Plus Jakarta Sans'";
+                    ctx.textAlign = "center";
+                    ctx.fillText("Passport Photo Here", 175, 160);
+                }
+
+                if (signImg) {
+                    ctx.drawImage(signImg, pad + 10, 320, 350 - (pad * 2) - 20, 120 - pad - 10);
+                } else {
+                    ctx.fillStyle = "#94a3b8";
+                    ctx.font = "14px 'Plus Jakarta Sans'";
+                    ctx.textAlign = "center";
+                    ctx.fillText("Signature Here", 175, 380);
+                }
+            }
+
+            photoFile.addEventListener("change", (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        photoImg = new Image();
+                        photoImg.onload = () => {
+                            document.getElementById("lblPhoto").innerText = "Photo Loaded";
+                            stitchImages();
+                            checkBtnState();
+                        };
+                        photoImg.src = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            signFile.addEventListener("change", (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        signImg = new Image();
+                        signImg.onload = () => {
+                            document.getElementById("lblSign").innerText = "Signature Loaded";
+                            stitchImages();
+                            checkBtnState();
+                        };
+                        signImg.src = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            borderPadding.addEventListener("input", stitchImages);
+
+            function checkBtnState() {
+                if (photoImg || signImg) {
+                    btnDownload.removeAttribute("disabled");
+                }
+            }
+
+            btnDownload.addEventListener("click", () => {
+                const url = renderCanvas.toDataURL("image/jpeg");
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `smartservice_joined_${Date.now()}.jpg`;
+                a.click();
+                showToast("Joined file downloaded successfully.", "success");
+            });
+
+            stitchImages();
+        });
+    </script>
+</body>
+</html>

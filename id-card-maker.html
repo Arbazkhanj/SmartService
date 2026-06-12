@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart ID Card & Admit Card Creator - SmartService</title>
+    <link rel="stylesheet" href="assets/css/global.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .id-layout {
+            display: grid;
+            grid-template-columns: 1fr 1.1fr;
+            gap: 32px;
+            margin-top: 24px;
+        }
+        
+        /* Card Design System */
+        .card-preview-container {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            align-items: center;
+            background: #475569;
+            padding: 32px 16px;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+        }
+        
+        /* ID Card standard size: 85.6mm x 54mm (~324px x 204px) or scale up to 340px x 215px */
+        .id-card-element {
+            width: 330px;
+            height: 210px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
+            display: grid;
+            grid-template-rows: 45px 1fr 20px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: #0f172a;
+            border: 1px solid #cbd5e1;
+        }
+        .id-card-header {
+            background: var(--primary);
+            color: white;
+            padding: 4px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .id-card-header h4 {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            font-weight: 800;
+            color: white;
+            line-height: 1.1;
+        }
+        .id-card-body {
+            padding: 10px 12px;
+            display: grid;
+            grid-template-columns: 75px 1fr;
+            gap: 12px;
+            align-items: center;
+        }
+        .id-photo-box {
+            width: 75px;
+            height: 90px;
+            border: 2px solid var(--border-color);
+            background: #f1f5f9;
+            border-radius: 4px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .id-photo-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .id-details-box {
+            font-size: 0.75rem;
+            line-height: 1.4;
+        }
+        .id-detail-line {
+            display: flex;
+            margin-bottom: 2px;
+        }
+        .id-detail-label {
+            width: 60px;
+            font-weight: bold;
+            color: var(--text-muted);
+        }
+        .id-detail-val {
+            flex: 1;
+            font-weight: 600;
+        }
+        .id-card-footer {
+            background: #f1f5f9;
+            font-size: 0.65rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        /* Barcode SVG scaling */
+        .id-barcode-svg {
+            width: 100%;
+            height: 25px;
+            max-height: 25px;
+        }
+        
+        /* Admit Card Formats */
+        .admit-card-element {
+            width: 100%;
+            max-width: 500px;
+            background: white;
+            border: 2px solid #000;
+            padding: 16px;
+            font-family: Arial, sans-serif;
+            color: black;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        
+        @media (max-width: 992px) {
+            .id-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* Print media styles */
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 0;
+            }
+            body, html {
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            body * {
+                visibility: hidden;
+            }
+            #printGridContainer, #printGridContainer * {
+                visibility: visible;
+            }
+            #printGridContainer {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 210mm !important;
+                display: grid !important;
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 15px !important;
+                padding: 10mm !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body style="padding-top: 70px;">
+    <site-header></site-header>
+
+    <main class="container section-padding no-print" style="padding-top: 20px;">
+        <div style="margin-bottom: 24px;">
+            <a href="index.html" style="color: var(--primary); font-weight: 600;"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+            <h1 style="font-size: 2.2rem; margin-top: 12px; color: var(--text-main);"><i class="fas fa-address-card mr-2 text-primary"></i> ID &amp; Admit Card Maker</h1>
+            <p style="color: var(--text-muted);">Create employee badges, student ID cards, barcodes, and print-ready A4 admit papers locally.</p>
+        </div>
+
+        <!-- Mode Selector -->
+        <div class="card" style="padding: 16px; margin-bottom: 24px; display: flex; gap: 16px;">
+            <button class="btn btn-primary" id="modeIdBtn"><i class="fas fa-id-card"></i> Student &amp; Employee ID Maker</button>
+            <button class="btn btn-secondary" id="modeAdmitBtn"><i class="fas fa-file-invoice"></i> Admit Card Manager</button>
+        </div>
+
+        <div class="id-layout">
+            
+            <!-- FORM CONTROLS PANEL -->
+            <div class="control-group" id="idCardFormPanel">
+                <h3 style="font-size: 1.15rem; margin-bottom: 16px;">Card Settings</h3>
+                
+                <div class="form-group">
+                    <label class="form-label">Card Theme Color</label>
+                    <select class="form-control" id="cardTheme">
+                        <option value="#2563eb">Classic Corporate Blue</option>
+                        <option value="#10b981">Institution Green</option>
+                        <option value="#dc2626">Critical Operations Red</option>
+                        <option value="#8b5cf6">Creative Agency Purple</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="control-label">Institution Name</label>
+                    <input type="text" class="form-control" id="instName" value="D.A.V. PUBLIC SCHOOL, INDORE">
+                </div>
+
+                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div>
+                        <label class="control-label">Card Holder Name</label>
+                        <input type="text" class="form-control" id="holderName" value="Aditya Verma">
+                    </div>
+                    <div>
+                        <label class="control-label">Card Type/Role</label>
+                        <input type="text" class="form-control" id="holderRole" value="STUDENT">
+                    </div>
+                </div>
+
+                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div>
+                        <label class="control-label">ID / Roll No</label>
+                        <input type="text" class="form-control" id="holderId" value="DAV-2026-9812">
+                    </div>
+                    <div>
+                        <label class="control-label">Father's Name</label>
+                        <input type="text" class="form-control" id="holderFather" value="Shri R. K. Verma">
+                    </div>
+                </div>
+
+                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div>
+                        <label class="control-label">Designation / Class</label>
+                        <input type="text" class="form-control" id="holderClass" value="Class XI - B">
+                    </div>
+                    <div>
+                        <label class="control-label">Mobile Number</label>
+                        <input type="text" class="form-control" id="holderPhone" value="+91 9893098930">
+                    </div>
+                </div>
+
+                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div>
+                        <label class="control-label">Validity/Expiry</label>
+                        <input type="text" class="form-control" id="holderValidity" value="March 2028">
+                    </div>
+                    <div>
+                        <label class="control-label">Upload Photo</label>
+                        <input type="file" id="holderPhoto" class="form-control" accept="image/*">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="control-label">Barcode Value (Numeric/Alpha)</label>
+                    <input type="text" class="form-control" id="barcodeVal" value="9812DAV2026">
+                </div>
+
+                <button class="btn btn-primary" style="width: 100%;" onclick="window.print()"><i class="fas fa-print"></i> Print Grid A4</button>
+            </div>
+
+            <!-- ADMIT CARD FORM PANEL -->
+            <div class="control-group" id="admitCardFormPanel" style="display: none;">
+                <h3 style="font-size: 1.15rem; margin-bottom: 16px;">Admit Card Details</h3>
+                
+                <div class="form-group">
+                    <label class="control-label">Examination Name</label>
+                    <input type="text" class="form-control" id="admExamName" value="SECONDARY SCHOOL TERM-I EXAM 2026">
+                </div>
+
+                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div>
+                        <label class="control-label">Student Name</label>
+                        <input type="text" class="form-control" id="admName" value="RAHUL SHARMA">
+                    </div>
+                    <div>
+                        <label class="control-label">Roll Number</label>
+                        <input type="text" class="form-control" id="admRoll" value="261092812">
+                    </div>
+                </div>
+
+                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div>
+                        <label class="control-label">Exam Center</label>
+                        <input type="text" class="form-control" id="admCenter" value="GOVT BOYS H.S. SCHOOL, SEC-B INDORE">
+                    </div>
+                    <div>
+                        <label class="control-label">Father's Name</label>
+                        <input type="text" class="form-control" id="admFather" value="SHRI DEVENDRA SHARMA">
+                    </div>
+                </div>
+
+                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div>
+                        <label class="control-label">Photo Upload</label>
+                        <input type="file" id="admPhoto" class="form-control" accept="image/*">
+                    </div>
+                    <div>
+                        <label class="control-label">Signature Upload</label>
+                        <input type="file" id="admSign" class="form-control" accept="image/*">
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" style="width: 100%;" onclick="window.print()"><i class="fas fa-print"></i> Print Admit A4</button>
+            </div>
+
+            <!-- LIVE PREVIEWS PANEL -->
+            <div class="card-preview-container">
+                <!-- ID CARD PREVIEW MODE -->
+                <div id="idCardPreviewZone" style="display: flex; flex-direction: column; gap: 20px; align-items: center;">
+                    <h4 style="color: white; opacity: 0.8; font-size: 0.9rem;">FRONT SIDE PREVIEW</h4>
+                    <!-- Card Front -->
+                    <div class="id-card-element" id="idCardFront">
+                        <div class="id-card-header" id="idHeaderBg">
+                            <h4 id="pInstName">D.A.V. Public School, Indore</h4>
+                            <i class="fas fa-graduation-cap"></i>
+                        </div>
+                        <div class="id-card-body">
+                            <div class="id-photo-box">
+                                <img id="pPhoto" src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=150&q=80" alt="Cardholder">
+                            </div>
+                            <div class="id-details-box">
+                                <h3 style="font-size: 0.95rem; font-weight: 800; margin-bottom: 4px; color: var(--primary);" id="pHolderName">Aditya Verma</h3>
+                                <div class="id-detail-line"><span class="id-detail-label">Role:</span><span class="id-detail-val" id="pHolderRole">STUDENT</span></div>
+                                <div class="id-detail-line"><span class="id-detail-label">ID No:</span><span class="id-detail-val" id="pHolderId">DAV-2026-9812</span></div>
+                                <div class="id-detail-line"><span class="id-detail-label">Father:</span><span class="id-detail-val" id="pHolderFather">Shri R. K. Verma</span></div>
+                                <div class="id-detail-line"><span class="id-detail-label">Class:</span><span class="id-detail-val" id="pHolderClass">Class XI - B</span></div>
+                            </div>
+                        </div>
+                        <div class="id-card-footer">
+                            Validity Expiry: &nbsp; <span id="pHolderValidity">March 2028</span>
+                        </div>
+                    </div>
+
+                    <!-- Card Back -->
+                    <h4 style="color: white; opacity: 0.8; font-size: 0.9rem; margin-top: 16px;">BACK SIDE PREVIEW</h4>
+                    <div class="id-card-element" id="idCardBack" style="grid-template-rows: 40px 1fr 20px;">
+                        <div class="id-card-header" id="idHeaderBgBack" style="justify-content: center; height: 40px;">
+                            <h4 style="font-size: 0.75rem;">GENERAL INSTRUCTIONS</h4>
+                        </div>
+                        <div style="padding: 12px; display: flex; flex-direction: column; justify-content: space-between; height: 100%;">
+                            <ol style="font-size: 0.6rem; margin-left: 14px; line-height: 1.4; color: var(--text-muted);">
+                                <li>This identity badge is non-transferable.</li>
+                                <li>Always wear card visibly while inside campus premises.</li>
+                                <li>Loss of badge must be reported immediately to administrative office.</li>
+                            </ol>
+                            <!-- Barcode -->
+                            <div style="text-align: center; margin-top: 8px;">
+                                <svg class="id-barcode-svg" id="barcodeSvg"></svg>
+                                <div style="font-size: 0.55rem; font-weight: bold; letter-spacing: 1px; margin-top: 2px;" id="barcodeText">9812DAV2026</div>
+                            </div>
+                        </div>
+                        <div class="id-card-footer" style="font-size: 0.6rem;">
+                            Contact Mobile No: &nbsp; <span id="pHolderPhone">+91 9893098930</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ADMIT CARD PREVIEW MODE -->
+                <div id="admitCardPreviewZone" style="display: none; width: 100%;">
+                    <h4 style="color: white; opacity: 0.8; font-size: 0.9rem; text-align: center; margin-bottom: 12px;">ADMIT SHEET PREVIEW</h4>
+                    
+                    <div class="admit-card-element" id="admitCardSheet">
+                        <div style="border-bottom: 2px solid #000; text-align: center; padding-bottom: 8px; margin-bottom: 16px;">
+                            <h2 style="font-size: 14px; font-weight: bold; text-transform: uppercase;">BOARD EXAMINATIONS AUTHORITY</h2>
+                            <h3 style="font-size: 12px; font-weight: bold; margin-top: 4px;" id="padmExamName">SECONDARY SCHOOL TERM-I EXAM 2026</h3>
+                            <h4 style="font-size: 11px; font-weight: bold; color: #555;">ADMIT CARD / ENTRY PASS</h4>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 100px; gap: 16px; align-items: start;">
+                            <div style="font-size: 11px; line-height: 1.6;">
+                                <div style="display: flex;"><span style="width: 100px; font-weight: bold;">Candidate Name:</span><span id="padmName" style="text-transform: uppercase;">RAHUL SHARMA</span></div>
+                                <div style="display: flex;"><span style="width: 100px; font-weight: bold;">Roll Number:</span><span id="padmRoll" style="font-weight: bold;">261092812</span></div>
+                                <div style="display: flex;"><span style="width: 100px; font-weight: bold;">Father's Name:</span><span id="padmFather" style="text-transform: uppercase;">SHRI DEVENDRA SHARMA</span></div>
+                                <div style="display: flex;"><span style="width: 100px; font-weight: bold;">Exam Center:</span><span id="padmCenter" style="font-weight: bold;">GOVT BOYS H.S. SCHOOL, SEC-B INDORE</span></div>
+                            </div>
+                            <!-- Candidate Photo -->
+                            <div style="border: 1px solid #000; width: 100px; height: 120px; display: flex; align-items: center; justify-content: center; background: #eee; overflow: hidden;">
+                                <img id="pAdmPhoto" src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=150&q=80" style="width: 100%; height: 100%; object-fit: cover;">
+                            </div>
+                        </div>
+
+                        <!-- Time Table Grid -->
+                        <table style="width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 10px; text-align: left;">
+                            <thead>
+                                <tr style="border-bottom: 1.5px solid #000;">
+                                    <th style="padding: 4px; font-weight: bold;">Date</th>
+                                    <th style="padding: 4px; font-weight: bold;">Subject Code</th>
+                                    <th style="padding: 4px; font-weight: bold;">Subject Name</th>
+                                    <th style="padding: 4px; font-weight: bold;">Timing</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="border-bottom: 1px solid #ddd;">
+                                    <td style="padding: 4px;">15-09-2026</td>
+                                    <td style="padding: 4px;">084</td>
+                                    <td style="padding: 4px;">Science & Technology</td>
+                                    <td style="padding: 4px;">09:00 AM - 12:00 PM</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid #ddd;">
+                                    <td style="padding: 4px;">18-09-2026</td>
+                                    <td style="padding: 4px;">087</td>
+                                    <td style="padding: 4px;">Social Studies</td>
+                                    <td style="padding: 4px;">09:00 AM - 12:00 PM</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid #ddd;">
+                                    <td style="padding: 4px;">22-09-2026</td>
+                                    <td style="padding: 4px;">041</td>
+                                    <td style="padding: 4px;">Mathematics</td>
+                                    <td style="padding: 4px;">09:00 AM - 12:00 PM</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div style="margin-top: 24px; display: flex; justify-content: space-between; align-items: flex-end;">
+                            <div style="font-size: 9px; line-height: 1.4; max-width: 60%;">
+                                <strong>Instructions:</strong><br>
+                                1. Report to center 30 mins before timing.<br>
+                                2. Bring valid government ID card alongside admit print.
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="border: 1px solid #ddd; width: 100px; height: 35px; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #fafafa;">
+                                    <img id="pAdmSign" src="https://images.unsplash.com/photo-1598257006458-087169a1f08d?auto=format&fit=crop&w=100&q=50" style="width: 100%; height: 100%; object-fit: contain;">
+                                </div>
+                                <span style="font-size: 8px; font-weight: bold; display: block; margin-top: 4px;">AUTHORIZED SIGNATURE</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- HIDDEN GRID LAYOUT AREA FOR PRINT CONTEXTS -->
+    <div id="printGridContainer" style="display: none;">
+        <!-- Filled dynamically inside print commands -->
+    </div>
+
+    <site-footer></site-footer>
+
+    <!-- Load JsBarcode for client-side barcode creation -->
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <script src="assets/js/components.js"></script>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // Mode switching
+            const modeIdBtn = document.getElementById("modeIdBtn");
+            const modeAdmitBtn = document.getElementById("modeAdmitBtn");
+            
+            const idCardFormPanel = document.getElementById("idCardFormPanel");
+            const admitCardFormPanel = document.getElementById("admitCardFormPanel");
+
+            const idCardPreviewZone = document.getElementById("idCardPreviewZone");
+            const admitCardPreviewZone = document.getElementById("admitCardPreviewZone");
+
+            // Parse tab from URL param
+            const urlParams = new URLSearchParams(window.location.search);
+            const tabParam = urlParams.get('tab');
+            if (tabParam === 'admit') {
+                modeIdBtn.className = "btn btn-secondary";
+                modeAdmitBtn.className = "btn btn-primary";
+                idCardFormPanel.style.display = "none";
+                admitCardFormPanel.style.display = "block";
+                idCardPreviewZone.style.display = "none";
+                admitCardPreviewZone.style.display = "block";
+            }
+
+            modeIdBtn.addEventListener("click", () => {
+                modeIdBtn.className = "btn btn-primary";
+                modeAdmitBtn.className = "btn btn-secondary";
+                idCardFormPanel.style.display = "block";
+                admitCardFormPanel.style.display = "none";
+                idCardPreviewZone.style.display = "flex";
+                admitCardPreviewZone.style.display = "none";
+            });
+
+            modeAdmitBtn.addEventListener("click", () => {
+                modeIdBtn.className = "btn btn-secondary";
+                modeAdmitBtn.className = "btn btn-primary";
+                idCardFormPanel.style.display = "none";
+                admitCardFormPanel.style.display = "block";
+                idCardPreviewZone.style.display = "none";
+                admitCardPreviewZone.style.display = "block";
+            });
+
+            // Handle live card content updates
+            const cardTheme = document.getElementById("cardTheme");
+            const instName = document.getElementById("instName");
+            const holderName = document.getElementById("holderName");
+            const holderRole = document.getElementById("holderRole");
+            const holderId = document.getElementById("holderId");
+            const holderFather = document.getElementById("holderFather");
+            const holderClass = document.getElementById("holderClass");
+            const holderPhone = document.getElementById("holderPhone");
+            const holderValidity = document.getElementById("holderValidity");
+            const barcodeVal = document.getElementById("barcodeVal");
+
+            function updateIdCard() {
+                document.getElementById("pInstName").innerText = instName.value;
+                document.getElementById("pHolderName").innerText = holderName.value;
+                document.getElementById("pHolderRole").innerText = holderRole.value;
+                document.getElementById("pHolderId").innerText = holderId.value;
+                document.getElementById("pHolderFather").innerText = holderFather.value;
+                document.getElementById("pHolderClass").innerText = holderClass.value;
+                document.getElementById("pHolderValidity").innerText = holderValidity.value;
+                document.getElementById("pHolderPhone").innerText = holderPhone.value;
+
+                // Color Themes
+                const themeColor = cardTheme.value;
+                document.getElementById("idHeaderBg").style.backgroundColor = themeColor;
+                document.getElementById("idHeaderBgBack").style.backgroundColor = themeColor;
+                document.getElementById("pHolderName").style.color = themeColor;
+
+                // Barcode generation using CDN
+                try {
+                    JsBarcode("#barcodeSvg", barcodeVal.value, {
+                        format: "CODE128",
+                        width: 1.5,
+                        height: 25,
+                        displayValue: false
+                    });
+                    document.getElementById("barcodeText").innerText = barcodeVal.value;
+                } catch(e) {
+                    console.error("Barcode generation error", e);
+                }
+            }
+
+            [cardTheme, instName, holderName, holderRole, holderId, holderFather, holderClass, holderPhone, holderValidity, barcodeVal].forEach(el => {
+                el.addEventListener("input", updateIdCard);
+                el.addEventListener("change", updateIdCard);
+            });
+
+            // Initial Card rendering
+            updateIdCard();
+
+            // Handle Photo upload for ID card
+            document.getElementById("holderPhoto").addEventListener("change", (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        document.getElementById("pPhoto").src = event.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // --- ADMIT CARD CONTROLS ---
+            const admExamName = document.getElementById("admExamName");
+            const admName = document.getElementById("admName");
+            const admRoll = document.getElementById("admRoll");
+            const admCenter = document.getElementById("admCenter");
+            const admFather = document.getElementById("admFather");
+
+            function updateAdmitCard() {
+                document.getElementById("padmExamName").innerText = admExamName.value;
+                document.getElementById("padmName").innerText = admName.value;
+                document.getElementById("padmRoll").innerText = admRoll.value;
+                document.getElementById("padmCenter").innerText = admCenter.value;
+                document.getElementById("padmFather").innerText = admFather.value;
+            }
+
+            [admExamName, admName, admRoll, admCenter, admFather].forEach(el => {
+                el.addEventListener("input", updateAdmitCard);
+            });
+
+            // Handle Photos upload for Admit Card
+            document.getElementById("admPhoto").addEventListener("change", (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        document.getElementById("pAdmPhoto").src = event.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            document.getElementById("admSign").addEventListener("change", (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        document.getElementById("pAdmSign").src = event.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // --- PRINT LAYOUT INJECTOR ---
+            window.onbeforeprint = () => {
+                // Populate printGridContainer dynamically based on active mode
+                const printZone = document.getElementById("printGridContainer");
+                printZone.innerHTML = "";
+
+                if (idCardPreviewZone.style.display !== "none") {
+                    // print ID cards (front & back next to each other)
+                    const frontClone = document.getElementById("idCardFront").cloneNode(true);
+                    const backClone = document.getElementById("idCardBack").cloneNode(true);
+                    frontClone.style.boxShadow = "none";
+                    backClone.style.boxShadow = "none";
+                    printZone.appendChild(frontClone);
+                    printZone.appendChild(backClone);
+                } else {
+                    // print Admit Card
+                    const admitClone = document.getElementById("admitCardSheet").cloneNode(true);
+                    admitClone.style.boxShadow = "none";
+                    admitClone.style.border = "none";
+                    printZone.appendChild(admitClone);
+                }
+            };
+        });
+    </script>
+</body>
+</html>

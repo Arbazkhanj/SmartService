@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Resizer & Compressor - SmartService</title>
+    <link rel="stylesheet" href="assets/css/global.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        .resizer-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+            margin-top: 40px;
+        }
+        
+        .upload-panel {
+            background: white;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            padding: 32px;
+            box-shadow: var(--shadow-md);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 350px;
+            cursor: pointer;
+            transition: var(--transition-fast);
+        }
+        .upload-panel:hover {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+        .upload-panel i {
+            font-size: 3.5rem;
+            color: var(--text-light);
+            margin-bottom: 20px;
+        }
+
+        .settings-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            padding: 32px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .preview-box {
+            background: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 250px;
+            max-height: 350px;
+            overflow: hidden;
+            position: relative;
+            margin-bottom: 24px;
+        }
+        .preview-img {
+            max-width: 100%;
+            max-height: 300px;
+            object-fit: contain;
+            box-shadow: var(--shadow-md);
+        }
+
+        .presets-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .preset-btn {
+            background: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            text-align: center;
+            transition: var(--transition-fast);
+        }
+        .preset-btn:hover {
+            background: var(--primary-light);
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .resizer-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .aspect-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            margin-top: -12px;
+            margin-bottom: 20px;
+        }
+        .aspect-checkbox input {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body style="padding-top: 70px;">
+    <site-header></site-header>
+
+    <main class="container section-padding" style="padding-top: 20px;">
+        <!-- Header -->
+        <div style="margin-bottom: 24px;">
+            <a href="index.html" style="color: var(--primary); font-weight: 600;"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+            <h1 style="font-size: 2.2rem; margin-top: 12px; color: var(--text-main);"><i class="fas fa-compress-arrows-alt mr-2 text-primary"></i>Image Resizer & Compressor</h1>
+            <p style="color: var(--text-muted);">Crop, resize and compress your photo or signature to specific file sizes (20KB, 50KB).</p>
+        </div>
+
+        <div class="resizer-grid">
+            <!-- Left Side - Upload or Preview -->
+            <div>
+                <input type="file" id="imageInput" accept="image/*" style="display: none;">
+                
+                <!-- Upload Slot -->
+                <div class="upload-panel" id="uploadSlot" onclick="document.getElementById('imageInput').click()">
+                    <i class="fas fa-images"></i>
+                    <h3>Select or Drag Image Here</h3>
+                    <p style="color: var(--text-light); margin-top: 8px;">Supports JPG, JPEG, PNG (Max 10MB)</p>
+                </div>
+
+                <!-- Preview Box (Hidden initially) -->
+                <div id="previewCard" style="display: none; background: white; border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow-md);">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 16px; color: var(--text-main);">Image Preview</h3>
+                    <div class="preview-box">
+                        <img src="" id="imgPreview" class="preview-img">
+                    </div>
+                    <!-- File info details -->
+                    <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">
+                        <div>Original Size: <span id="origSize" style="color: var(--text-main);">0 KB</span></div>
+                        <div>Original Pixels: <span id="origDimensions" style="color: var(--text-main);">0 x 0 px</span></div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-top: 8px;">
+                        <div>Output Size: <span id="outSize" style="color: var(--primary);">0 KB</span></div>
+                        <div>Output Pixels: <span id="outDimensions" style="color: var(--primary);">0 x 0 px</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side - Settings -->
+            <div class="settings-card">
+                <h3 style="font-size: 1.1rem; margin-bottom: 24px; color: var(--text-main);">Resize & Compress Settings</h3>
+                
+                <!-- Quick Indian Form Presets -->
+                <label class="form-label">Sarkari Presets</label>
+                <div class="presets-row">
+                    <button class="preset-btn" id="presetPassport">
+                        <i class="fas fa-user-tie"></i> Passport Photo<br>
+                        <span style="font-size: 0.75rem; font-weight: normal; color: var(--text-light);">350 x 450 px | &lt;50KB</span>
+                    </button>
+                    <button class="preset-btn" id="presetSignature">
+                        <i class="fas fa-signature"></i> Signature Resize<br>
+                        <span style="font-size: 0.75rem; font-weight: normal; color: var(--text-light);">140 x 60 px | &lt;20KB</span>
+                    </button>
+                </div>
+
+                <!-- Custom Width & Height -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label class="form-label" for="resizeWidth">Width (px)</label>
+                        <input type="number" id="resizeWidth" class="form-control" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="resizeHeight">Height (px)</label>
+                        <input type="number" id="resizeHeight" class="form-control" value="0">
+                    </div>
+                </div>
+
+                <label class="aspect-checkbox">
+                    <input type="checkbox" id="maintainAspect" checked> Maintain Aspect Ratio
+                </label>
+
+                <!-- Compress Size target -->
+                <div class="form-group">
+                    <label class="form-label" for="targetKb">Target File Size (Max KB Limit)</label>
+                    <input type="number" id="targetKb" class="form-control" value="50" placeholder="e.g. 20 or 50">
+                    <p style="font-size: 0.75rem; color: var(--text-light); margin-top: 6px;">
+                        Leave blank to compress by standard quality. Enter e.g. <strong>20</strong> to enforce output under 20KB.
+                    </p>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="compressQuality">Compression Quality</label>
+                    <input type="range" id="compressQuality" class="custom-slider" min="10" max="100" value="85">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.75rem; margin-top: 4px; color: var(--text-light);">
+                        <span>10% (High Compress)</span>
+                        <span id="qualityLabel" style="font-weight: 600; color: var(--primary);">85%</span>
+                        <span>100% (High Quality)</span>
+                    </div>
+                </div>
+
+                <!-- Download CTA -->
+                <button id="btnDownload" class="btn btn-success" style="width: 100%; font-size: 1.05rem; margin-top: 16px;" disabled>
+                    <i class="fas fa-download"></i> Compress & Download
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <site-footer></site-footer>
+
+    <script src="assets/js/components.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const imageInput = document.getElementById("imageInput");
+            const uploadSlot = document.getElementById("uploadSlot");
+            const previewCard = document.getElementById("previewCard");
+            const imgPreview = document.getElementById("imgPreview");
+            
+            const origSize = document.getElementById("origSize");
+            const origDimensions = document.getElementById("origDimensions");
+            const outSize = document.getElementById("outSize");
+            const outDimensions = document.getElementById("outDimensions");
+
+            const resizeWidth = document.getElementById("resizeWidth");
+            const resizeHeight = document.getElementById("resizeHeight");
+            const maintainAspect = document.getElementById("maintainAspect");
+            const targetKb = document.getElementById("targetKb");
+            const compressQuality = document.getElementById("compressQuality");
+            const qualityLabel = document.getElementById("qualityLabel");
+
+            const presetPassport = document.getElementById("presetPassport");
+            const presetSignature = document.getElementById("presetSignature");
+            const btnDownload = document.getElementById("btnDownload");
+
+            let originalImg = null; // Image object
+            let originalBytes = 0;
+            let originalWidth = 0;
+            let originalHeight = 0;
+            let mimeType = "image/jpeg";
+
+            // Click file loading
+            imageInput.addEventListener("change", handleFileSelect);
+            
+            // Drag and drop events
+            uploadSlot.addEventListener("dragover", (e) => { e.preventDefault(); uploadSlot.style.borderColor = "var(--primary)"; });
+            uploadSlot.addEventListener("dragleave", () => { uploadSlot.style.borderColor = "var(--border-color)"; });
+            uploadSlot.addEventListener("drop", (e) => {
+                e.preventDefault();
+                uploadSlot.style.borderColor = "var(--border-color)";
+                if (e.dataTransfer.files.length > 0) {
+                    imageInput.files = e.dataTransfer.files;
+                    handleFileSelect();
+                }
+            });
+
+            function handleFileSelect() {
+                const file = imageInput.files[0];
+                if (!file) return;
+
+                originalBytes = file.size;
+                mimeType = file.type;
+                
+                // Show values
+                origSize.innerText = `${(originalBytes / 1024).toFixed(1)} KB`;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    originalImg = new Image();
+                    originalImg.onload = () => {
+                        originalWidth = originalImg.width;
+                        originalHeight = originalImg.height;
+
+                        origDimensions.innerText = `${originalWidth} x ${originalHeight} px`;
+                        
+                        // Set fields
+                        resizeWidth.value = originalWidth;
+                        resizeHeight.value = originalHeight;
+
+                        imgPreview.src = originalImg.src;
+                        
+                        // Swap displays
+                        uploadSlot.style.display = "none";
+                        previewCard.style.display = "block";
+                        btnDownload.removeAttribute("disabled");
+                        
+                        showToast("Image loaded successfully.", "success");
+                        updateOutputMetrics();
+                    };
+                    originalImg.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+
+            // Presets trigger
+            presetPassport.addEventListener("click", () => {
+                if (!originalImg) return;
+                resizeWidth.value = 350;
+                resizeHeight.value = 450;
+                targetKb.value = 50;
+                maintainAspect.checked = false;
+                updateOutputMetrics();
+                showToast("Applied Indian Passport Photo preset (350x450px, under 50KB)", "info");
+            });
+
+            presetSignature.addEventListener("click", () => {
+                if (!originalImg) return;
+                resizeWidth.value = 140;
+                resizeHeight.value = 60;
+                targetKb.value = 20;
+                maintainAspect.checked = false;
+                updateOutputMetrics();
+                showToast("Applied Standard Signature preset (140x60px, under 20KB)", "info");
+            });
+
+            // Dimension changes listeners
+            resizeWidth.addEventListener("input", () => {
+                if (!originalImg) return;
+                if (maintainAspect.checked) {
+                    const ratio = originalHeight / originalWidth;
+                    resizeHeight.value = Math.round(resizeWidth.value * ratio);
+                }
+                updateOutputMetrics();
+            });
+
+            resizeHeight.addEventListener("input", () => {
+                if (!originalImg) return;
+                if (maintainAspect.checked) {
+                    const ratio = originalWidth / originalHeight;
+                    resizeWidth.value = Math.round(resizeHeight.value * ratio);
+                }
+                updateOutputMetrics();
+            });
+
+            // Quality change
+            compressQuality.addEventListener("input", (e) => {
+                qualityLabel.innerText = `${e.target.value}%`;
+                updateOutputMetrics();
+            });
+
+            targetKb.addEventListener("input", () => {
+                updateOutputMetrics();
+            });
+
+            // Render current canvas and estimate size
+            function updateOutputMetrics() {
+                if (!originalImg) return;
+                
+                const w = parseInt(resizeWidth.value) || originalWidth;
+                const h = parseInt(resizeHeight.value) || originalHeight;
+                outDimensions.innerText = `${w} x ${h} px`;
+
+                // Perform client side rendering onto a temp canvas to inspect size
+                const canvas = document.createElement("canvas");
+                canvas.width = w;
+                canvas.height = h;
+                const ctx = canvas.getContext("2d");
+                ctx.drawImage(originalImg, 0, 0, w, h);
+
+                const q = parseFloat(compressQuality.value) / 100;
+                const targetLimit = parseFloat(targetKb.value);
+
+                if (targetLimit > 0) {
+                    // Iterative compression to find quality that meets the target
+                    compressToSize(canvas, targetLimit, (blob) => {
+                        outSize.innerText = `${(blob.size / 1024).toFixed(1)} KB`;
+                    });
+                } else {
+                    canvas.toBlob((blob) => {
+                        outSize.innerText = `${(blob.size / 1024).toFixed(1)} KB`;
+                    }, "image/jpeg", q);
+                }
+            }
+
+            // Binary search to find optimal compression
+            function compressToSize(canvas, limitKb, callback) {
+                let low = 0.01;
+                let high = 0.99;
+                let bestBlob = null;
+                let iterations = 0;
+
+                function testQuality() {
+                    const mid = (low + high) / 2;
+                    canvas.toBlob((blob) => {
+                        iterations++;
+                        const sizeKb = blob.size / 1024;
+                        
+                        if (sizeKb <= limitKb) {
+                            bestBlob = blob;
+                            low = mid; // Try higher quality
+                        } else {
+                            high = mid; // Need lower quality
+                        }
+
+                        if (iterations < 7 && (high - low) > 0.05) {
+                            testQuality();
+                        } else {
+                            callback(bestBlob || blob);
+                        }
+                    }, "image/jpeg", mid);
+                }
+
+                testQuality();
+            }
+
+            // Download Event
+            btnDownload.addEventListener("click", () => {
+                if (!originalImg) return;
+
+                const w = parseInt(resizeWidth.value) || originalWidth;
+                const h = parseInt(resizeHeight.value) || originalHeight;
+
+                const canvas = document.createElement("canvas");
+                canvas.width = w;
+                canvas.height = h;
+                const ctx = canvas.getContext("2d");
+                ctx.drawImage(originalImg, 0, 0, w, h);
+
+                const q = parseFloat(compressQuality.value) / 100;
+                const targetLimit = parseFloat(targetKb.value);
+
+                if (targetLimit > 0) {
+                    compressToSize(canvas, targetLimit, (blob) => {
+                        triggerBlobDownload(blob);
+                    });
+                } else {
+                    canvas.toBlob((blob) => {
+                        triggerBlobDownload(blob);
+                    }, "image/jpeg", q);
+                }
+            });
+
+            function triggerBlobDownload(blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `smartservice_compressed_${Date.now()}.jpg`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast("Image compressed and downloaded successfully.", "success");
+            }
+        });
+    </script>
+</body>
+</html>

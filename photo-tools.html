@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Photo & Resizing Suite - SmartService</title>
+    <link rel="stylesheet" href="assets/css/global.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .suite-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 32px;
+            margin-top: 24px;
+        }
+        .tool-sidebar {
+            position: sticky;
+            top: 90px;
+            height: fit-content;
+        }
+        .tool-tab-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .tool-tab-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 20px;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: var(--transition-fast);
+            border: 1px solid transparent;
+            background: white;
+            box-shadow: var(--shadow-sm);
+        }
+        .tool-tab-item:hover, .tool-tab-item.active {
+            background-color: var(--primary-light);
+            color: var(--primary);
+        }
+        .tool-tab-item.active {
+            border-color: rgba(37,99,235,0.15);
+        }
+        .tool-panel {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        .tool-panel.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Premium Upload Area */
+        .upload-zone {
+            border: 2px dashed var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 40px 24px;
+            text-align: center;
+            background: #f8fafc;
+            cursor: pointer;
+            transition: var(--transition-normal);
+            position: relative;
+        }
+        .upload-zone:hover {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+        .upload-zone input[type="file"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+        
+        /* Editor Layouts */
+        .editor-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-top: 24px;
+        }
+        @media (max-width: 992px) {
+            .suite-layout {
+                grid-template-columns: 1fr;
+            }
+            .tool-sidebar {
+                position: static;
+            }
+            .tool-tab-list {
+                flex-direction: row;
+                overflow-x: auto;
+                padding-bottom: 8px;
+            }
+            .tool-tab-item {
+                white-space: nowrap;
+            }
+            .editor-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* Preview Canvas and Containers */
+        .preview-box {
+            background: #0f172a;
+            border-radius: var(--radius-md);
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 300px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+        .preview-canvas {
+            max-width: 100%;
+            max-height: 450px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            background: #ffffff;
+        }
+        .mppeb-preview-canvas {
+            width: 250px;
+            height: 380px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            background: #ffffff;
+        }
+        
+        /* Control Elements */
+        .control-group {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+        }
+        .control-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            display: block;
+        }
+        .control-slider {
+            width: 100%;
+            margin-bottom: 16px;
+        }
+    </style>
+</head>
+<body style="padding-top: 70px;">
+    <site-header></site-header>
+
+    <main class="container section-padding" style="padding-top: 20px;">
+        <div style="margin-bottom: 24px;">
+            <a href="index.html" style="color: var(--primary); font-weight: 600;"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+            <h1 style="font-size: 2.2rem; margin-top: 12px; color: var(--text-main);"><i class="fas fa-camera mr-2 text-primary"></i> Cyber Cafe Photo Tool Suite</h1>
+            <p style="color: var(--text-muted);">Sarkari layouts, resizers, MPPEB templates, and passport creators operating completely client-side.</p>
+        </div>
+
+        <div class="suite-layout">
+            <!-- Sidebar Navigation -->
+            <aside class="tool-sidebar">
+                <ul class="tool-tab-list">
+                    <li class="tool-tab-item active" data-target="passport">
+                        <i class="fas fa-images"></i> Passport Photo Maker
+                    </li>
+                    <li class="tool-tab-item" data-target="mppeb">
+                        <i class="fas fa-id-badge"></i> MPPEB Template Maker
+                    </li>
+                    <li class="tool-tab-item" data-target="resizer">
+                        <i class="fas fa-compress-arrows-alt"></i> Sarkari Resizer Presets
+                    </li>
+                    <li class="tool-tab-item" data-target="name-date">
+                        <i class="fas fa-font"></i> Name & Date Photo Maker
+                    </li>
+                    <li class="tool-tab-item" data-target="crop-format">
+                        <i class="fas fa-crop-alt"></i> Crop & Format Changer
+                    </li>
+                    <li class="tool-tab-item" data-target="enhance">
+                        <i class="fas fa-sliders-h"></i> Contrast & Enhance
+                    </li>
+                    <li class="tool-tab-item" data-target="whatsapp">
+                        <i class="fab fa-whatsapp"></i> WhatsApp Printer
+                    </li>
+                </ul>
+            </aside>
+
+            <!-- Workspace Panels -->
+            <section style="flex: 1;">
+                
+                <!-- 1. PASSPORT PHOTO MAKER -->
+                <div class="tool-panel active" id="passport">
+                    <div class="card" style="padding: 24px;">
+                        <h2 style="font-size: 1.5rem; margin-bottom: 12px;"><i class="fas fa-images text-primary"></i> Passport Photo Maker</h2>
+                        <p style="color: var(--text-muted); margin-bottom: 24px;">Create multi-copy sheets (8, 12, 16, or 32 print copies) on A4 or 4x6 photo paper with custom backgrounds and borders.</p>
+                        
+                        <div class="upload-zone" id="passportUploadZone">
+                            <i class="fas fa-cloud-upload-alt" style="font-size: 3rem; color: var(--text-light); margin-bottom: 16px;"></i>
+                            <h4 style="margin-bottom: 8px;">Upload Passport Photo</h4>
+                            <p style="font-size: 0.9rem; color: var(--text-muted);">Select or drag JPG/PNG image here</p>
+                            <input type="file" id="passportFile" accept="image/*">
+                        </div>
+
+                        <div class="editor-grid" id="passportEditor" style="display: none;">
+                            <div class="preview-box">
+                                <canvas class="preview-canvas" id="passportCanvas"></canvas>
+                            </div>
+                            <div class="control-group">
+                                <h3 style="font-size: 1.1rem; margin-bottom: 16px;">Configure Passport Sheet</h3>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">Background Color</label>
+                                    <select class="form-control" id="passportBg">
+                                        <option value="original">Keep Original Background</option>
+                                        <option value="#3b82f6">Standard Blue (#3b82f6)</option>
+                                        <option value="#ffffff">Plain White (#ffffff)</option>
+                                        <option value="#ef4444">Light Red (#ef4444)</option>
+                                    </select>
+                                    <span style="font-size: 0.75rem; color: var(--text-muted);">Requires transparent image to apply color. Use Background Remover first if needed.</span>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Border</label>
+                                    <select class="form-control" id="passportBorder">
+                                        <option value="black">Thin Black Outline (2px)</option>
+                                        <option value="none">No Border</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Copies & Paper Size</label>
+                                    <select class="form-control" id="passportPaper">
+                                        <option value="A4-32">A4 Paper (32 Copies - Grid layout)</option>
+                                        <option value="A4-16">A4 Paper (16 Copies - Medium spacing)</option>
+                                        <option value="4x6-8">4x6 Photo Paper (8 Copies)</option>
+                                        <option value="4x6-12">4x6 Photo Paper (12 Copies)</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Photo Margins & Gap (px)</label>
+                                    <input type="range" class="control-slider" id="passportGap" min="5" max="30" value="15">
+                                </div>
+
+                                <button class="btn btn-primary" id="downloadPassport" style="width: 100%;"><i class="fas fa-download"></i> Download Print Sheet</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. MPPEB TEMPLATE MAKER -->
+                <div class="tool-panel" id="mppeb">
+                    <div class="card" style="padding: 24px;">
+                        <h2 style="font-size: 1.5rem; margin-bottom: 12px;"><i class="fas fa-id-badge text-primary"></i> MPPEB Template Maker</h2>
+                        <p style="color: var(--text-muted); margin-bottom: 24px;">Stitch candidate photo (4x5cm), signature (6x3cm) and handwritten declaration inside a single JPG under 200KB for MP PEB online portals.</p>
+                        
+                        <div class="editor-grid">
+                            <div class="control-group" style="display: flex; flex-direction: column; gap: 16px;">
+                                <h3 style="font-size: 1.1rem; margin-bottom: 8px;">Candidate Details &amp; Uploads</h3>
+                                
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                                    <div>
+                                        <label class="control-label">Name On Photo *</label>
+                                        <input type="text" id="mppebNameInput" class="form-control" placeholder="Candidate Name" value="RAMESH KUMAR">
+                                    </div>
+                                    <div>
+                                        <label class="control-label">Date On Photo *</label>
+                                        <input type="text" id="mppebDateInput" class="form-control" placeholder="DD-MM-YYYY" value="15-08-2026">
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="control-label">1. Candidate Photo (4x5 cm)</label>
+                                    <input type="file" id="mppebPhoto" class="form-control" accept="image/*">
+                                </div>
+
+                                <div>
+                                    <label class="control-label">2. Black Ink Signature (6x3 cm)</label>
+                                    <input type="file" id="mppebSign" class="form-control" accept="image/*">
+                                </div>
+
+                                <div>
+                                    <label class="control-label">3. Handwritten Declaration Text</label>
+                                    <input type="file" id="mppebText" class="form-control" accept="image/*">
+                                </div>
+
+                                <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 8px 0;">
+
+                                <div>
+                                    <label class="form-label">Template Border Style</label>
+                                    <select class="form-control" id="mppebBorder">
+                                        <option value="standard">Standard Outer Border (Black)</option>
+                                        <option value="none">No Border</option>
+                                    </select>
+                                </div>
+
+                                <button class="btn btn-primary" id="generateMppeb" style="width: 100%;"><i class="fas fa-sync"></i> Generate MPPEB Sheet</button>
+                            </div>
+
+                            <div class="control-group" style="text-align: center;">
+                                <h3 style="font-size: 1.1rem; margin-bottom: 16px;">Output Preview</h3>
+                                <div style="display: flex; justify-content: center; background: #e2e8f0; padding: 16px; border-radius: var(--radius-md);">
+                                    <canvas class="mppeb-preview-canvas" id="mppebCanvas"></canvas>
+                                </div>
+                                <button class="btn btn-success" id="downloadMppeb" style="width: 100%; margin-top: 16px;" disabled><i class="fas fa-download"></i> Download Template JPG</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. SARKARI RESIZER PRESETS -->
+                <div class="tool-panel" id="resizer">
+                    <div class="card" style="padding: 24px;">
+                        <h2 style="font-size: 1.5rem; margin-bottom: 12px;"><i class="fas fa-compress-arrows-alt text-primary"></i> Sarkari Resizer Presets</h2>
+                        <p style="color: var(--text-muted); margin-bottom: 24px;">Quick-resize images to standard size parameters required by Indian portals (PAN card, Signature, Thumb Impression) under strict KB targets.</p>
+
+                        <div class="upload-zone" id="resizerUploadZone">
+                            <i class="fas fa-cloud-upload-alt" style="font-size: 3rem; color: var(--text-light); margin-bottom: 16px;"></i>
+                            <h4 style="margin-bottom: 8px;">Upload Target Document</h4>
+                            <p style="font-size: 0.9rem; color: var(--text-muted);">Select or drag JPG/PNG image here</p>
+                            <input type="file" id="resizerFile" accept="image/*">
+                        </div>
+
+                        <div class="editor-grid" id="resizerEditor" style="display: none;">
+                            <div class="preview-box">
+                                <canvas class="preview-canvas" id="resizerCanvas"></canvas>
+                            </div>
+                            <div class="control-group">
+                                <h3 style="font-size: 1.1rem; margin-bottom: 16px;">Resize Configuration</h3>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">Sarkari Presets</label>
+                                    <select class="form-control" id="resizerPreset">
+                                        <option value="custom">Custom Dimensions (Set below)</option>
+                                        <option value="pan">PAN Card Upload (213 x 213 px, &lt; 30KB)</option>
+                                        <option value="signature">Signature Crop (140 x 60 px, &lt; 20KB)</option>
+                                        <option value="thumb">Thumb Impression (225 x 225 px, &lt; 20KB)</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;" id="customDimGroup">
+                                    <div>
+                                        <label class="control-label">Width (px)</label>
+                                        <input type="number" class="form-control" id="resizeWidth" value="300">
+                                    </div>
+                                    <div>
+                                        <label class="control-label">Height (px)</label>
+                                        <input type="number" class="form-control" id="resizeHeight" value="300">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Strict Target File Size Limit</label>
+                                    <select class="form-control" id="resizerTargetKB">
+                                        <option value="20">Compress under 20 KB</option>
+                                        <option value="30">Compress under 30 KB</option>
+                                        <option value="50">Compress under 50 KB</option>
+                                        <option value="100">Compress under 100 KB</option>
+                                        <option value="200">Compress under 200 KB</option>
+                                        <option value="none">No compression (High Quality)</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="control-label" id="currentKBDisplay">Estimated File Size: --</label>
+                                </div>
+
+                                <button class="btn btn-primary" id="downloadResized" style="width: 100%;"><i class="fas fa-download"></i> Apply & Download JPG</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. NAME & DATE PHOTO MAKER -->
+                <div class="tool-panel" id="name-date">
+                    <div class="card" style="padding: 24px;">
+                        <h2 style="font-size: 1.5rem; margin-bottom: 12px;"><i class="fas fa-font text-primary"></i> Name & Date on Photo Maker</h2>
+                        <p style="color: var(--text-muted); margin-bottom: 24px;">Place a clean white text banner at the bottom of the portrait photo to print candidates' names and registration dates.</p>
+
+                        <div class="upload-zone" id="ndUploadZone">
+                            <i class="fas fa-cloud-upload-alt" style="font-size: 3rem; color: var(--text-light); margin-bottom: 16px;"></i>
+                            <h4 style="margin-bottom: 8px;">Upload Passport/Portrait Image</h4>
+                            <p style="font-size: 0.9rem; color: var(--text-muted);">Select or drag JPG/PNG image here</p>
+                            <input type="file" id="ndFile" accept="image/*">
+                        </div>
+
+                        <div class="editor-grid" id="ndEditor" style="display: none;">
+                            <div class="preview-box">
+                                <canvas class="preview-canvas" id="ndCanvas"></canvas>
+                            </div>
+                            <div class="control-group">
+                                <h3 style="font-size: 1.1rem; margin-bottom: 16px;">Text Settings</h3>
+                                
+                                <div class="form-group">
+                                    <label class="control-label">Candidate Name</label>
+                                    <input type="text" class="form-control" id="ndName" placeholder="e.g. RAMESH KUMAR" value="RAMESH KUMAR">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="control-label">Date (e.g. Date of Photo)</label>
+                                    <input type="text" class="form-control" id="ndDate" placeholder="e.g. 15-08-2026" value="15-08-2026">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Font Family & Size</label>
+                                    <select class="form-control" id="ndFont">
+                                        <option value="Arial">Arial (Standard Sans-Serif)</option>
+                                        <option value="Times New Roman">Times New Roman (Serif)</option>
+                                        <option value="Courier New">Courier New (Monospace)</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="control-label">Banner Height (%)</label>
+                                    <input type="range" class="control-slider" id="ndBannerHeight" min="15" max="30" value="20">
+                                </div>
+
+                                <button class="btn btn-primary" id="downloadND" style="width: 100%;"><i class="fas fa-download"></i> Save & Download JPG</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. CROP & FORMAT CHANGER -->
+                <div class="tool-panel" id="crop-format">
+                    <div class="card" style="padding: 24px;">
+                        <h2 style="font-size: 1.5rem; margin-bottom: 12px;"><i class="fas fa-crop-alt text-primary"></i> Crop & Format Changer</h2>
+                        <p style="color: var(--text-muted); margin-bottom: 24px;">Adjust orientation ratios, crop photos, and convert formats dynamically between JPG, PNG, and WEBP.</p>
+
+                        <div class="upload-zone" id="cfUploadZone">
+                            <i class="fas fa-cloud-upload-alt" style="font-size: 3rem; color: var(--text-light); margin-bottom: 16px;"></i>
+                            <h4 style="margin-bottom: 8px;">Upload Image</h4>
+                            <p style="font-size: 0.9rem; color: var(--text-muted);">Select or drag JPG/PNG/WEBP image here</p>
+                            <input type="file" id="cfFile" accept="image/*">
+                        </div>
+
+                        <div class="editor-grid" id="cfEditor" style="display: none;">
+                            <div class="preview-box">
+                                <canvas class="preview-canvas" id="cfCanvas"></canvas>
+                            </div>
+                            <div class="control-group">
+                                <h3 style="font-size: 1.1rem; margin-bottom: 16px;">Crop & Format Settings</h3>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">Crop Aspect Ratio</label>
+                                    <select class="form-control" id="cfRatio">
+                                        <option value="free">Free Crop (Whole Image)</option>
+                                        <option value="1:1">1:1 Square (Voter Card size)</option>
+                                        <option value="3:4">3:4 Portrait (Passport size)</option>
+                                        <option value="4:3">4:3 Landscape</option>
+                                        <option value="16:9">16:9 Widescreen</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                                    <div>
+                                        <label class="control-label">X Offset (%)</label>
+                                        <input type="range" class="control-slider" id="cfCropX" min="0" max="80" value="0">
+                                    </div>
+                                    <div>
+                                        <label class="control-label">Y Offset (%)</label>
+                                        <input type="range" class="control-slider" id="cfCropY" min="0" max="80" value="0">
+                                    </div>
+                                </div>
+
+                                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                                    <div>
+                                        <label class="control-label">Width (%)</label>
+                                        <input type="range" class="control-slider" id="cfCropW" min="20" max="100" value="100">
+                                    </div>
+                                    <div>
+                                        <label class="control-label">Height (%)</label>
+                                        <input type="range" class="control-slider" id="cfCropH" min="20" max="100" value="100">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Save Format Output</label>
+                                    <select class="form-control" id="cfOutputFormat">
+                                        <option value="image/jpeg">Convert to JPG (.jpeg)</option>
+                                        <option value="image/png">Convert to PNG (.png)</option>
+                                        <option value="image/webp">Convert to WEBP (.webp)</option>
+                                    </select>
+                                </div>
+
+                                <button class="btn btn-primary" id="downloadCF" style="width: 100%;"><i class="fas fa-download"></i> Save Image Output</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6. CONTRAST & ENHANCE -->
+                <div class="tool-panel" id="enhance">
+                    <div class="card" style="padding: 24px;">
+                        <h2 style="font-size: 1.5rem; margin-bottom: 12px;"><i class="fas fa-sliders-h text-primary"></i> Contrast & Photo Enhancer</h2>
+                        <p style="color: var(--text-muted); margin-bottom: 24px;">Quick adjustments for brightness, contrast, saturation, and filters for documents, signatures, or thumb impression scans.</p>
+
+                        <div class="upload-zone" id="enhUploadZone">
+                            <i class="fas fa-cloud-upload-alt" style="font-size: 3rem; color: var(--text-light); margin-bottom: 16px;"></i>
+                            <h4 style="margin-bottom: 8px;">Upload Scan Image</h4>
+                            <p style="font-size: 0.9rem; color: var(--text-muted);">Select or drag JPG/PNG image here</p>
+                            <input type="file" id="enhFile" accept="image/*">
+                        </div>
+
+                        <div class="editor-grid" id="enhEditor" style="display: none;">
+                            <div class="preview-box">
+                                <canvas class="preview-canvas" id="enhCanvas"></canvas>
+                            </div>
+                            <div class="control-group">
+                                <h3 style="font-size: 1.1rem; margin-bottom: 16px;">Enhancer Options</h3>
+                                
+                                <div class="form-group">
+                                    <label class="control-label">Brightness</label>
+                                    <input type="range" class="control-slider" id="enhBright" min="50" max="150" value="100">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="control-label">Contrast</label>
+                                    <input type="range" class="control-slider" id="enhContrast" min="50" max="200" value="100">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="control-label">Saturation</label>
+                                    <input type="range" class="control-slider" id="enhSat" min="0" max="200" value="100">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Color Filter Preset</label>
+                                    <select class="form-control" id="enhFilter">
+                                        <option value="none">Normal Color</option>
+                                        <option value="grayscale">Grayscale (B&amp;W Doc scan)</option>
+                                        <option value="high-contrast">High Contrast B&amp;W (For bad signatures)</option>
+                                        <option value="warm">Warm Tone</option>
+                                        <option value="cool">Cool Tone</option>
+                                    </select>
+                                </div>
+
+                                <button class="btn btn-primary" id="downloadEnh" style="width: 100%;"><i class="fas fa-download"></i> Save & Download JPG</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 7. WHATSAPP PRINTER -->
+                <div class="tool-panel" id="whatsapp">
+                    <div class="card" style="padding: 24px;">
+                        <h2 style="font-size: 1.5rem; margin-bottom: 12px;"><i class="fab fa-whatsapp text-primary"></i> WhatsApp Image Printer</h2>
+                        <p style="color: var(--text-muted); margin-bottom: 24px;">WhatsApp compresses document images heavily and strips borders/margins. This formatting utility scales images cleanly on A4 canvas borders for professional printing.</p>
+
+                        <div class="upload-zone" id="waUploadZone">
+                            <i class="fas fa-cloud-upload-alt" style="font-size: 3rem; color: var(--text-light); margin-bottom: 16px;"></i>
+                            <h4 style="margin-bottom: 8px;">Upload Image received via WhatsApp</h4>
+                            <p style="font-size: 0.9rem; color: var(--text-muted);">Select or drag JPG/PNG image here</p>
+                            <input type="file" id="waFile" accept="image/*">
+                        </div>
+
+                        <div class="editor-grid" id="waEditor" style="display: none;">
+                            <div class="preview-box">
+                                <canvas class="preview-canvas" id="waCanvas"></canvas>
+                            </div>
+                            <div class="control-group">
+                                <h3 style="font-size: 1.1rem; margin-bottom: 16px;">Print Layout settings</h3>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">Layout Mode</label>
+                                    <select class="form-control" id="waLayout">
+                                        <option value="full-a4">Full Page A4 Portrait</option>
+                                        <option value="half-page">Half Page A4</option>
+                                        <option value="quarter-page">Quarter Page A4</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="control-label">A4 Page Margins (px)</label>
+                                    <input type="range" class="control-slider" id="waMargin" min="10" max="60" value="30">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Outer Border Border</label>
+                                    <select class="form-control" id="waBorder">
+                                        <option value="thin-gray">Thin Light Gray Border</option>
+                                        <option value="thin-black">Thin Dark Black Border</option>
+                                        <option value="none">No Border Outline</option>
+                                    </select>
+                                </div>
+
+                                <button class="btn btn-primary" id="downloadWA" style="width: 100%;"><i class="fas fa-print"></i> Generate Print A4 PDF</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+        </div>
+    </main>
+
+    <site-footer></site-footer>
+
+    <script src="assets/js/components.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // --- TAB SWITCHING LOGIC ---
+            const tabs = document.querySelectorAll(".tool-tab-item");
+            const panels = document.querySelectorAll(".tool-panel");
+
+            // Check if there is a query parameter e.g. ?tab=mppeb
+            const urlParams = new URLSearchParams(window.location.search);
+            const tabParam = urlParams.get('tab');
+            if (tabParam) {
+                const targetTab = document.querySelector(`.tool-tab-item[data-target="${tabParam}"]`);
+                if (targetTab) {
+                    tabs.forEach(t => t.classList.remove("active"));
+                    panels.forEach(p => p.classList.remove("active"));
+                    targetTab.classList.add("active");
+                    const pnl = document.getElementById(tabParam);
+                    if (pnl) pnl.classList.add("active");
+                }
+            }
+
+            tabs.forEach(tab => {
+                tab.addEventListener("click", () => {
+                    tabs.forEach(t => t.classList.remove("active"));
+                    panels.forEach(p => p.classList.remove("active"));
+                    
+                    tab.classList.add("active");
+                    const targetId = tab.dataset.target;
+                    document.getElementById(targetId).classList.add("active");
+                    
+                    // Update URL hash/parameter silently without reload
+                    const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?tab=' + targetId;
+                    window.history.pushState({ path: newUrl }, '', newUrl);
+                });
+            });
+
+            // Helper to get helper files load as images
+            function handleFileUpload(inputElement, callback) {
+                inputElement.addEventListener("change", (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const img = new Image();
+                        img.onload = () => callback(img, file);
+                        img.src = event.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            // --- 1. PASSPORT MAKER LOGIC ---
+            let passportImg = null;
+            const passportCanvas = document.getElementById("passportCanvas");
+            const passportCtx = passportCanvas.getContext("2d");
+            
+            handleFileUpload(document.getElementById("passportFile"), (img) => {
+                passportImg = img;
+                document.getElementById("passportUploadZone").style.display = "none";
+                document.getElementById("passportEditor").style.display = "grid";
+                renderPassport();
+            });
+
+            const passportBg = document.getElementById("passportBg");
+            const passportBorder = document.getElementById("passportBorder");
+            const passportPaper = document.getElementById("passportPaper");
+            const passportGap = document.getElementById("passportGap");
+
+            [passportBg, passportBorder, passportPaper, passportGap].forEach(el => {
+                el.addEventListener("change", renderPassport);
+                el.addEventListener("input", renderPassport);
+            });
+
+            function renderPassport() {
+                if (!passportImg) return;
+                
+                // standard A4 or 4x6 dimensions in px (approx for print layout)
+                const paperType = passportPaper.value; // e.g. A4-32, 4x6-8 etc
+                let canvasWidth = 2480; // A4 standard 300dpi width
+                let canvasHeight = 3508; // A4 standard 300dpi height
+                let copies = 32;
+
+                if (paperType.startsWith("4x6")) {
+                    canvasWidth = 1200; // 4x6 standard 300dpi width
+                    canvasHeight = 1800; // 4x6 standard 300dpi height
+                    copies = parseInt(paperType.split("-")[1]);
+                } else {
+                    copies = parseInt(paperType.split("-")[1]);
+                }
+
+                passportCanvas.width = canvasWidth;
+                passportCanvas.height = canvasHeight;
+
+                // Fill background of canvas (White paper background)
+                passportCtx.fillStyle = "#ffffff";
+                passportCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+                // Passport size on sheet (standard passport: 3.5cm x 4.5cm)
+                // In 300dpi: 3.5cm is ~413px, 4.5cm is ~531px
+                const photoWidth = 413;
+                const photoHeight = 531;
+
+                const gap = parseInt(passportGap.value) * 2; // scale factor
+                
+                // Calculate spacing
+                const cols = Math.floor((canvasWidth - 100) / (photoWidth + gap));
+                
+                for (let i = 0; i < copies; i++) {
+                    const row = Math.floor(i / cols);
+                    const col = i % cols;
+
+                    const x = 100 + col * (photoWidth + gap);
+                    const y = 150 + row * (photoHeight + gap);
+
+                    // Draw Background of single photo if specified
+                    if (passportBg.value !== "original") {
+                        passportCtx.fillStyle = passportBg.value;
+                        passportCtx.fillRect(x, y, photoWidth, photoHeight);
+                    }
+
+                    // Draw image
+                    passportCtx.drawImage(passportImg, x, y, photoWidth, photoHeight);
+
+                    // Draw border
+                    if (passportBorder.value === "black") {
+                        passportCtx.strokeStyle = "#000000";
+                        passportCtx.lineWidth = 6;
+                        passportCtx.strokeRect(x, y, photoWidth, photoHeight);
+                    }
+                }
+            }
+
+            document.getElementById("downloadPassport").addEventListener("click", () => {
+                const link = document.createElement("a");
+                link.download = `passport-sheet-${passportPaper.value}.jpg`;
+                link.href = passportCanvas.toDataURL("image/jpeg", 0.9);
+                link.click();
+                showToast("Passport Print Grid downloaded successfully.");
+            });
+
+
+            // --- 2. MPPEB MAKER LOGIC ---
+            let mppebPhotoImg = null;
+            let mppebSignImg = null;
+            let mppebTextImg = null;
+
+            const mppebCanvas = document.getElementById("mppebCanvas");
+            const mppebCtx = mppebCanvas.getContext("2d");
+            
+            handleFileUpload(document.getElementById("mppebPhoto"), (img) => { mppebPhotoImg = img; drawMppeb(); });
+            handleFileUpload(document.getElementById("mppebSign"), (img) => { mppebSignImg = img; drawMppeb(); });
+            handleFileUpload(document.getElementById("mppebText"), (img) => { mppebTextImg = img; drawMppeb(); });
+            
+            document.getElementById("mppebBorder").addEventListener("change", drawMppeb);
+            document.getElementById("generateMppeb").addEventListener("click", drawMppeb);
+
+            function drawMppeb() {
+                // MPPEB Template is standard: 530 x 780 px
+                mppebCanvas.width = 530;
+                mppebCanvas.height = 780;
+
+                // White backdrop
+                mppebCtx.fillStyle = "#ffffff";
+                mppebCtx.fillRect(0, 0, 530, 780);
+
+                if (document.getElementById("mppebBorder").value === "standard") {
+                    mppebCtx.strokeStyle = "#000000";
+                    mppebCtx.lineWidth = 4;
+                    mppebCtx.strokeRect(2, 2, 526, 776);
+                }
+
+                // Grid Divider lines
+                mppebCtx.strokeStyle = "#cbd5e1";
+                mppebCtx.lineWidth = 1;
+
+                // Title Banner: "MPPEB Candidate Self-Declaration Template"
+                mppebCtx.fillStyle = "#0f172a";
+                mppebCtx.font = "bold 15px sans-serif";
+                mppebCtx.textAlign = "center";
+                mppebCtx.fillText("MPPEB TEMPLATE SHEET", 265, 30);
+                
+                mppebCtx.beginPath();
+                mppebCtx.moveTo(10, 45);
+                mppebCtx.lineTo(520, 45);
+                mppebCtx.stroke();
+
+                // Draw Photo Box (standard 4x5 ratio: 180x225px) at center-left
+                mppebCtx.strokeRect(30, 60, 220, 275);
+                mppebCtx.fillStyle = "#64748b";
+                mppebCtx.font = "12px sans-serif";
+                mppebCtx.fillText("CANDIDATE PHOTO", 140, 200);
+
+                if (mppebPhotoImg) {
+                    mppebCtx.drawImage(mppebPhotoImg, 30, 60, 220, 275);
+                }
+
+                // Draw Signature Box (standard 6x3 ratio: 220x110px) at center-right
+                mppebCtx.strokeRect(280, 60, 220, 110);
+                mppebCtx.fillText("SIGNATURE", 390, 120);
+
+                if (mppebSignImg) {
+                    mppebCtx.drawImage(mppebSignImg, 280, 60, 220, 110);
+                }
+
+                // Instructions warning
+                mppebCtx.fillStyle = "#475569";
+                mppebCtx.font = "11px sans-serif";
+                mppebCtx.fillText("1. Write signature inside box strictly.", 390, 190);
+                mppebCtx.fillText("2. Black ink pen only.", 390, 210);
+
+                // Self Declaration Box (Bottom half)
+                mppebCtx.strokeRect(30, 360, 470, 390);
+                mppebCtx.fillText("DECLARATION BOX (Handwritten Decl. Text)", 265, 550);
+
+                if (mppebTextImg) {
+                    mppebCtx.drawImage(mppebTextImg, 30, 360, 470, 390);
+                }
+
+                document.getElementById("downloadMppeb").disabled = false;
+            }
+
+            document.getElementById("downloadMppeb").addEventListener("click", () => {
+                const link = document.createElement("a");
+                link.download = `mppeb-template.jpg`;
+                // MPPEB needs file under 200KB. Using 0.8 quality handles this securely.
+                link.href = mppebCanvas.toDataURL("image/jpeg", 0.75);
+                link.click();
+                showToast("MPPEB Template JPG generated and compressed under 200KB.");
+            });
+
+
+            // --- 3. SARKARI RESIZER PRESETS ---
+            let resizerImg = null;
+            let originalFile = null;
+            const resizerCanvas = document.getElementById("resizerCanvas");
+            const resizerCtx = resizerCanvas.getContext("2d");
+
+            handleFileUpload(document.getElementById("resizerFile"), (img, file) => {
+                resizerImg = img;
+                originalFile = file;
+                document.getElementById("resizerUploadZone").style.display = "none";
+                document.getElementById("resizerEditor").style.display = "grid";
+                
+                document.getElementById("resizeWidth").value = img.width;
+                document.getElementById("resizeHeight").value = img.height;
+                applyResize();
+            });
+
+            const resizerPreset = document.getElementById("resizerPreset");
+            const resizeWidth = document.getElementById("resizeWidth");
+            const resizeHeight = document.getElementById("resizeHeight");
+            const resizerTargetKB = document.getElementById("resizerTargetKB");
+
+            resizerPreset.addEventListener("change", () => {
+                const customDimGroup = document.getElementById("customDimGroup");
+                if (resizerPreset.value === "pan") {
+                    resizeWidth.value = 213;
+                    resizeHeight.value = 213;
+                    resizerTargetKB.value = "30";
+                    customDimGroup.style.display = "none";
+                } else if (resizerPreset.value === "signature") {
+                    resizeWidth.value = 140;
+                    resizeHeight.value = 60;
+                    resizerTargetKB.value = "20";
+                    customDimGroup.style.display = "none";
+                } else if (resizerPreset.value === "thumb") {
+                    resizeWidth.value = 225;
+                    resizeHeight.value = 225;
+                    resizerTargetKB.value = "20";
+                    customDimGroup.style.display = "none";
+                } else {
+                    customDimGroup.style.display = "grid";
+                }
+                applyResize();
+            });
+
+            [resizeWidth, resizeHeight, resizerTargetKB].forEach(el => {
+                el.addEventListener("change", applyResize);
+                el.addEventListener("input", applyResize);
+            });
+
+            function applyResize() {
+                if (!resizerImg) return;
+
+                const w = parseInt(resizeWidth.value) || 200;
+                const h = parseInt(resizeHeight.value) || 200;
+
+                resizerCanvas.width = w;
+                resizerCanvas.height = h;
+
+                // Draw centered
+                resizerCtx.fillStyle = "#ffffff";
+                resizerCtx.fillRect(0, 0, w, h);
+                resizerCtx.drawImage(resizerImg, 0, 0, w, h);
+
+                // Estimate file size preview
+                const format = "image/jpeg";
+                const targetKB = resizerTargetKB.value;
+                
+                let quality = 0.9;
+                let dataURL = resizerCanvas.toDataURL(format, quality);
+                let sizeBytes = atob(dataURL.split(',')[1]).length;
+
+                // Iteratively search for the quality that meets the targetKB requirement
+                if (targetKB !== "none") {
+                    const targetBytes = parseInt(targetKB) * 1024;
+                    if (sizeBytes > targetBytes) {
+                        for (let q = 0.85; q >= 0.1; q -= 0.05) {
+                            dataURL = resizerCanvas.toDataURL(format, q);
+                            sizeBytes = atob(dataURL.split(',')[1]).length;
+                            if (sizeBytes <= targetBytes) {
+                                quality = q;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                const finalKB = (sizeBytes / 1024).toFixed(1);
+                document.getElementById("currentKBDisplay").innerText = `Estimated File Size: ${finalKB} KB (Preset Constraint: ${targetKB === 'none' ? 'None' : targetKB + ' KB'})`;
+            }
+
+            document.getElementById("downloadResized").addEventListener("click", () => {
+                if (!resizerImg) return;
+                
+                const w = parseInt(resizeWidth.value) || 200;
+                const h = parseInt(resizeHeight.value) || 200;
+                const targetKB = resizerTargetKB.value;
+                const format = "image/jpeg";
+                
+                let quality = 0.9;
+                let dataURL = resizerCanvas.toDataURL(format, quality);
+                let sizeBytes = atob(dataURL.split(',')[1]).length;
+
+                if (targetKB !== "none") {
+                    const targetBytes = parseInt(targetKB) * 1024;
+                    for (let q = 0.9; q >= 0.05; q -= 0.05) {
+                        dataURL = resizerCanvas.toDataURL(format, q);
+                        sizeBytes = atob(dataURL.split(',')[1]).length;
+                        if (sizeBytes <= targetBytes) {
+                            quality = q;
+                            break;
+                        }
+                    }
+                }
+
+                const link = document.createElement("a");
+                link.download = `resized-${w}x${h}.jpg`;
+                link.href = dataURL;
+                link.click();
+                showToast("Resized photo downloaded successfully.");
+            });
+
+
+            // --- 4. NAME & DATE PHOTO MAKER LOGIC ---
+            let ndImg = null;
+            const ndCanvas = document.getElementById("ndCanvas");
+            const ndCtx = ndCanvas.getContext("2d");
+
+            handleFileUpload(document.getElementById("ndFile"), (img) => {
+                ndImg = img;
+                document.getElementById("ndUploadZone").style.display = "none";
+                document.getElementById("ndEditor").style.display = "grid";
+                renderND();
+            });
+
+            const ndName = document.getElementById("ndName");
+            const ndDate = document.getElementById("ndDate");
+            const ndFont = document.getElementById("ndFont");
+            const ndBannerHeight = document.getElementById("ndBannerHeight");
+
+            [ndName, ndDate, ndFont, ndBannerHeight].forEach(el => {
+                el.addEventListener("input", renderND);
+                el.addEventListener("change", renderND);
+            });
+
+            function renderND() {
+                if (!ndImg) return;
+
+                const baseW = ndImg.width;
+                const baseH = ndImg.height;
+
+                // Configure canvas sizes
+                ndCanvas.width = baseW;
+                
+                const factor = parseInt(ndBannerHeight.value) / 100; // e.g. 20%
+                const bannerPx = Math.round(baseH * factor);
+                ndCanvas.height = baseH + bannerPx;
+
+                // Draw portrait image
+                ndCtx.drawImage(ndImg, 0, 0, baseW, baseH);
+
+                // Draw white banner at bottom
+                ndCtx.fillStyle = "#ffffff";
+                ndCtx.fillRect(0, baseH, baseW, bannerPx);
+
+                // Banner border
+                ndCtx.strokeStyle = "#000000";
+                ndCtx.lineWidth = Math.max(2, Math.round(baseW / 150));
+                ndCtx.strokeRect(0, baseH, baseW, bannerPx);
+
+                // Print Name & Date
+                ndCtx.fillStyle = "#000000";
+                ndCtx.textAlign = "center";
+                
+                const fontName = ndFont.value;
+                const fontSize = Math.max(12, Math.round(bannerPx * 0.3));
+                ndCtx.font = `bold ${fontSize}px ${fontName}`;
+                
+                ndCtx.fillText(ndName.value.toUpperCase(), baseW / 2, baseH + (bannerPx * 0.45));
+                ndCtx.fillText(ndDate.value, baseW / 2, baseH + (bannerPx * 0.8));
+            }
+
+            document.getElementById("downloadND").addEventListener("click", () => {
+                const link = document.createElement("a");
+                link.download = `name-date-photo.jpg`;
+                link.href = ndCanvas.toDataURL("image/jpeg", 0.9);
+                link.click();
+                showToast("Name & Date banner photo generated successfully.");
+            });
+
+
+            // --- 5. CROP & FORMAT CHANGER LOGIC ---
+            let cfImg = null;
+            const cfCanvas = document.getElementById("cfCanvas");
+            const cfCtx = cfCanvas.getContext("2d");
+
+            handleFileUpload(document.getElementById("cfFile"), (img) => {
+                cfImg = img;
+                document.getElementById("cfUploadZone").style.display = "none";
+                document.getElementById("cfEditor").style.display = "grid";
+                renderCF();
+            });
+
+            const cfRatio = document.getElementById("cfRatio");
+            const cfCropX = document.getElementById("cfCropX");
+            const cfCropY = document.getElementById("cfCropY");
+            const cfCropW = document.getElementById("cfCropW");
+            const cfCropH = document.getElementById("cfCropH");
+            const cfOutputFormat = document.getElementById("cfOutputFormat");
+
+            [cfRatio, cfCropX, cfCropY, cfCropW, cfCropH, cfOutputFormat].forEach(el => {
+                el.addEventListener("input", renderCF);
+                el.addEventListener("change", renderCF);
+            });
+
+            function renderCF() {
+                if (!cfImg) return;
+
+                const originalWidth = cfImg.width;
+                const originalHeight = cfImg.height;
+
+                // crop parameters as fractions of width/height
+                let xPercent = parseInt(cfCropX.value) / 100;
+                let yPercent = parseInt(cfCropY.value) / 100;
+                let wPercent = parseInt(cfCropW.value) / 100;
+                let hPercent = parseInt(cfCropH.value) / 100;
+
+                // Adjust limits
+                if (xPercent + wPercent > 1) {
+                    wPercent = 1 - xPercent;
+                }
+                if (yPercent + hPercent > 1) {
+                    hPercent = 1 - yPercent;
+                }
+
+                let sX = originalWidth * xPercent;
+                let sY = originalHeight * yPercent;
+                let sW = originalWidth * wPercent;
+                let sH = originalHeight * hPercent;
+
+                // If strict ratio is specified
+                const ratioVal = cfRatio.value;
+                if (ratioVal !== "free") {
+                    const [rw, rh] = ratioVal.split(":").map(Number);
+                    const targetRatio = rw / rh;
+                    
+                    // Constrain source height to target aspect ratio
+                    sH = sW / targetRatio;
+                    if (sY + sH > originalHeight) {
+                        sH = originalHeight - sY;
+                        sW = sH * targetRatio;
+                    }
+                }
+
+                cfCanvas.width = sW;
+                cfCanvas.height = sH;
+
+                cfCtx.fillStyle = "#ffffff";
+                cfCtx.fillRect(0, 0, sW, sH);
+                cfCtx.drawImage(cfImg, sX, sY, sW, sH, 0, 0, sW, sH);
+            }
+
+            document.getElementById("downloadCF").addEventListener("click", () => {
+                const format = cfOutputFormat.value;
+                const extension = format.split("/")[1];
+                const link = document.createElement("a");
+                link.download = `cropped-image.${extension}`;
+                link.href = cfCanvas.toDataURL(format, 0.9);
+                link.click();
+                showToast(`Image cropped and saved as ${extension.toUpperCase()} format.`);
+            });
+
+
+            // --- 6. CONTRAST & ENHANCE LOGIC ---
+            let enhImg = null;
+            const enhCanvas = document.getElementById("enhCanvas");
+            const enhCtx = enhCanvas.getContext("2d");
+
+            handleFileUpload(document.getElementById("enhFile"), (img) => {
+                enhImg = img;
+                document.getElementById("enhUploadZone").style.display = "none";
+                document.getElementById("enhEditor").style.display = "grid";
+                renderEnhance();
+            });
+
+            const enhBright = document.getElementById("enhBright");
+            const enhContrast = document.getElementById("enhContrast");
+            const enhSat = document.getElementById("enhSat");
+            const enhFilter = document.getElementById("enhFilter");
+
+            [enhBright, enhContrast, enhSat, enhFilter].forEach(el => {
+                el.addEventListener("input", renderEnhance);
+                el.addEventListener("change", renderEnhance);
+            });
+
+            function renderEnhance() {
+                if (!enhImg) return;
+
+                const w = enhImg.width;
+                const h = enhImg.height;
+                enhCanvas.width = w;
+                enhCanvas.height = h;
+
+                // Draw image on canvas
+                enhCtx.drawImage(enhImg, 0, 0, w, h);
+
+                // Get image pixels to perform manual enhancement controls
+                const imgData = enhCtx.getImageData(0, 0, w, h);
+                const data = imgData.data;
+
+                const brightness = parseInt(enhBright.value) / 100;
+                const contrast = parseInt(enhContrast.value) / 100;
+                const saturation = parseInt(enhSat.value) / 100;
+                const filter = enhFilter.value;
+
+                // Factor calculations
+                const contrastFactor = (259 * (contrast * 255 + 255)) / (255 * (259 - contrast * 255));
+
+                for (let i = 0; i < data.length; i += 4) {
+                    let r = data[i];
+                    let g = data[i + 1];
+                    let b = data[i + 2];
+
+                    // Brightness filter
+                    r *= brightness;
+                    g *= brightness;
+                    b *= brightness;
+
+                    // Contrast filter
+                    r = contrastFactor * (r - 128) + 128;
+                    g = contrastFactor * (g - 128) + 128;
+                    b = contrastFactor * (b - 128) + 128;
+
+                    // Saturation filter (luminance weights)
+                    const gray = 0.2989 * r + 0.5870 * g + 0.1140 * b;
+                    r = gray + saturation * (r - gray);
+                    g = gray + saturation * (g - gray);
+                    b = gray + saturation * (b - gray);
+
+                    // Filter presets
+                    if (filter === "grayscale" || filter === "high-contrast") {
+                        let finalGray = 0.2989 * r + 0.5870 * g + 0.1140 * b;
+                        if (filter === "high-contrast") {
+                            // Threshold binary filter
+                            finalGray = finalGray > 128 ? 255 : 0;
+                        }
+                        r = finalGray;
+                        g = finalGray;
+                        b = finalGray;
+                    } else if (filter === "warm") {
+                        r *= 1.1;
+                        b *= 0.9;
+                    } else if (filter === "cool") {
+                        r *= 0.9;
+                        b *= 1.1;
+                    }
+
+                    // Bounds clamp
+                    data[i] = Math.min(255, Math.max(0, r));
+                    data[i + 1] = Math.min(255, Math.max(0, g));
+                    data[i + 2] = Math.min(255, Math.max(0, b));
+                }
+
+                enhCtx.putImageData(imgData, 0, 0);
+            }
+
+            document.getElementById("downloadEnh").addEventListener("click", () => {
+                const link = document.createElement("a");
+                link.download = `enhanced-scan.jpg`;
+                link.href = enhCanvas.toDataURL("image/jpeg", 0.9);
+                link.click();
+                showToast("Enhanced image saved.");
+            });
+
+
+            // --- 7. WHATSAPP PRINTER LOGIC ---
+            let waImg = null;
+            const waCanvas = document.getElementById("waCanvas");
+            const waCtx = waCanvas.getContext("2d");
+
+            handleFileUpload(document.getElementById("waFile"), (img) => {
+                waImg = img;
+                document.getElementById("waUploadZone").style.display = "none";
+                document.getElementById("waEditor").style.display = "grid";
+                renderWhatsApp();
+            });
+
+            const waLayout = document.getElementById("waLayout");
+            const waMargin = document.getElementById("waMargin");
+            const waBorder = document.getElementById("waBorder");
+
+            [waLayout, waMargin, waBorder].forEach(el => {
+                el.addEventListener("change", renderWhatsApp);
+                el.addEventListener("input", renderWhatsApp);
+            });
+
+            function renderWhatsApp() {
+                if (!waImg) return;
+
+                // Standard A4 portrait aspect ratio (approx 300dpi: 2480 x 3508)
+                const canvasWidth = 2480;
+                const canvasHeight = 3508;
+
+                waCanvas.width = canvasWidth;
+                waCanvas.height = canvasHeight;
+
+                // Plain white background paper
+                waCtx.fillStyle = "#ffffff";
+                waCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+                const margin = parseInt(waMargin.value) * 6; // scale margin factor
+
+                // Calculate printable area
+                let printW = canvasWidth - (margin * 2);
+                let printH = canvasHeight - (margin * 2);
+
+                const layoutMode = waLayout.value;
+                if (layoutMode === "half-page") {
+                    printH = (canvasHeight / 2) - (margin * 2);
+                } else if (layoutMode === "quarter-page") {
+                    printW = (canvasWidth / 2) - (margin * 2);
+                    printH = (canvasHeight / 2) - (margin * 2);
+                }
+
+                // Calculate Aspect Fit of image inside printable area
+                const imgRatio = waImg.width / waImg.height;
+                const printRatio = printW / printH;
+
+                let drawW = printW;
+                let drawH = printH;
+
+                if (imgRatio > printRatio) {
+                    drawH = drawW / imgRatio;
+                } else {
+                    drawW = drawH * imgRatio;
+                }
+
+                // Coordinates
+                const x = margin + (printW - drawW) / 2;
+                const y = margin + (printH - drawH) / 2;
+
+                // Draw WhatsApp Image fit
+                waCtx.drawImage(waImg, x, y, drawW, drawH);
+
+                // Draw outer borders
+                if (waBorder.value === "thin-gray") {
+                    waCtx.strokeStyle = "#cbd5e1";
+                    waCtx.lineWidth = 4;
+                    waCtx.strokeRect(x, y, drawW, drawH);
+                } else if (waBorder.value === "thin-black") {
+                    waCtx.strokeStyle = "#000000";
+                    waCtx.lineWidth = 6;
+                    waCtx.strokeRect(x, y, drawW, drawH);
+                }
+            }
+
+            document.getElementById("downloadWA").addEventListener("click", () => {
+                // Since this needs to print directly, we can download the full JPG at high DPI A4.
+                // Alternatively, printing can be triggered via a popup, or standard download.
+                const link = document.createElement("a");
+                link.download = `whatsapp-a4-print.jpg`;
+                link.href = waCanvas.toDataURL("image/jpeg", 0.95);
+                link.click();
+                showToast("WhatsApp layout printed/generated successfully.");
+            });
+        });
+    </script>
+</body>
+</html>

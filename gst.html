@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GST Tax Calculator - SmartService</title>
+    <link rel="stylesheet" href="assets/css/global.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        .gst-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 1.8fr;
+            gap: 32px;
+            margin-top: 40px;
+        }
+
+        .inputs-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            padding: 32px;
+            box-shadow: var(--shadow-md);
+            height: fit-content;
+        }
+
+        .results-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            padding: 32px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .action-toggle {
+            display: flex;
+            border: 1.5px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+        .action-btn {
+            flex: 1;
+            padding: 12px;
+            background: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            transition: var(--transition-fast);
+        }
+        .action-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Rate selector button pills */
+        .rate-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+        .rate-pill {
+            background: var(--bg-light);
+            border: 1.5px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 12px 6px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            text-align: center;
+            transition: var(--transition-fast);
+        }
+        .rate-pill.active {
+            background: var(--primary-light);
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        /* Detail split list */
+        .split-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1.5px solid var(--border-color);
+            font-weight: 600;
+        }
+        .split-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+            margin-top: 12px;
+        }
+        .split-label {
+            color: var(--text-muted);
+        }
+        .split-value {
+            color: var(--text-main);
+            font-size: 1.05rem;
+        }
+
+        @media (max-width: 992px) {
+            .gst-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body style="padding-top: 70px;">
+    <site-header></site-header>
+
+    <main class="container section-padding" style="padding-top: 20px;">
+        <!-- Header -->
+        <div style="margin-bottom: 24px;">
+            <a href="index.html" style="color: var(--primary); font-weight: 600;"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+            <h1 style="font-size: 2.2rem; margin-top: 12px; color: var(--text-main);"><i class="fas fa-percent mr-2 text-primary"></i>GST Tax Calculator</h1>
+            <p style="color: var(--text-muted);">Quickly add or subtract GST rates and check SGST/CGST tax components split.</p>
+        </div>
+
+        <div class="gst-grid">
+            <!-- Left Side - Inputs -->
+            <div class="inputs-card fade-in">
+                <!-- Toggle Mode -->
+                <label class="form-label">Calculation Mode</label>
+                <div class="action-toggle">
+                    <button class="action-btn active" id="modeAdd">Add GST (+)</button>
+                    <button class="action-btn" id="modeRemove">Remove GST (-)</button>
+                </div>
+
+                <!-- Input Amount -->
+                <div class="form-group">
+                    <label class="form-label" for="gstAmount">Initial Amount (₹)</label>
+                    <input type="number" id="gstAmount" class="form-control" placeholder="Enter amount e.g. 5000" style="font-weight: 700; font-size: 1.1rem;" value="1000">
+                </div>
+
+                <!-- Tax Rate presets -->
+                <label class="form-label">GST Tax Rate (%)</label>
+                <div class="rate-grid">
+                    <div class="rate-pill" data-rate="5">5%</div>
+                    <div class="rate-pill" data-rate="12">12%</div>
+                    <div class="rate-pill active" data-rate="18">18%</div>
+                    <div class="rate-pill" data-rate="28">28%</div>
+                </div>
+
+                <!-- Custom rate -->
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label" for="customRate">Or Custom Rate (%)</label>
+                    <input type="number" id="customRate" class="form-control" placeholder="e.g. 15" min="0" max="100">
+                </div>
+            </div>
+
+            <!-- Right Side - Results -->
+            <div class="results-card fade-in" style="animation-delay: 0.1s;">
+                <h3 style="font-size: 1.1rem; margin-bottom: 24px; color: var(--text-main); border-bottom: 1.5px solid var(--border-color); padding-bottom: 12px;">Calculation Breakdown</h3>
+                
+                <div class="split-row">
+                    <span class="split-label" id="lblNetAmt">Net Price (Excl. Tax)</span>
+                    <span class="split-value" id="valNetAmt">₹ 1,000.00</span>
+                </div>
+
+                <div class="split-row" style="color: #2563eb;">
+                    <span class="split-label" style="color: #2563eb;">CGST (Central GST)</span>
+                    <span class="split-value" id="valCgst" style="color: #2563eb;">₹ 90.00</span>
+                </div>
+
+                <div class="split-row" style="color: #2563eb;">
+                    <span class="split-label" style="color: #2563eb;">SGST (State GST)</span>
+                    <span class="split-value" id="valSgst" style="color: #2563eb;">₹ 90.00</span>
+                </div>
+
+                <div class="split-row" style="background: var(--primary-light); padding: 16px; border-radius: var(--radius-sm); border: none; margin-top: 16px;">
+                    <span class="split-label" style="color: var(--primary); font-weight: 700;">Total Tax (GST)</span>
+                    <span class="split-value" id="valTotalGst" style="color: var(--primary); font-weight: 700; font-size: 1.15rem;">₹ 180.00</span>
+                </div>
+
+                <div class="split-row" style="background: #ecfdf5; padding: 20px 16px; border-radius: var(--radius-sm); border: none; margin-top: 16px;">
+                    <span class="split-label" id="lblGrossAmt" style="color: #059669; font-weight: 800; font-size: 1.1rem;">Gross Amount (Incl. Tax)</span>
+                    <span class="split-value" id="valGrossAmt" style="color: #059669; font-weight: 800; font-size: 1.5rem;">₹ 1,180.00</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <site-footer></site-footer>
+
+    <script src="assets/js/components.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const gstAmount = document.getElementById("gstAmount");
+            const modeAdd = document.getElementById("modeAdd");
+            const modeRemove = document.getElementById("modeRemove");
+            const ratePills = document.querySelectorAll(".rate-pill");
+            const customRate = document.getElementById("customRate");
+
+            const lblNetAmt = document.getElementById("lblNetAmt");
+            const valNetAmt = document.getElementById("valNetAmt");
+            const valCgst = document.getElementById("valCgst");
+            const valSgst = document.getElementById("valSgst");
+            const valTotalGst = document.getElementById("valTotalGst");
+            const lblGrossAmt = document.getElementById("lblGrossAmt");
+            const valGrossAmt = document.getElementById("valGrossAmt");
+
+            // State variables
+            let calculationMode = "add"; // "add" or "remove"
+            let taxRate = 18; // Default 18%
+
+            function recalculateGst() {
+                const amount = parseFloat(gstAmount.value) || 0;
+                
+                let net = 0;
+                let gst = 0;
+                let gross = 0;
+
+                if (calculationMode === "add") {
+                    net = amount;
+                    gst = (amount * taxRate) / 100;
+                    gross = amount + gst;
+                    
+                    lblNetAmt.innerText = "Initial Price (Excl. Tax)";
+                    lblGrossAmt.innerText = "Gross Total (Incl. Tax)";
+                } else {
+                    gross = amount;
+                    net = amount / (1 + (taxRate / 100));
+                    gst = amount - net;
+                    
+                    lblNetAmt.innerText = "Net Price (Excl. Tax)";
+                    lblGrossAmt.innerText = "Initial Price (Incl. Tax)";
+                }
+
+                const cgst = gst / 2;
+                const sgst = gst / 2;
+
+                // Format helper
+                const fmt = (num) => "₹ " + num.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+                // Render fields
+                valNetAmt.innerText = fmt(net);
+                valCgst.innerText = fmt(cgst);
+                valSgst.innerText = fmt(sgst);
+                valTotalGst.innerText = fmt(gst);
+                valGrossAmt.innerText = fmt(gross);
+            }
+
+            // Mode selection listeners
+            modeAdd.addEventListener("click", () => {
+                modeAdd.classList.add("active");
+                modeRemove.classList.remove("active");
+                calculationMode = "add";
+                recalculateGst();
+                showToast("Mode changed: Adding tax to price.", "info");
+            });
+
+            modeRemove.addEventListener("click", () => {
+                modeRemove.classList.add("active");
+                modeAdd.classList.remove("active");
+                calculationMode = "remove";
+                recalculateGst();
+                showToast("Mode changed: Deducting tax from price.", "info");
+            });
+
+            // Rate presets selection listeners
+            ratePills.forEach(pill => {
+                pill.addEventListener("click", () => {
+                    ratePills.forEach(p => p.classList.remove("active"));
+                    pill.classList.add("active");
+                    customRate.value = ""; // clear custom
+                    
+                    taxRate = parseInt(pill.dataset.rate);
+                    recalculateGst();
+                });
+            });
+
+            // Custom tax listener
+            customRate.addEventListener("input", (e) => {
+                const val = parseFloat(e.target.value);
+                if (!isNaN(val) && val >= 0) {
+                    ratePills.forEach(p => p.classList.remove("active"));
+                    taxRate = val;
+                    recalculateGst();
+                } else {
+                    // Fallback to active pill
+                    const activePill = document.querySelector(".rate-pill.active");
+                    if (activePill) {
+                        taxRate = parseInt(activePill.dataset.rate);
+                        recalculateGst();
+                    }
+                }
+            });
+
+            // Amount change listener
+            gstAmount.addEventListener("input", recalculateGst);
+
+            // Run initial calculation
+            recalculateGst();
+        });
+    </script>
+</body>
+</html>

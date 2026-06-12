@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartService - Free Online CSC VLE Tools Portal</title>
+    <meta name="description" content="India's most premium free online tool portal for CSC VLEs, operators, and students. Resize images, merge PDFs, crop photos, print government ID cards, and calculate tax instantly.">
+    <meta name="keywords" content="smart service, csc tools, image resizer, govt id print, csc billing, free tools, vle portal">
+    <link rel="icon" type="image/png" href="assets/images/favicon.png">
+    
+    <!-- CSS Dependencies -->
+    <link rel="stylesheet" href="assets/css/global.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* Specific Homepage Styles */
+        .hero {
+            background: var(--gradient-dark);
+            color: #ffffff;
+            padding: 120px 0 80px 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(37,99,235,0.15) 0%, transparent 60%);
+            animation: float-slow 15s infinite linear;
+            z-index: 1;
+        }
+        @keyframes float-slow {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .hero-title {
+            font-size: 3.5rem;
+            line-height: 1.15;
+            margin-bottom: 24px;
+            background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero-subtitle {
+            font-size: 1.25rem;
+            color: #94a3b8;
+            margin-bottom: 40px;
+        }
+        
+        /* Interactive Search */
+        .search-container {
+            max-width: 600px;
+            margin: 0 auto 48px auto;
+            position: relative;
+        }
+        .search-input {
+            width: 100%;
+            padding: 18px 24px 18px 56px;
+            border-radius: 50px;
+            border: 1px solid rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(12px);
+            color: #ffffff;
+            font-size: 1.1rem;
+            outline: none;
+            transition: var(--transition-normal);
+        }
+        .search-input:focus {
+            background: rgba(255,255,255,0.15);
+            border-color: var(--primary);
+            box-shadow: 0 0 30px rgba(37,99,235,0.25);
+        }
+        .search-icon {
+            position: absolute;
+            left: 24px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            font-size: 1.25rem;
+        }
+
+        /* Stats Grid */
+        .stats-section {
+            background: #ffffff;
+            border-bottom: 1px solid var(--border-color);
+            padding: 32px 0;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            text-align: center;
+        }
+        .stat-num {
+            font-size: 2.25rem;
+            font-weight: 800;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 4px;
+        }
+        .stat-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        /* Main Workspace layout */
+        .main-workspace {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 40px;
+            margin-top: 60px;
+        }
+
+        /* Sidebar styling */
+        .sidebar {
+            position: sticky;
+            top: 100px;
+            height: fit-content;
+        }
+        .category-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .category-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 20px;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: var(--transition-fast);
+            border: 1px solid transparent;
+        }
+        .category-item:hover, .category-item.active {
+            background-color: var(--primary-light);
+            color: var(--primary);
+        }
+        .category-item.active {
+            border-color: rgba(37,99,235,0.15);
+        }
+
+        /* Grid */
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+        }
+
+        /* Responsive */
+        @media (max-width: 992px) {
+            .main-workspace {
+                grid-template-columns: 1fr;
+            }
+            .sidebar {
+                position: static;
+            }
+            .category-list {
+                flex-direction: row;
+                overflow-x: auto;
+                padding-bottom: 12px;
+            }
+            .category-item {
+                white-space: nowrap;
+            }
+        }
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2.5rem;
+            }
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Shared Header custom element -->
+    <site-header></site-header>
+
+    <!-- Hero Banner -->
+    <section class="hero">
+        <div class="container hero-content">
+            <div style="margin-bottom: 24px;">
+                <span class="badge badge-glow">New Platform Release</span>
+            </div>
+            <h1 class="hero-title">Welcome to SmartService</h1>
+            <p class="hero-subtitle">
+                India's most advanced web utilities dashboard for Common Service Centres (CSC). Fast, secure, and 100% free forever.
+            </p>
+            
+            <!-- Dynamic Search -->
+            <div class="search-container">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="toolSearch" class="search-input" placeholder="Search 40+ tools... (e.g. Card Print, Resizer, GST)">
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Panel -->
+    <section class="stats-section">
+        <div class="container stats-grid">
+            <div>
+                <div class="stat-num">45+</div>
+                <div class="stat-label">Sarkari Utilities</div>
+            </div>
+            <div>
+                <div class="stat-num">100%</div>
+                <div class="stat-label">Secure & Local</div>
+            </div>
+            <div>
+                <div class="stat-num">80K+</div>
+                <div class="stat-label">Active CSC Users</div>
+            </div>
+            <div>
+                <div class="stat-num">24/7</div>
+                <div class="stat-label">Offline Accessible</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Workspace Section -->
+    <main class="container section-padding" style="padding-top: 20px;">
+        <div class="main-workspace">
+            
+            <!-- Categories Sidebar -->
+            <aside class="sidebar">
+                <h3 style="margin-bottom: 20px; font-size: 1.2rem; color: var(--text-main);">Tool Categories</h3>
+                <ul class="category-list">
+                    <li class="category-item active" data-category="all">
+                        <i class="fas fa-th-large"></i> All Services
+                    </li>
+                    <li class="category-item" data-category="csctools">
+                        <i class="fas fa-id-card"></i> CSC VLE Tools
+                    </li>
+                    <li class="category-item" data-category="document">
+                        <i class="fas fa-file-alt"></i> Document Creators
+                    </li>
+                    <li class="category-item" data-category="converter">
+                        <i class="fas fa-exchange-alt"></i> File Converters
+                    </li>
+                    <li class="category-item" data-category="calculator">
+                        <i class="fas fa-calculator"></i> Smart Calculators
+                    </li>
+                    <li class="category-item" data-category="utility">
+                        <i class="fas fa-tools"></i> Utility Tools
+                    </li>
+                </ul>
+            </aside>
+
+            <!-- Tools Grid Section -->
+            <section style="flex: 1;">
+                <div class="tools-grid" id="toolsGrid">
+                    
+                    <!-- Tool 1: Govt ID Print (Core) -->
+                    <div class="interactive-card" data-category="csctools" data-name="govt id print card aadhar pan voter driving license A4 4x6">
+                        
+                        <div class="card-image-box">
+                            <img src="assets/images/tools/govt-id-print.svg" alt="Govt ID Card Print">
+                            <div class="card-icon-badge" style="background: var(--primary-light); color: var(--primary);">
+                                <i class="fas fa-print"></i>
+                            </div>
+                        </div>
+                        <h4 style="margin-bottom: 8px; font-size: 1.15rem;">Govt ID Card Print</h4>
+                        <p style="font-size: 0.9rem; margin-bottom: 20px;">
+                            Auto-size Aadhaar, PAN, & Voter ID cards to standard 85.6x54mm. Print front & back on A4/Letter/4x6 paper.
+                        </p>
+                        <a href="govt-id-print.html" class="btn btn-primary" style="width: 100%; font-size: 0.85rem; padding: 10px 16px;">Open Tool</a>
+                    </div>
+
+                    <!-- Tool 1b: Farmer Data Extractor (Core) -->
+                    <div class="interactive-card" data-category="csctools" data-name="farmer data extractor pm kisan registration status aadhaar print 4x6 A4 card profile">
+                        
+                        <div class="card-image-box">
+                            <img src="assets/images/tools/farmer-extractor.svg" alt="Farmer Data Extractor">
+                            <div class="card-icon-badge" style="background: var(--primary-light); color: var(--primary);">
+                                <i class="fas fa-tractor"></i>
+                            </div>
+                        </div>
+                        <h4 style="margin-bottom: 8px; font-size: 1.15rem;">Farmer Data Extractor</h4>
+                        <p style="font-size: 0.9rem; margin-bottom: 20px;">
+                            Upload PM-Kisan status PDFs, extract Aadhaar & Farmer ID details, and print custom pocket cards or A4 profiles.
+                        </p>
+                        <a href="farmer-data-extractor.html" class="btn btn-primary" style="width: 100%; font-size: 0.85rem; padding: 10px 16px;">Open Tool</a>
+                    </div>
+
+                    <!-- Tool 2: Image Resizer (Core) -->
+                    <div class="interactive-card" data-category="csctools" data-name="image resizer compressor crop photo signature 20kb 50kb png jpg">
+                        
+                        <div class="card-image-box">
+                            <img src="assets/images/tools/image-resizer.svg" alt="Image Resizer & Compressor">
+                            <div class="card-icon-badge" style="background: var(--primary-light); color: var(--primary);">
+                                <i class="fas fa-compress-arrows-alt"></i>
+                            </div>
+                        </div>
+                        <h4 style="margin-bottom: 8px; font-size: 1.15rem;">Image Resizer & Compressor</h4>
+                        <p style="font-size: 0.9rem; margin-bottom: 20px;">
+                            Crop, resize, and compress images to custom target file sizes (e.g., under 20KB/50KB) for government forms.
+                        </p>
+                        <a href="image-resizer.html" class="btn btn-primary" style="width: 100%; font-size: 0.85rem; padding: 10px 16px;">Open Tool</a>
+                    </div>
+
+                    <!-- Tool 3: WhatsApp Direct (Core) -->
+                    <div class="interactive-card" data-category="utility" data-name="whatsapp direct chat send message no save contact text">
+                        
+                        <div class="card-image-box">
+                            <img src="assets/images/tools/whatsapp-direct.svg" alt="WhatsApp Direct Message">
+                            <div class="card-icon-badge" style="background: var(--secondary-light); color: var(--secondary);">
+                                <i class="fab fa-whatsapp"></i>
+                            </div>
+                        </div>
+                        <h4 style="margin-bottom: 8px; font-size: 1.15rem;">WhatsApp Direct Message</h4>
+                        <p style="font-size: 0.9rem; margin-bottom: 20px;">
+                            Send official WhatsApp messages, invoices, and documents to customers without saving their phone numbers.
+                        </p>
+                        <a href="whatsapp-direct.html" class="btn btn-primary" style="width: 100%; font-size: 0.85rem; padding: 10px 16px;">Open Tool</a>
+                    </div>
+
+                    <!-- Tool 4: Age Calculator (Core) -->
+                    <div class="interactive-card" data-category="calculator" data-name="age calculator date of birth age in days hours minutes exam eligibility">
+                        
+                        <div class="card-image-box">
+                            <img src="assets/images/tools/age-calculator.svg" alt="Age Calculator">
+                            <div class="card-icon-badge" style="background: #fffbeb; color: #d97706;">
+                                <i class="fas fa-birthday-cake"></i>
+                            </div>
+                        </div>
+                        <h4 style="margin-bottom: 8px; font-size: 1.15rem;">Age Calculator</h4>
+                        <p style="font-size: 0.9rem; margin-bottom: 20px;">
+                            Calculate exact age in years, months, days down to the second for official exam eligibility verification.
+                        </p>
+                        <a href="age-calculator.html" class="btn btn-primary" style="width: 100%; font-size: 0.85rem; padding: 10px 16px;">Open Tool</a>
+                    </div>
+
+                    <!-- Tool 5: GST Calculator (Core) -->
+                    <div class="interactive-card" data-category="calculator" data-name="gst calculator tax cgst sgst add remove tax rate invoices">
+                        
+                        <div class="card-image-box">
+                            <img src="assets/images/tools/gst-calc.svg" alt="GST Calculator">
+                            <div class="card-icon-badge" style="background: #fffbeb; color: #d97706;">
+                                <i class="fas fa-percent"></i>
+                            </div>
+                        </div>
+                        <h4 style="margin-bottom: 8px; font-size: 1.15rem;">GST Calculator</h4>
+                        <p style="font-size: 0.9rem; margin-bottom: 20px;">
+                            Add or subtract GST (5%, 12%, 18%, 28%) and split calculations into SGST and CGST values for billing.
+                        </p>
+                        <a href="gst.html" class="btn btn-primary" style="width: 100%; font-size: 0.85rem; padding: 10px 16px;">Open Tool</a>
+                    </div>
+
+                    <!-- Tool 6: Resume/CV Maker -->
+                    <div class="interactive-card" data-category="document" data-name="resume builder cv maker biodata format template job application">
+                        
+                        <div class="card-image-box">
+                            <img src="assets/images/tools/resume-builder.svg" alt="Resume/CV Builder">
+                            <div class="card-icon-badge" style="background: #fdf2f8; color: #db2777;">
+                                <i class="fas fa-file-invoice"></i>
+                            </div>
+                        </div>
+                        <h4 style="margin-bottom: 8px; font-size: 1.15rem;">Resume/CV Builder</h4>
+                        <p style="font-size: 0.9rem; margin-bottom: 20px;">
+                            Create high-converting corporate and government job resumes using sleek, print-ready custom templates.
+                        </p>
+                        <a href="resume-builder.html" class="btn btn-primary" style="width: 100%; font-size: 0.85rem; padding: 10px 16px;">Open Tool</a>
+                    </div>
+
+                    <!-- Tool 7: Marriage Biodata -->
+                    <div class="interactive-card" data-category="document" data-name="marriage biodata maker formats templates shadi profile">
+                        
+                        <div class="card-image-box">
+                            <img src="assets/images/tools/biodata-maker.svg" alt="Marriage Biodata Maker">
+                            <div class="card-icon-badge" style="background: #fdf2f8; color: #db2777;">
+                                <i class="fas fa-heart"></i>
+                            </div>
+                        </div>
+                        <h4 style="margin-bottom: 8px; font-size: 1.15rem;">Marriage Biodata Maker</h4>
+                        <p style="font-size: 0.9rem; margin-bottom: 20px;">
+                            Generate premium shadi profiles with beautiful floral designs and multi-page layout configurations.
+                        </p>
+                        <a href="marital-biodata-maker.html" class="btn btn-primary" style="width: 100%; font-size: 0.85rem; padding: 10px 16px;">Open Tool</a>
+                    </div>
+
+                    <!-- Tool 8: Invoice Generator -->
+                    <div class="interactive-card" data-category="document" data-name="invoice generator billing software shop bill gst receipt layout">
+                        
+                        <div class="card-image-box">
+                            <img src="assets/images/tools/invoice-gen.svg" alt="Invoice Generator">
+                            <div class="card-icon-badge" style="background: #fdf2f8; color: #db2777;">
+                                <i class="fas fa-file-prescription"></i>
+                            </div>
+                        </div>
+                        <h4 style="margin-bottom: 8px; font-size: 1.15rem;">Invoice Generator</h4>
+                        <p style="font-size: 0.9rem; margin-bottom: 20px;">
+                            Generate modern invoices with custom shop logos, client details, CGST/SGST taxes, and discount rates.
+                        </p>
+                        <a href="invoice-generator.html" class="btn btn-primary" style="width: 100%; font-size: 0.85rem; padding: 10px 16px;">Open Tool</a>
+                    </div>
+
+                    <!-- Tool 9: JPG to PDF -->
+                    <div class="interactive-card" data-category="converter" data-name="jpg to pdf converter image to document merge images scanner">
+                        
+                        <div class="card-image-box">
+                            <img src="assets/images/tools/jpg-to-pdf.svg" alt="JPG to PDF Converter">
+                            <div class="card-icon-badge" style="background: var(--primary-light); color: var(--primary);">
+                                <i class="fas fa-file-pdf"></i>
+                            </div>
+                        </div>
+                        <h4 style="margin-bottom: 8px; font-size: 1.15rem;">JPG to PDF Converter</h4>
+                        <p style="font-size: 0.9rem; margin-bottom: 20px;">
+                            Merge separate image scans into a single, optimized PDF document for instant portal uploads.
+                        </p>
+                        <a href="image-to-pdf.html" class="btn btn-primary" style="width: 100%; font-size: 0.85rem; padding: 10px 16px;">Open Tool</a>
+                    </div>
+
+                    <!-- Tool 10: PDF Merger -->
+                    <div class="interactive-card" data-category="utility" data-name="pdf merger combine pdf files document joiner join pdfs">
+                        
+                        <div class="card-image-box">
+                            <img src="assets/images/tools/pdf-merger.svg" alt="PDF Merger">
+                            <div class="card-icon-badge" style="background: var(--secondary-light); color: var(--secondary);">
+                                <i class="fas fa-object-group"></i>
+                            </div>
+                        </div>
+                        <h4 style="margin-bottom: 8px; font-size: 1.15rem;">PDF Merger</h4>
+                        <p style="font-size: 0.9rem; margin-bottom: 20px;">
+                            Combine multiple document PDFs together securely in your browser without uploading to external servers.
+                        </p>
+                        <a href="merge-pdf.html" class="btn btn-primary" style="width: 100%; font-size: 0.85rem; padding: 10px 16px;">Open Tool</a>
+                    </div>
+
+                    <!-- Tool 11: PDF Splitter -->
+                    <div class="interactive-card" data-category="utility" data-name="pdf splitter divide extract pages range select single pdfs">
+                        
+                        <div class="card-image-box">
+                            <img src="assets/images/tools/pdf-splitter.svg" alt="PDF Splitter">
+                            <div class="card-icon-badge" style="background: var(--secondary-light); color: var(--secondary);">
+                                <i class="fas fa-columns"></i>
+                            </div>
+                        </div>
+                        <h4 style="margin-bottom: 8px; font-size: 1.15rem;">PDF Splitter</h4>
+                        <p style="font-size: 0.9rem; margin-bottom: 20px;">
+                            Split a multi-page PDF document into individual files or extract custom page ranges immediately.
+                        </p>
+                        <a href="split.html" class="btn btn-primary" style="width: 100%; font-size: 0.85rem; padding: 10px 16px;">Open Tool</a>
+                    </div>
+
+                    <!-- Tool 12: Stamp Maker -->
+                    <div class="interactive-card" data-category="csctools" data-name="stamp maker rubber stamp generator custom text outline element logo round csc">
+                        
+                        <div class="card-image-box">
+                            <img src="assets/images/tools/stamp-maker.svg" alt="CSC Stamp Maker">
+                            <div class="card-icon-badge" style="background: var(--primary-light); color: var(--primary);">
+                                <i class="fas fa-stamp"></i>
+                            </div>
+                        </div>
+                        <h4 style="margin-bottom: 8px; font-size: 1.15rem;">CSC Stamp Maker</h4>
+                        <p style="font-size: 0.9rem; margin-bottom: 20px;">
+                            Generate highly customizable round and rectangular rubber stamps with customizable borders, text, and logos.
+                        </p>
+                        <a href="stamp-maker.html" class="btn btn-primary" style="width: 100%; font-size: 0.85rem; padding: 10px 16px;">Open Tool</a>
+                    </div>
+
+                    <!-- Tool 13: Photo Sign Joiner -->
+                    <div class="interactive-card" data-category="csctools" data-name="photo sign signature joiner merge images name date generator">
+                        
+                        <div class="card-image-box">
+                            <img src="assets/images/tools/photo-sign.svg" alt="Photo & Signature Joiner">
+                            <div class="card-icon-badge" style="background: var(--primary-light); color: var(--primary);">
+                                <i class="fas fa-link"></i>
+                            </div>
+                        </div>
+                        <h4 style="margin-bottom: 8px; font-size: 1.15rem;">Photo & Signature Joiner</h4>
+                        <p style="font-size: 0.9rem; margin-bottom: 20px;">
+                            Join a passport-sized photo and a signature into a single file as required by Indian banking and exam portals.
+                        </p>
+                        <a href="photo-sign.html" class="btn btn-primary" style="width: 100%; font-size: 0.85rem; padding: 10px 16px;">Open Tool</a>
+                    </div>
+
+                    <!-- Tool 14: QR Generator -->
+                    <div class="interactive-card" data-category="utility" data-name="qr code generator generate link address text custom scan">
+                        
+                        <div class="card-image-box">
+                            <img src="assets/images/tools/qr-generator.svg" alt="QR Code Generator">
+                            <div class="card-icon-badge" style="background: var(--secondary-light); color: var(--secondary);">
+                                <i class="fas fa-qrcode"></i>
+                            </div>
+                        </div>
+                        <h4 style="margin-bottom: 8px; font-size: 1.15rem;">QR Code Generator</h4>
+                        <p style="font-size: 0.9rem; margin-bottom: 20px;">
+                            Create custom QR codes for websites, text strings, UPI payments, and Wi-Fi networks in high resolution.
+                        </p>
+                        <a href="qr.html" class="btn btn-primary" style="width: 100%; font-size: 0.85rem; padding: 10px 16px;">Open Tool</a>
+                    </div>
+
+                    <!-- Tool 15: Background Remover -->
+                    <div class="interactive-card" data-category="utility" data-name="photo background remover bg cut transparent passport outline edit">
+                        
+                        <div class="card-image-box">
+                            <img src="assets/images/tools/bg-remover.svg" alt="Background Remover">
+                            <div class="card-icon-badge" style="background: var(--secondary-light); color: var(--secondary);">
+                                <i class="fas fa-scissors"></i>
+                            </div>
+                        </div>
+                        <h4 style="margin-bottom: 8px; font-size: 1.15rem;">Background Remover</h4>
+                        <p style="font-size: 0.9rem; margin-bottom: 20px;">
+                            Cleanly isolate portrait targets and create professional transparent background cuts for passport photos.
+                        </p>
+                        <a href="bg.html" class="btn btn-primary" style="width: 100%; font-size: 0.85rem; padding: 10px 16px;">Open Tool</a>
+                    </div>
+
+                    <!-- Tool 16: Multiple ID Print -->
+                    <div class="interactive-card" data-category="csctools" data-name="multiple id cards print layout sheets a4 paper size dimension">
+                        
+                        <div class="card-image-box">
+                            <img src="assets/images/tools/multiple-id.svg" alt="Multiple ID Cards Print">
+                            <div class="card-icon-badge" style="background: var(--primary-light); color: var(--primary);">
+                                <i class="fas fa-copy"></i>
+                            </div>
+                        </div>
+                        <h4 style="margin-bottom: 8px; font-size: 1.15rem;">Multiple ID Cards Print</h4>
+                        <p style="font-size: 0.9rem; margin-bottom: 20px;">
+                            Arrange and align up to 5 different government ID cards on a single A4 page sheet for quick combined printing.
+                        </p>
+                        <a href="govt-id-print.html" class="btn btn-primary" style="width: 100%; font-size: 0.85rem; padding: 10px 16px;">Open Tool</a>
+                    </div>
+
+                    <!-- Tool 17: Typing Test -->
+                    <div class="interactive-card" data-category="utility" data-name="typing speed test practice english hindi unicode mangal krutidev keys keyboard">
+                        
+                        <div class="card-image-box">
+                            <img src="assets/images/tools/typing-test.svg" alt="Typing Speed Tester">
+                            <div class="card-icon-badge" style="background: var(--secondary-light); color: var(--secondary);">
+                                <i class="fas fa-keyboard"></i>
+                            </div>
+                        </div>
+                        <h4 style="margin-bottom: 8px; font-size: 1.15rem;">Typing Speed Tester</h4>
+                        <p style="font-size: 0.9rem; margin-bottom: 20px;">
+                            Test typing speed and precision in English and Hindi (Unicode, Mangal, Krutidev) with live net WPM counters.
+                        </p>
+                        <a href="typing-test.html" class="btn btn-primary" style="width: 100%; font-size: 0.85rem; padding: 10px 16px;">Open Tool</a>
+                    </div>
+
+                    <!-- Tool 18: Passport Photo Maker -->
+                    <div class="interactive-card" data-category="csctools" data-name="passport photo maker copies print sheet background A4 4x6 grid layout ai photo">
+                        
+                        <div class="card-image-box">
+                            <img src="assets/images/tools/passport-photo.svg" alt="Passport Photo Maker">
+                            <div class="card-icon-badge" style="background: var(--primary-light); color: var(--primary);">
+                                <i class="fas fa-images"></i>
+                            </div>
+                        </div>
+                        <h4 style="margin-bottom: 8px; font-size: 1.15rem;">Passport Photo Maker</h4>
+                        <p style="font-size: 0.9rem; margin-bottom: 20px;">
+                            Generate multi-copy grids (8, 12, 16, or 32 copies) on A4/4x6 paper with custom backgrounds and borders.
+                        </p>
+                        <a href="photo-tools.html?tab=passport" class="btn btn-primary" style="width: 100%; font-size: 0.85rem; padding: 10px 16px;">Open Tool</a>
+                    </div>
+
+                    <!-- Tool 19: MPPEB Template Maker -->
+                    <div class="interactive-card" data-category="csctools" data-name="mppeb professional template maker stitching photo signature self-declaration mp peb">
+                        
+                        <div class="card-image-box">
+                            <img src="assets/images/tools/mppeb-maker.svg" alt="MPPEB Template Maker">
+                            <div class="card-icon-badge" style="background: var(--primary-light); color: var(--primary);">
+                                <i class="fas fa-id-badge"></i>
+                            </div>
+                        </div>
+                        <h4 style="margin-bottom: 8px; font-size: 1.15rem;">MPPEB Template Maker</h4>
+                        <p style="font-size: 0.9rem; margin-bottom: 20px;">
+                            Combine photo, signature, and self-declaration under 200KB for Madhya Pradesh PEB online applications.
+                        </p>
+                        <a href="photo-tools.html?tab=mppeb" class="btn btn-primary" style="width: 100%; font-size: 0.85rem; padding: 10px 16px;">Open Tool</a>
+                    </div>
+
+                    <!-- Tool 20: Name & Date on Photo -->
+                    <div class="interactive-card" data-category="csctools" data-name="name date photo maker banner bottom text candidate registry photo text">
+                        
+                        <div class="card-image-box">
+                            <img src="assets/images/tools/name-date-photo.svg" alt="Name & Date Photo Maker">
+                            <div class="card-icon-badge" style="background: var(--primary-light); color: var(--primary);">
+                                <i class="fas fa-font"></i>
+                            </div>
+                        </div>
+                        <h4 style="margin-bottom: 8px; font-size: 1.15rem;">Name &amp; Date Photo Maker</h4>
+                        <p style="font-size: 0.9rem; margin-bottom: 20px;">
+                            Decorate candidate photos with custom bottom text banners detailing names and date of registration.
+                        </p>
+                        <a href="photo-tools.html?tab=name-date" class="btn btn-primary" style="width: 100%; font-size: 0.85rem; padding: 10px 16px;">Open Tool</a>
+                    </div>
+
+                    <!-- Tool 21: Sarkari Resizer Presets -->
+                    <div class="interactive-card" data-category="csctools" data-name="pancard photo resizer 213x213px crop resize 30kb signature resizer thumb impression 140x60px 225x225px 20kb">
+                        
+                        <div class="card-image-box">
+                            <img src="assets/images/tools/sarkari-resizer.svg" alt="Sarkari Resizer Presets">
+                            <div class="card-icon-badge" style="background: var(--primary-light); color: var(--primary);">
+                                <i class="fas fa-expand-arrows-alt"></i>
+                            </div>
+                        </div>
+                        <h4 style="margin-bottom: 8px; font-size: 1.15rem;">Sarkari Resizer Presets</h4>
+                        <p style="font-size: 0.9rem; margin-bottom: 20px;">
+                            Auto-scale candidate details for government uploads (PAN Card, Signature box, Thumb impression) under strict KB sizes.
+                        </p>
+                        <a href="photo-tools.html?tab=resizer" class="btn btn-primary" style="width: 100%; font-size: 0.85rem; padding: 10px 16px;">Open Tool</a>
+                    </div>
+
+                    <!-- Tool 22: Crop & Format Changer -->
+                    <div class="interactive-card" data-category="utility" data-name="image cropper tool image format changer convert jpg png webp format quality aspect ratio">
+                        
+                        <div class="card-image-box">
+                            <img src="assets/images/tools/crop-format.svg" alt="Crop & Format Changer">
+                            <div class="card-icon-badge" style="background: var(--secondary-light); color: var(--secondary);">
+                                <i class="fas fa-crop-alt"></i>
+                            </div>
+                        </div>
+                        <h4 style="margin-bottom: 8px; font-size: 1.15rem;">Crop &amp; Format Changer</h4>
+                        <p style="font-size: 0.9rem; margin-bottom: 20px;">
+                            Crop and align source graphics, changing formats between JPG, PNG, and WEBP to optimize website uploads.
+                        </p>
+                        <a href="photo-tools.html?tab=crop-format" class="btn btn-primary" style="width: 100%; font-size: 0.85rem; padding: 10px 16px;">Open Tool</a>
+                    </div>
+
+                    <!-- Tool 23: Contrast & Enhancer -->
+                    <div class="interactive-card" data-category="utility" data-name="enhance photo editor contrast brightness saturation document scan bad signature thumb print">
+                        
+                        <div class="card-image-box">
+                            <img src="assets/images/tools/contrast-enhance.svg" alt="Contrast & Enhancer">
+                            <div class="card-icon-badge" style="background: var(--secondary-light); color: var(--secondary);">
+                                <i class="fas fa-sliders-h"></i>
+                            </div>
+                        </div>
+                        <h4 style="margin-bottom: 8px; font-size: 1.15rem;">Contrast &amp; Enhancer</h4>
+                        <p style="font-size: 0.9rem; margin-bottom: 20px;">
+                            Quick-adjust parameters for dull documents, bad signatures, or smudged thumb print scans.
+                        </p>
+                        <a href="photo-tools.html?tab=enhance" class="btn btn-primary" style="width: 100%; font-size: 0.85rem; padding: 10px 16px;">Open Tool</a>
+                    </div>
+
+                    <!-- Tool 24: WhatsApp Image Print -->
+                    <div class="interactive-card" data-category="utility" data-name="whatsapp image print scale layout A4 half quarter border margins padding print sizing">
+                        
+                        <div class="card-image-box">
+                            <img src="assets/images/tools/whatsapp-print.svg" alt="WhatsApp Image Printer">
+                            <div class="card-icon-badge" style="background: var(--secondary-light); color: var(--secondary);">
+                                <i class="fab fa-whatsapp-square"></i>
+                            </div>
+                        </div>
+                        <h4 style="margin-bottom: 8px; font-size: 1.15rem;">WhatsApp Image Printer</h4>
+                        <p style="font-size: 0.9rem; margin-bottom: 20px;">
+                            Format raw mobile camera shots sent over messaging platforms into standardized A4 document prints.
+                        </p>
+                        <a href="photo-tools.html?tab=whatsapp" class="btn btn-primary" style="width: 100%; font-size: 0.85rem; padding: 10px 16px;">Open Tool</a>
+                    </div>
+
+                    <!-- Tool 25: Loan EMI Calculator -->
+                    <div class="interactive-card" data-category="calculator" data-name="loan emi calculator bank housing personal interest tenure chart table amortization interest calculations">
+                        
+                        <div class="card-image-box">
+                            <img src="assets/images/tools/loan-emi.svg" alt="Loan EMI Calculator">
+                            <div class="card-icon-badge" style="background: #fffbeb; color: #d97706;">
+                                <i class="fas fa-funnel-dollar"></i>
+                            </div>
+                        </div>
+                        <h4 style="margin-bottom: 8px; font-size: 1.15rem;">Loan EMI Calculator</h4>
+                        <p style="font-size: 0.9rem; margin-bottom: 20px;">
+                            Calculate monthly loan payments, view interest share, and render standard amortization schedules.
+                        </p>
+                        <a href="calculators.html?tab=emi" class="btn btn-primary" style="width: 100%; font-size: 0.85rem; padding: 10px 16px;">Open Tool</a>
+                    </div>
+
+                    <!-- Tool 26: Gold & Silver Calculator -->
+                    <div class="interactive-card" data-category="calculator" data-name="gold silver smart calculator billing rate weight ornament making charges gst tax 3% gold bill">
+                        
+                        <div class="card-image-box">
+                            <img src="assets/images/tools/gold-silver.svg" alt="Gold & Silver Calculator">
+                            <div class="card-icon-badge" style="background: #fffbeb; color: #d97706;">
+                                <i class="fas fa-coins"></i>
+                            </div>
+                        </div>
+                        <h4 style="margin-bottom: 8px; font-size: 1.15rem;">Gold &amp; Silver Calculator</h4>
+                        <p style="font-size: 0.9rem; margin-bottom: 20px;">
+                            Evaluate ornament market billing rates by weight, metal price, making charges, and standard 3% GST.
+                        </p>
+                        <a href="calculators.html?tab=gold" class="btn btn-primary" style="width: 100%; font-size: 0.85rem; padding: 10px 16px;">Open Tool</a>
+                    </div>
+
+                    <!-- Tool 27: Percentage Calculator -->
+                    <div class="interactive-card" data-category="calculator" data-name="percentage calculator difference change margins fraction ratio simple math percent calculations">
+                        
+                        <div class="card-image-box">
+                            <img src="assets/images/tools/percentage-calc.svg" alt="Percentage Calculator">
+                            <div class="card-icon-badge" style="background: #fffbeb; color: #d97706;">
+                                <i class="fas fa-percent"></i>
+                            </div>
+                        </div>
+                        <h4 style="margin-bottom: 8px; font-size: 1.15rem;">Percentage Calculator</h4>
+                        <p style="font-size: 0.9rem; margin-bottom: 20px;">
+                            Solve basic percentages, mark margin increases/decreases, and convert fractions instantly.
+                        </p>
+                        <a href="calculators.html?tab=percentage" class="btn btn-primary" style="width: 100%; font-size: 0.85rem; padding: 10px 16px;">Open Tool</a>
+                    </div>
+
+                    <!-- Tool 28: CGPA Calculator -->
+                    <div class="interactive-card" data-category="calculator" data-name="cgpa sgpa calculator credit university scale factor cbse conversion percent grade calculation">
+                        
+                        <div class="card-image-box">
+                            <img src="assets/images/tools/cgpa-converter.svg" alt="CGPA / SGPA Converter">
+                            <div class="card-icon-badge" style="background: #fffbeb; color: #d97706;">
+                                <i class="fas fa-award"></i>
+                            </div>
+                        </div>
+                        <h4 style="margin-bottom: 8px; font-size: 1.15rem;">CGPA / SGPA Converter</h4>
+                        <p style="font-size: 0.9rem; margin-bottom: 20px;">
+                            Translate college CGPA scores to exact percentage equivalents using customized university formulas.
+                        </p>
+                        <a href="calculators.html?tab=cgpa" class="btn btn-primary" style="width: 100%; font-size: 0.85rem; padding: 10px 16px;">Open Tool</a>
+                    </div>
+
+                    <!-- Tool 29: Date & Age Planner -->
+                    <div class="interactive-card" data-category="calculator" data-name="date calculator offset count duration calendar age days weeks span date difference duration">
+                        
+                        <div class="card-image-box">
+                            <img src="assets/images/tools/date-calc.svg" alt="Date & Age Planner">
+                            <div class="card-icon-badge" style="background: #fffbeb; color: #d97706;">
+                                <i class="fas fa-calendar-alt"></i>
+                            </div>
+                        </div>
+                        <h4 style="margin-bottom: 8px; font-size: 1.15rem;">Date &amp; Age Planner</h4>
+                        <p style="font-size: 0.9rem; margin-bottom: 20px;">
+                            Verify target durations between two dates or add/subtract offsets to count exam deadlines.
+                        </p>
+                        <a href="calculators.html?tab=date-calc" class="btn btn-primary" style="width: 100%; font-size: 0.85rem; padding: 10px 16px;">Open Tool</a>
+                    </div>
+
+                    <!-- Tool 30: Cover Letter Maker -->
+                    <div class="interactive-card" data-category="document" data-name="cover letter generator professional job application request resume template cover letter maker">
+                        
+                        <div class="card-image-box">
+                            <img src="assets/images/tools/cover-letter.svg" alt="Cover Letter Maker">
+                            <div class="card-icon-badge" style="background: #fdf2f8; color: #db2777;">
+                                <i class="fas fa-envelope-open-text"></i>
+                            </div>
+                        </div>
+                        <h4 style="margin-bottom: 8px; font-size: 1.15rem;">Cover Letter Maker</h4>
+                        <p style="font-size: 0.9rem; margin-bottom: 20px;">
+                            Draft formal introduction letters and cover notes for job profiles and corporate vacancy requests.
+                        </p>
+                        <a href="document-tools.html?tab=cover-letter" class="btn btn-primary" style="width: 100%; font-size: 0.85rem; padding: 10px 16px;">Open Tool</a>
+                    </div>
+
+                    <!-- Tool 31: Affidavit Format Generator -->
+                    <div class="interactive-card" data-category="document" data-name="affidavit format generator gap certificate alias name correction stamp paper declaration court stamp">
+                        
+                        <div class="card-image-box">
+                            <img src="assets/images/tools/affidavit-gen.svg" alt="Affidavit Generator">
+                            <div class="card-icon-badge" style="background: #fdf2f8; color: #db2777;">
+                                <i class="fas fa-gavel"></i>
+                            </div>
+                        </div>
+                        <h4 style="margin-bottom: 8px; font-size: 1.15rem;">Affidavit Generator</h4>
+                        <p style="font-size: 0.9rem; margin-bottom: 20px;">
+                            Format legal court declarations for name corrections, residency declarations, and academic gaps on stamp sheets.
+                        </p>
+                        <a href="document-tools.html?tab=affidavit" class="btn btn-primary" style="width: 100%; font-size: 0.85rem; padding: 10px 16px;">Open Tool</a>
+                    </div>
+
+                    <!-- Tool 32: Rent Agreement Generator -->
+                    <div class="interactive-card" data-category="document" data-name="agreement format generator rent deed lease tenancy contract signature party landlord tenant">
+                        
+                        <div class="card-image-box">
+                            <img src="assets/images/tools/rent-agreement.svg" alt="Rent Agreement Maker">
+                            <div class="card-icon-badge" style="background: #fdf2f8; color: #db2777;">
+                                <i class="fas fa-file-contract"></i>
+                            </div>
+                        </div>
+                        <h4 style="margin-bottom: 8px; font-size: 1.15rem;">Rent Agreement Maker</h4>
+                        <p style="font-size: 0.9rem; margin-bottom: 20px;">
+                            Generate tenancy leases, rental contracts, and commercial occupancy agreements in standardized forms.
+                        </p>
+                        <a href="document-tools.html?tab=agreement" class="btn btn-primary" style="width: 100%; font-size: 0.85rem; padding: 10px 16px;">Open Tool</a>
+                    </div>
+
+                    <!-- Tool 33: School Book Name Slips Maker -->
+                    <div class="interactive-card" data-category="document" data-name="name slip maker school notebook sticker tags custom kids cartoon grid print A4 sticker slips">
+                        
+                        <div class="card-image-box">
+                            <img src="assets/images/tools/name-slips.svg" alt="School Book Name Slips">
+                            <div class="card-icon-badge" style="background: #fdf2f8; color: #db2777;">
+                                <i class="fas fa-ticket-alt"></i>
+                            </div>
+                        </div>
+                        <h4 style="margin-bottom: 8px; font-size: 1.15rem;">School Book Name Slips</h4>
+                        <p style="font-size: 0.9rem; margin-bottom: 20px;">
+                            Produce A4 print sheets containing grids of colorful cartoon-theme book covers name tags.
+                        </p>
+                        <a href="document-tools.html?tab=name-slips" class="btn btn-primary" style="width: 100%; font-size: 0.85rem; padding: 10px 16px;">Open Tool</a>
+                    </div>
+
+                    <!-- Tool 34: Exam Question Paper compiler -->
+                    <div class="interactive-card" data-category="document" data-name="exam question paper maker test compiler section marks school logo double column exam questions">
+                        
+                        <div class="card-image-box">
+                            <img src="assets/images/tools/exam-paper.svg" alt="Exam Paper Compiler">
+                            <div class="card-icon-badge" style="background: #fdf2f8; color: #db2777;">
+                                <i class="fas fa-file-signature"></i>
+                            </div>
+                        </div>
+                        <h4 style="margin-bottom: 8px; font-size: 1.15rem;">Exam Paper Compiler</h4>
+                        <p style="font-size: 0.9rem; margin-bottom: 20px;">
+                            Compile school test sheets and double-column term papers with customized section weights and school logs.
+                        </p>
+                        <a href="document-tools.html?tab=exam-paper" class="btn btn-primary" style="width: 100%; font-size: 0.85rem; padding: 10px 16px;">Open Tool</a>
+                    </div>
+
+                    <!-- Tool 35: Add Watermark to PDF -->
+                    <div class="interactive-card" data-category="utility" data-name="add watermark to pdf text transparency color rotation angle pdf-lib offline overlay secure pdf">
+                        
+                        <div class="card-image-box">
+                            <img src="assets/images/tools/pdf-watermark.svg" alt="PDF Watermark Creator">
+                            <div class="card-icon-badge" style="background: var(--secondary-light); color: var(--secondary);">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                        </div>
+                        <h4 style="margin-bottom: 8px; font-size: 1.15rem;">PDF Watermark Creator</h4>
+                        <p style="font-size: 0.9rem; margin-bottom: 20px;">
+                            Apply transparent text banners or agency labels to PDF documents completely offline.
+                        </p>
+                        <a href="pdf-watermark.html" class="btn btn-primary" style="width: 100%; font-size: 0.85rem; padding: 10px 16px;">Open Tool</a>
+                    </div>
+
+                    <!-- Tool 36: ID Card Maker -->
+                    <div class="interactive-card" data-category="csctools" data-name="id card maker student employee badge barcode generator layout print a4 front back school college card">
+                        
+                        <div class="card-image-box">
+                            <img src="assets/images/tools/id-card-maker.svg" alt="Custom ID Card Maker">
+                            <div class="card-icon-badge" style="background: var(--primary-light); color: var(--primary);">
+                                <i class="fas fa-id-card-alt"></i>
+                            </div>
+                        </div>
+                        <h4 style="margin-bottom: 8px; font-size: 1.15rem;">Custom ID Card Maker</h4>
+                        <p style="font-size: 0.9rem; margin-bottom: 20px;">
+                            Generate professional institutional ID badges with customizable themes, barcodes, and A4 print templates.
+                        </p>
+                        <a href="id-card-maker.html" class="btn btn-primary" style="width: 100%; font-size: 0.85rem; padding: 10px 16px;">Open Tool</a>
+                    </div>
+
+                    <!-- Tool 37: Admit Card Manager -->
+                    <div class="interactive-card" data-category="csctools" data-name="admit card manager manager sheet secondary boards timetable registration exam entry pass exams details">
+                        
+                        <div class="card-image-box">
+                            <img src="assets/images/tools/admit-card.svg" alt="Admit Card Manager">
+                            <div class="card-icon-badge" style="background: var(--primary-light); color: var(--primary);">
+                                <i class="fas fa-user-check"></i>
+                            </div>
+                        </div>
+                        <h4 style="margin-bottom: 8px; font-size: 1.15rem;">Admit Card Manager</h4>
+                        <p style="font-size: 0.9rem; margin-bottom: 20px;">
+                            Draft formal registration admission tickets and exam center passes with standard subject calendars.
+                        </p>
+                        <a href="id-card-maker.html?tab=admit" class="btn btn-primary" style="width: 100%; font-size: 0.85rem; padding: 10px 16px;">Open Tool</a>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Shared Footer custom element -->
+    <site-footer></site-footer>
+
+    <!-- Search Filtering and Category Logic -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const searchInput = document.getElementById("toolSearch");
+            const categoryItems = document.querySelectorAll(".category-item");
+            const toolCards = document.querySelectorAll(".interactive-card");
+
+            let activeCategory = "all";
+            let searchQuery = "";
+
+            function applyFilters() {
+                toolCards.forEach(card => {
+                    const matchCategory = (activeCategory === "all" || card.dataset.category === activeCategory);
+                    const matchSearch = card.dataset.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                        card.querySelector("h4").innerText.toLowerCase().includes(searchQuery.toLowerCase());
+
+                    if (matchCategory && matchSearch) {
+                        card.style.display = "block";
+                        setTimeout(() => {
+                            card.style.opacity = "1";
+                            card.style.transform = "translateY(0) scale(1)";
+                        }, 50);
+                    } else {
+                        card.style.opacity = "0";
+                        card.style.transform = "translateY(10px) scale(0.95)";
+                        setTimeout(() => {
+                            card.style.display = "none";
+                        }, 200);
+                    }
+                });
+            }
+
+            // Search change listener
+            searchInput.addEventListener("input", (e) => {
+                searchQuery = e.target.value;
+                applyFilters();
+            });
+
+            // Category click listener
+            categoryItems.forEach(item => {
+                item.addEventListener("click", () => {
+                    categoryItems.forEach(i => i.classList.remove("active"));
+                    item.classList.add("active");
+                    activeCategory = item.dataset.category;
+                    applyFilters();
+                });
+            });
+        });
+    </script>
+    
+    <!-- Script Component Initializer -->
+    <script src="assets/js/components.js"></script>
+</body>
+</html>

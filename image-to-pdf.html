@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image to PDF Converter - SmartService</title>
+    <link rel="stylesheet" href="assets/css/global.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- jspdf CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        .pdf-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 32px;
+            margin-top: 32px;
+        }
+
+        .upload-panel {
+            background: white;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            padding: 32px;
+            box-shadow: var(--shadow-md);
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            margin-bottom: 24px;
+        }
+        .upload-panel:hover {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+        .upload-panel i {
+            font-size: 3rem;
+            color: var(--text-light);
+            margin-bottom: 16px;
+        }
+
+        .sort-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        .sort-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: white;
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+        }
+        .sort-thumb {
+            width: 50px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+        }
+        .item-actions {
+            margin-left: auto;
+            display: flex;
+            gap: 8px;
+        }
+        .sort-action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-light);
+            padding: 4px;
+            font-size: 1rem;
+            transition: var(--transition-fast);
+        }
+        .sort-action-btn:hover {
+            color: var(--primary);
+        }
+
+        .config-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            padding: 32px;
+            box-shadow: var(--shadow-md);
+            height: fit-content;
+        }
+    </style>
+</head>
+<body style="padding-top: 70px;">
+    <site-header></site-header>
+
+    <main class="container section-padding" style="padding-top: 20px;">
+        <!-- Header -->
+        <div style="margin-bottom: 24px;">
+            <a href="index.html" style="color: var(--primary); font-weight: 600;"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+            <h1 style="font-size: 2.2rem; margin-top: 12px; color: var(--text-main);"><i class="fas fa-file-pdf mr-2 text-primary"></i>Image to PDF Converter</h1>
+            <p style="color: var(--text-muted);">Convert photos, scans, and identity documents (JPG/PNG) into a single optimized PDF document.</p>
+        </div>
+
+        <div class="pdf-grid">
+            <!-- Left Side: Uploader & Sorter -->
+            <div>
+                <input type="file" id="imageFiles" accept="image/*" multiple style="display: none;">
+                <div class="upload-panel" onclick="document.getElementById('imageFiles').click()">
+                    <i class="fas fa-images"></i>
+                    <h3>Select Multiple Image Files</h3>
+                    <p style="color: var(--text-light); margin-top: 8px;">Supports JPG, JPEG, PNG, WebP (Max 10MB per file)</p>
+                </div>
+
+                <!-- Files Sorter List -->
+                <div class="glass-panel" style="padding: 24px; display: none;" id="filesPanel">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h4 style="font-size: 1.1rem; color: var(--text-main);">Uploaded Scans List (<span id="fileCount">0</span>)</h4>
+                        <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem; color: #ef4444;" id="btnClearAll"><i class="fas fa-trash"></i> Clear All</button>
+                    </div>
+                    
+                    <div class="sort-list" id="filesList">
+                        <!-- Dynamic sorting rows -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side: Configs & Download -->
+            <div class="config-card">
+                <h3 style="font-size: 1.1rem; margin-bottom: 24px; color: var(--text-main);">PDF Document Settings</h3>
+                
+                <div class="form-group">
+                    <label class="form-label" for="pdfPageSize">Page Setup</label>
+                    <select id="pdfPageSize" class="form-control" style="font-weight: 600;">
+                        <option value="a4">A4 (Standard)</option>
+                        <option value="letter">Letter</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="pdfPageOrientation">Page Orientation</label>
+                    <select id="pdfPageOrientation" class="form-control" style="font-weight: 600;">
+                        <option value="p">Portrait (Vertical)</option>
+                        <option value="l">Landscape (Horizontal)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="pdfMargin">Page Margin (mm)</label>
+                    <select id="pdfMargin" class="form-control" style="font-weight: 600;">
+                        <option value="0">0mm (Full Bleed)</option>
+                        <option value="5">5mm (Small Border)</option>
+                        <option value="10">10mm (Standard)</option>
+                        <option value="15">15mm (Wide)</option>
+                    </select>
+                </div>
+
+                <button id="btnConvert" class="btn btn-success" style="width: 100%; font-size: 1.05rem; margin-top: 16px;" disabled>
+                    <i class="fas fa-file-pdf"></i> Generate & Download PDF
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <site-footer></site-footer>
+
+    <script src="assets/js/components.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const imageFiles = document.getElementById("imageFiles");
+            const filesPanel = document.getElementById("filesPanel");
+            const filesList = document.getElementById("filesList");
+            const fileCount = document.getElementById("fileCount");
+            const btnClearAll = document.getElementById("btnClearAll");
+
+            const pdfPageSize = document.getElementById("pdfPageSize");
+            const pdfPageOrientation = document.getElementById("pdfPageOrientation");
+            const pdfMargin = document.getElementById("pdfMargin");
+            const btnConvert = document.getElementById("btnConvert");
+
+            // Local file items state
+            let loadedFiles = [];
+
+            imageFiles.addEventListener("change", handleFileSelect);
+
+            function handleFileSelect() {
+                const files = Array.from(imageFiles.files);
+                if (files.length === 0) return;
+
+                files.forEach((file) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        loadedFiles.push({
+                            id: Math.random().toString(36).substr(2, 9),
+                            name: file.name,
+                            size: file.size,
+                            src: e.target.result
+                        });
+                        renderFilesList();
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            function renderFilesList() {
+                filesList.innerHTML = "";
+                fileCount.innerText = loadedFiles.length;
+
+                if (loadedFiles.length > 0) {
+                    filesPanel.style.display = "block";
+                    btnConvert.removeAttribute("disabled");
+                } else {
+                    filesPanel.style.display = "none";
+                    btnConvert.setAttribute("disabled", "true");
+                }
+
+                loadedFiles.forEach((file, idx) => {
+                    const sizeKb = (file.size / 1024).toFixed(1);
+                    filesList.innerHTML += `
+                        <div class="sort-item">
+                            <img src="${file.src}" class="sort-thumb">
+                            <div>
+                                <h5 style="font-size: 0.9rem; font-weight: 700; margin-bottom: 2px;">Page ${idx + 1}: ${file.name.substring(0, 18)}...</h5>
+                                <p style="font-size: 0.75rem; color: var(--text-light);">${sizeKb} KB</p>
+                            </div>
+                            <div class="item-actions">
+                                <button class="sort-action-btn" onclick="window.moveItem(${idx}, -1)" title="Move Up"><i class="fas fa-arrow-up"></i></button>
+                                <button class="sort-action-btn" onclick="window.moveItem(${idx}, 1)" title="Move Down"><i class="fas fa-arrow-down"></i></button>
+                                <button class="sort-action-btn" onclick="window.deleteItem('${file.id}')" title="Delete" style="color: #ef4444;"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            // Expose sorting helpers
+            window.moveItem = (index, direction) => {
+                const target = index + direction;
+                if (target < 0 || target >= loadedFiles.length) return;
+
+                const temp = loadedFiles[index];
+                loadedFiles[index] = loadedFiles[target];
+                loadedFiles[target] = temp;
+                renderFilesList();
+            };
+
+            window.deleteItem = (id) => {
+                loadedFiles = loadedFiles.filter(item => item.id !== id);
+                renderFilesList();
+                showToast("Image removed from list.", "info");
+            };
+
+            btnClearAll.addEventListener("click", () => {
+                loadedFiles = [];
+                renderFilesList();
+                showToast("Cleared all files.", "info");
+            });
+
+            // PDF compile logic
+            btnConvert.addEventListener("click", () => {
+                if (loadedFiles.length === 0) return;
+
+                const { jsPDF } = window.jspdf;
+                const size = pdfPageSize.value;
+                const orientation = pdfPageOrientation.value;
+                const margin = parseInt(pdfMargin.value);
+
+                // Create jsPDF instance
+                const doc = new jsPDF({
+                    orientation: orientation,
+                    unit: 'mm',
+                    format: size
+                });
+
+                // Get page bounds in mm
+                const pageWidth = doc.internal.pageSize.getWidth();
+                const pageHeight = doc.internal.pageSize.getHeight();
+
+                const maxWidth = pageWidth - (margin * 2);
+                const maxHeight = pageHeight - (margin * 2);
+
+                loadedFiles.forEach((file, idx) => {
+                    if (idx > 0) {
+                        doc.addPage(size, orientation);
+                    }
+
+                    // Draw image dynamically with aspect bounds scaling
+                    const img = new Image();
+                    img.src = file.src;
+                    
+                    // Synchronous canvas check logic is done because src is already dataURL loaded
+                    let imgWidth = img.width || 800;
+                    let imgHeight = img.height || 600;
+
+                    let renderWidth = maxWidth;
+                    let renderHeight = (imgHeight * maxWidth) / imgWidth;
+
+                    if (renderHeight > maxHeight) {
+                        renderHeight = maxHeight;
+                        renderWidth = (imgWidth * maxHeight) / imgHeight;
+                    }
+
+                    // Center inside bounds
+                    const x = margin + (maxWidth - renderWidth) / 2;
+                    const y = margin + (maxHeight - renderHeight) / 2;
+
+                    doc.addImage(file.src, 'JPEG', x, y, renderWidth, renderHeight);
+                });
+
+                doc.save(`smartservice_images_${Date.now()}.pdf`);
+                showToast("PDF document generated and downloaded.", "success");
+            });
+        });
+    </script>
+</body>
+</html>

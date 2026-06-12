@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Generator - SmartService</title>
+    <link rel="stylesheet" href="assets/css/global.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- easyqrcodejs CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/easyqrcodejs@4.4.10/dist/easy.qrcode.min.js"></script>
+
+    <style>
+        .qr-grid {
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 32px;
+            margin-top: 32px;
+        }
+
+        .settings-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            padding: 32px;
+            box-shadow: var(--shadow-md);
+            height: fit-content;
+        }
+
+        .preview-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            padding: 32px;
+            box-shadow: var(--shadow-md);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .canvas-box {
+            background: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 24px;
+            width: 100%;
+            min-height: 400px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        #renderCanvas {
+            max-width: 100%;
+            max-height: 400px;
+            background: white;
+            box-shadow: var(--shadow-md);
+        }
+
+        #qrcode {
+            display: none;
+        }
+    </style>
+</head>
+<body style="padding-top: 70px;">
+    <site-header></site-header>
+
+    <main class="container section-padding" style="padding-top: 20px;">
+        <!-- Header -->
+        <div style="margin-bottom: 24px;">
+            <a href="index.html" style="color: var(--primary); font-weight: 600;"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+            <h1 style="font-size: 2.2rem; margin-top: 12px; color: var(--text-main);"><i class="fas fa-qrcode mr-2 text-primary"></i>QR Code Generator</h1>
+            <p style="color: var(--text-muted);">Instantly create downloadable high-resolution QR codes for websites, texts, or UPI payments.</p>
+        </div>
+
+        <div class="qr-grid">
+            <!-- Left Side: Settings -->
+            <div class="settings-card fade-in">
+                <h3 style="font-size: 1.1rem; margin-bottom: 20px; color: var(--text-main);">QR Settings</h3>
+                
+                <div class="form-group">
+                    <label class="form-label" for="qrText">QR Code Value (URL/Text)</label>
+                    <input type="text" id="qrText" class="form-control" value="https://smartservice.in" placeholder="Enter link or text">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="qrTitle">Card Title Header (Optional)</label>
+                    <input type="text" id="qrTitle" class="form-control" value="Scan to Visit" placeholder="e.g. Scan & Pay">
+                </div>
+            </div>
+
+            <!-- Right Side: Preview -->
+            <div class="preview-card fade-in" style="animation-delay: 0.1s;">
+                <h3 style="font-size: 1.1rem; margin-bottom: 24px; color: var(--text-main); align-self: flex-start;">Live Output Preview</h3>
+                
+                <div class="canvas-box">
+                    <div id="qrcode"></div>
+                    <canvas id="renderCanvas"></canvas>
+                </div>
+
+                <button id="btnDownload" class="btn btn-success" style="width: 100%; font-size: 1.05rem;">
+                    <i class="fas fa-download"></i> Download QR Code (PNG)
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <site-footer></site-footer>
+
+    <script src="assets/js/components.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const qrText = document.getElementById("qrText");
+            const qrTitle = document.getElementById("qrTitle");
+            const qrcodeDiv = document.getElementById("qrcode");
+            const renderCanvas = document.getElementById("renderCanvas");
+            const btnDownload = document.getElementById("btnDownload");
+
+            const ctx = renderCanvas.getContext("2d");
+
+            renderCanvas.width = 400;
+            renderCanvas.height = 450;
+
+            function drawQrCode() {
+                const text = qrText.value || "SmartService";
+                const titleText = qrTitle.value || "";
+
+                qrcodeDiv.innerHTML = "";
+                
+                // Construct QR in hidden element
+                new QRCode(qrcodeDiv, {
+                    text: text,
+                    width: 260,
+                    height: 260,
+                    colorDark: "#0f172a",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+
+                // Stitch onto target Canvas
+                setTimeout(() => {
+                    const qrImg = qrcodeDiv.querySelector("img");
+                    if (!qrImg) return;
+
+                    ctx.fillStyle = "#ffffff";
+                    ctx.fillRect(0, 0, 400, 450);
+
+                    // Draw header
+                    if (titleText) {
+                        ctx.fillStyle = "#0f172a";
+                        ctx.font = "bold 24px 'Plus Jakarta Sans'";
+                        ctx.textAlign = "center";
+                        ctx.fillText(titleText, 200, 50);
+                    }
+
+                    // Draw image
+                    ctx.drawImage(qrImg, 70, 80, 260, 260);
+
+                    // Draw footer text
+                    ctx.fillStyle = "#64748b";
+                    ctx.font = "14px 'Plus Jakarta Sans'";
+                    ctx.textAlign = "center";
+                    ctx.fillText("Generated by SmartService", 200, 390);
+                }, 150);
+            }
+
+            // Input binds
+            qrText.addEventListener("input", drawQrCode);
+            qrTitle.addEventListener("input", drawQrCode);
+
+            btnDownload.addEventListener("click", () => {
+                const url = renderCanvas.toDataURL("image/png");
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `smartservice_qr_${Date.now()}.png`;
+                a.click();
+                showToast("QR Code downloaded successfully.", "success");
+            });
+
+            // Initial render
+            drawQrCode();
+        });
+    </script>
+</body>
+</html>

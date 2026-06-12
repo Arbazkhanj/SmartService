@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 140" width="280" height="140">
+    <defs>
+        
+        <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#ecfdf5" />
+            <stop offset="100%" stop-color="#d1fae5" />
+        </linearGradient>
+        <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+            <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#0f172a" flood-opacity="0.08" />
+        </filter>
+    </defs>
+    
+    <rect width="280" height="140" fill="url(#bgGrad)" />
+    
+    <g opacity="0.08">
+        <pattern id="grid-green" width="16" height="16" patternUnits="userSpaceOnUse">
+            <path d="M 16 0 L 0 0 0 16" fill="none" stroke="#10b981" stroke-width="1"/>
+        </pattern>
+        <rect width="280" height="140" fill="url(#grid-green)" />
+    </g>
+    
+    <!-- Abstract background circles -->
+    <circle cx="30" cy="110" r="30" fill="none" stroke="#10b981" stroke-width="1" opacity="0.1" />
+    <circle cx="250" cy="30" r="40" fill="none" stroke="#10b981" stroke-width="1" opacity="0.1" />
+    
+    <!-- Central Content Group -->
+    <g filter="url(#shadow)">
+        
+    <!-- Rounded WhatsApp speech bubble -->
+    <rect x="85" y="30" width="110" height="70" rx="12" fill="#10b981" />
+    <path d="M100,100 L90,112 L105,100 Z" fill="#10b981" />
+    <!-- Phone icon + send icon inside bubble -->
+    <path d="M125,52 C120,52 112,58 112,65 C112,74 122,80 130,80 C136,80 142,75 142,68 C142,61 136,52 125,52 Z" fill="none" stroke="#ffffff" stroke-width="3" />
+    <circle cx="127" cy="66" r="3" fill="#ffffff" />
+    <!-- Text mockup bubble chat -->
+    <rect x="100" y="45" width="55" height="4" rx="2" fill="#ffffff" opacity="0.9" />
+    <rect x="100" y="55" width="40" height="4" rx="2" fill="#ffffff" opacity="0.9" />
+    <!-- Outgoing plane message -->
+    <g transform="translate(190, 45)">
+        <path d="M 0 0 L 25 -10 L 12 10 L 8 5 Z" fill="#047857" />
+        <path d="M 8 5 L 12 10 L 15 25 Z" fill="#065f46" />
+    </g>
+
+    </g>
+</svg>

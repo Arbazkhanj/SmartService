@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sarkari Document & Formats Creator - SmartService</title>
+    <link rel="stylesheet" href="assets/css/global.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .doc-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 32px;
+            margin-top: 24px;
+        }
+        .doc-sidebar {
+            position: sticky;
+            top: 90px;
+            height: fit-content;
+        }
+        .doc-tab-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .doc-tab-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 20px;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: var(--transition-fast);
+            border: 1px solid transparent;
+            background: white;
+            box-shadow: var(--shadow-sm);
+        }
+        .doc-tab-item:hover, .doc-tab-item.active {
+            background-color: var(--primary-light);
+            color: var(--primary);
+        }
+        .doc-tab-item.active {
+            border-color: rgba(37,99,235,0.15);
+        }
+        .doc-panel {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        .doc-panel.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .editor-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 28px;
+        }
+        
+        /* A4 Page Styling */
+        .preview-paper-container {
+            background: #475569;
+            padding: 32px 16px;
+            border-radius: var(--radius-lg);
+            display: flex;
+            justify-content: center;
+            overflow-y: auto;
+            max-height: 800px;
+            border: 1px solid var(--border-color);
+        }
+        .a4-sheet {
+            background: #ffffff;
+            width: 210mm;
+            min-height: 297mm;
+            padding: 20mm;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            color: #1e293b;
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 11pt;
+            line-height: 1.5;
+            position: relative;
+            box-sizing: border-box;
+        }
+        
+        /* Name slip specific styles */
+        .slip-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            width: 100%;
+        }
+        .name-slip-card {
+            border: 2px dashed #3b82f6;
+            border-radius: 8px;
+            padding: 16px;
+            background: #eff6ff;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .name-slip-card.cartoon-space {
+            background: #faf5ff;
+            border-color: #a855f7;
+        }
+        .name-slip-card.cartoon-jungle {
+            background: #f0fdf4;
+            border-color: #22c55e;
+        }
+        .name-slip-theme-banner {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            font-weight: 800;
+            color: #ffffff;
+            background: #3b82f6;
+            padding: 2px 8px;
+            border-radius: 4px;
+            width: fit-content;
+        }
+        .name-slip-line {
+            border-bottom: 1px dotted #94a3b8;
+            padding-bottom: 2px;
+            font-size: 0.9rem;
+            color: #0f172a;
+        }
+        
+        /* Question paper header */
+        .paper-header {
+            text-align: center;
+            border-bottom: 2px solid #0f172a;
+            padding-bottom: 12px;
+            margin-bottom: 24px;
+        }
+        .paper-section-title {
+            text-align: center;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-top: 16px;
+            margin-bottom: 12px;
+            border-bottom: 1px solid #1e293b;
+        }
+        
+        @media (max-width: 992px) {
+            .doc-layout {
+                grid-template-columns: 1fr;
+            }
+            .doc-sidebar {
+                position: static;
+            }
+            .doc-tab-list {
+                flex-direction: row;
+                overflow-x: auto;
+                padding-bottom: 8px;
+            }
+            .doc-tab-item {
+                white-space: nowrap;
+            }
+            .editor-grid {
+                grid-template-columns: 1fr;
+            }
+            .preview-paper-container {
+                overflow-x: auto;
+            }
+            .a4-sheet {
+                width: 100%;
+                min-width: 600px;
+                padding: 10mm;
+            }
+        }
+        
+        /* Print Styles Override */
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 0;
+            }
+            body, html {
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            body * {
+                visibility: hidden;
+            }
+            .a4-sheet, .a4-sheet * {
+                visibility: visible;
+            }
+            .a4-sheet {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 210mm !important;
+                height: 297mm !important;
+                box-shadow: none !important;
+                padding: 15mm !important;
+                margin: 0 !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body style="padding-top: 70px;">
+    <site-header></site-header>
+
+    <main class="container section-padding no-print" style="padding-top: 20px;">
+        <div style="margin-bottom: 24px;">
+            <a href="index.html" style="color: var(--primary); font-weight: 600;"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+            <h1 style="font-size: 2.2rem; margin-top: 12px; color: var(--text-main);"><i class="fas fa-file-signature mr-2 text-primary"></i> Sarkari Document Suite</h1>
+            <p style="color: var(--text-muted);">Generate professional Indian affidavits, rent agreements, school question papers, and kids name slips instantly offline.</p>
+        </div>
+
+        <div class="doc-layout">
+            <!-- Sidebar Navigation -->
+            <aside class="doc-sidebar">
+                <ul class="doc-tab-list">
+                    <li class="doc-tab-item active" data-target="affidavit">
+                        <i class="fas fa-gavel"></i> Affidavit Generator
+                    </li>
+                    <li class="doc-tab-item" data-target="agreement">
+                        <i class="fas fa-file-contract"></i> Rent Agreement
+                    </li>
+                    <li class="doc-tab-item" data-target="cover-letter">
+                        <i class="fas fa-envelope-open-text"></i> Cover Letter Maker
+                    </li>
+                    <li class="doc-tab-item" data-target="name-slips">
+                        <i class="fas fa-ticket-alt"></i> School Book Name Slips
+                    </li>
+                    <li class="doc-tab-item" data-target="exam-paper">
+                        <i class="fas fa-file-invoice"></i> School Question Paper
+                    </li>
+                </ul>
+            </aside>
+
+            <!-- Document Workspace Panels -->
+            <section style="flex: 1;">
+                
+                <!-- 1. AFFIDAVIT GENERATOR -->
+                <div class="doc-panel active" id="affidavit">
+                    <div class="card" style="padding: 24px;">
+                        <h2 style="font-size: 1.5rem; margin-bottom: 12px;"><i class="fas fa-stamp text-primary"></i> Indian Affidavit Generator</h2>
+                        <p style="color: var(--text-muted); margin-bottom: 24px;">Create standard declaration formats for name correction, academic gap years, and address proof declarations instantly.</p>
+
+                        <div class="editor-grid">
+                            <div class="control-group" style="display: flex; flex-direction: column; gap: 16px;">
+                                <h3 style="font-size: 1.1rem; margin-bottom: 8px;">Affidavit Details</h3>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">Affidavit Type</label>
+                                    <select class="form-control" id="affType">
+                                        <option value="gap">Gap Certificate Academic Affidavit</option>
+                                        <option value="name">Name Correction/Alias Affidavit</option>
+                                        <option value="address">Address Declaration Affidavit</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="control-label">Declarant Name</label>
+                                    <input type="text" class="form-control" id="affName" value="Rajesh Kumar Sharma">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="control-label">Father's Name</label>
+                                    <input type="text" class="form-control" id="affFather" value="Shri Mohan Lal Sharma">
+                                </div>
+
+                                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                                    <div>
+                                        <label class="control-label">Age (Years)</label>
+                                        <input type="number" class="form-control" id="affAge" value="23">
+                                    </div>
+                                    <div>
+                                        <label class="control-label">State of Residence</label>
+                                        <input type="text" class="form-control" id="affState" value="Madhya Pradesh">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="control-label">Full Address</label>
+                                    <input type="text" class="form-control" id="affAddress" value="Flat No 204, Royal Palace, Vijay Nagar, Indore">
+                                </div>
+
+                                <!-- Variable text inputs based on type -->
+                                <div id="affDynamicInputs">
+                                    <!-- Gap cert inputs -->
+                                    <div class="form-group gap-fields">
+                                        <label class="control-label">Gap Year Duration (e.g. 2024 to 2026)</label>
+                                        <input type="text" class="form-control" id="affGapYears" value="2024 to 2026">
+                                    </div>
+                                    <div class="form-group gap-fields">
+                                        <label class="control-label">Reason for Gap (e.g. Preparing for UPSC Exams)</label>
+                                        <input type="text" class="form-control" id="affGapReason" value="Preparing for Competitive Exams">
+                                    </div>
+                                </div>
+
+                                <button class="btn btn-primary" onclick="window.print()"><i class="fas fa-print"></i> Print A4 Affidavit</button>
+                            </div>
+
+                            <!-- Live A4 Sheet Preview -->
+                            <div class="preview-paper-container">
+                                <div class="a4-sheet" id="affSheet">
+                                    <!-- Stamp Space Header (VLEs print on 10/20/50/100 Rupees stamp paper, requiring 3-inch top margin) -->
+                                    <div class="stamp-space no-print" style="height: 100px; border: 1px dashed var(--text-light); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 40px;">
+                                        [LEAVE SPACE FOR ₹50/₹100 NON-JUDICIAL STAMP PAPER HERE]
+                                    </div>
+
+                                    <div style="text-align: center; font-weight: bold; text-decoration: underline; font-size: 14pt; margin-bottom: 24px;">AFFIDAVIT</div>
+                                    
+                                    <p style="text-align: justify; margin-bottom: 16px;">
+                                        I, <strong id="pAffName">Rajesh Kumar Sharma</strong>, Son of <span id="pAffFather">Shri Mohan Lal Sharma</span>, aged about <span id="pAffAge">23</span> years, residing at <span id="pAffAddress">Flat No 204, Royal Palace, Vijay Nagar, Indore, Madhya Pradesh</span>, do hereby solemnly affirm and state on oath as under:
+                                    </p>
+
+                                    <div id="affStatements">
+                                        <!-- Statement bullet points -->
+                                    </div>
+
+                                    <p style="margin-top: 32px; text-align: justify;">
+                                        That the contents of the above affidavit are true and correct to the best of my personal knowledge and belief, and nothing material has been concealed therefrom.
+                                    </p>
+
+                                    <div style="margin-top: 60px; display: flex; justify-content: space-between;">
+                                        <div>
+                                            <p>Date: ________________</p>
+                                            <p>Place: Indore</p>
+                                        </div>
+                                        <div style="text-align: center; width: 200px;">
+                                            <p>______________________</p>
+                                            <strong style="text-transform: uppercase;">DEPONENT</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. RENT AGREEMENT -->
+                <div class="doc-panel" id="agreement">
+                    <div class="card" style="padding: 24px;">
+                        <h2 style="font-size: 1.5rem; margin-bottom: 12px;"><i class="fas fa-file-contract text-primary"></i> Rent Agreement Generator</h2>
+                        <p style="color: var(--text-muted); margin-bottom: 24px;">Generate customized 11-Month tenancy lease deeds, security deposit terms, and contract clauses offline.</p>
+
+                        <div class="editor-grid">
+                            <div class="control-group" style="display: flex; flex-direction: column; gap: 16px;">
+                                <h3 style="font-size: 1.1rem; margin-bottom: 8px;">Agreement Form</h3>
+                                
+                                <div class="form-group">
+                                    <label class="control-label">Landlord Name (Owner)</label>
+                                    <input type="text" class="form-control" id="ownerName" value="Sanjay Kumar Verma">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="control-label">Tenant Name (Renter)</label>
+                                    <input type="text" class="form-control" id="tenantName" value="Amit Mishra">
+                                </div>
+
+                                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                                    <div>
+                                        <label class="control-label">Monthly Rent (₹)</label>
+                                        <input type="number" class="form-control" id="rentAmount" value="12000">
+                                    </div>
+                                    <div>
+                                        <label class="control-label">Security Deposit (₹)</label>
+                                        <input type="number" class="form-control" id="securityDeposit" value="24000">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="control-label">Rented Property Address</label>
+                                    <input type="text" class="form-control" id="propertyAddress" value="Plot 45, Sector B, Scheme 54, Indore (M.P.)">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="control-label">Agreement Commencement Date</label>
+                                    <input type="date" class="form-control" id="agreementDate" value="2026-06-12">
+                                </div>
+
+                                <button class="btn btn-primary" onclick="window.print()"><i class="fas fa-print"></i> Print Agreement A4</button>
+                            </div>
+
+                            <div class="preview-paper-container">
+                                <div class="a4-sheet" id="agreementSheet">
+                                    <div class="stamp-space no-print" style="height: 100px; border: 1px dashed var(--text-light); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 40px;">
+                                        [LEAVE SPACE FOR ₹100/₹500 NON-JUDICIAL STAMP PAPER HERE]
+                                    </div>
+
+                                    <div style="text-align: center; font-weight: bold; text-decoration: underline; font-size: 14pt; margin-bottom: 24px;">RENT AGREEMENT DEED</div>
+
+                                    <p style="text-align: justify; margin-bottom: 16px;">
+                                        This Rent Agreement is made on <strong id="pAgreeDate">12-06-2026</strong>, by and between:
+                                    </p>
+
+                                    <p style="text-align: justify; margin-bottom: 16px;">
+                                        <strong>FIRST PARTY (Landlord):</strong> <span id="pOwnerName">Sanjay Kumar Verma</span>, residing at the address Indore.
+                                    </p>
+
+                                    <p style="text-align: justify; margin-bottom: 16px;">
+                                        <strong>SECOND PARTY (Tenant):</strong> <span id="pTenantName">Amit Mishra</span>, residing at the address Indore.
+                                    </p>
+
+                                    <p style="text-align: justify; margin-bottom: 16px;">
+                                        WHEREAS the First Party is the absolute owner of the premises located at <strong id="pPropAddress">Plot 45, Sector B, Scheme 54, Indore (M.P.)</strong>, and has agreed to let out the same to the Tenant on a monthly rent basis.
+                                    </p>
+
+                                    <h4 style="font-size: 12pt; margin-top: 20px; margin-bottom: 8px;">TERMS AND CONDITIONS:</h4>
+                                    <ol style="margin-left: 20px; text-align: justify;">
+                                        <li>That this tenancy period is scheduled strictly for a duration of 11 Months.</li>
+                                        <li>That the Tenant shall pay a monthly rental sum of <strong>₹<span id="pRentAmt">12,000</span></strong> payable on or before the 5th day of every calendar month.</li>
+                                        <li>That the Tenant has deposited a refundable Security Sum of <strong>₹<span id="pSecurityAmt">24,000</span></strong> with the Landlord.</li>
+                                        <li>That the Tenant shall pay all utility bills (Electricity, water, gas) directly to the department.</li>
+                                    </ol>
+
+                                    <div style="margin-top: 60px; display: flex; justify-content: space-between;">
+                                        <div style="text-align: center; width: 180px;">
+                                            <p>_____________________</p>
+                                            <strong>LANDLORD (Owner)</strong>
+                                        </div>
+                                        <div style="text-align: center; width: 180px;">
+                                            <p>_____________________</p>
+                                            <strong>TENANT (Renter)</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. COVER LETTER MAKER -->
+                <div class="doc-panel" id="cover-letter">
+                    <div class="card" style="padding: 24px;">
+                        <h2 style="font-size: 1.5rem; margin-bottom: 12px;"><i class="fas fa-envelope-open-text text-primary"></i> Cover Letter Maker</h2>
+                        <p style="color: var(--text-muted); margin-bottom: 24px;">Draft corporate & administrative job application introduction cover letters offline instantly.</p>
+
+                        <div class="editor-grid">
+                            <div class="control-group" style="display: flex; flex-direction: column; gap: 16px;">
+                                <h3 style="font-size: 1.1rem; margin-bottom: 8px;">Letter Details</h3>
+                                
+                                <div class="form-group">
+                                    <label class="control-label">Your Name</label>
+                                    <input type="text" class="form-control" id="clName" value="Karan Singh">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="control-label">Job Title Applying For</label>
+                                    <input type="text" class="form-control" id="clTitle" value="Senior System Administrator">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="control-label">Company Name</label>
+                                    <input type="text" class="form-control" id="clCompany" value="Infosys Technologies">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="control-label">Skills / Experience Highlight</label>
+                                    <textarea class="form-control" id="clSkills" style="height: 100px;">managing secure cloud infrastructure, automating deployment pipelines, and scaling microservices with 5+ years of active experience.</textarea>
+                                </div>
+
+                                <button class="btn btn-primary" onclick="window.print()"><i class="fas fa-print"></i> Print Cover Letter</button>
+                            </div>
+
+                            <div class="preview-paper-container">
+                                <div class="a4-sheet" id="clSheet" style="font-family: Arial, Helvetica, sans-serif; font-size: 10.5pt;">
+                                    <div style="border-bottom: 2px solid var(--primary); padding-bottom: 16px; margin-bottom: 24px;">
+                                        <h2 style="font-size: 20pt; color: var(--primary);" id="pClName">Karan Singh</h2>
+                                        <p style="color: var(--text-muted);">Email: karansingh@email.com | Mobile: +91 9876543210</p>
+                                    </div>
+
+                                    <p id="clDateDisplay" style="margin-bottom: 20px;">June 11, 2026</p>
+
+                                    <p style="margin-bottom: 20px;">
+                                        To,<br>
+                                        The Hiring Manager,<br>
+                                        <strong id="pClCompany">Infosys Technologies</strong>
+                                    </p>
+
+                                    <p style="margin-bottom: 16px;">
+                                        <strong>Subject: Application for the position of <span id="pClTitle">Senior System Administrator</span></strong>
+                                    </p>
+
+                                    <p style="margin-bottom: 16px;">Dear Hiring Manager,</p>
+
+                                    <p style="text-align: justify; margin-bottom: 16px;">
+                                        I am writing to express my strong interest in the <strong id="pClTitleSec">Senior System Administrator</strong> vacancy at your organization. With a robust background in computing structures and professional document management, I am confident in my ability to make immediate positive contributions to your development teams.
+                                    </p>
+
+                                    <p style="text-align: justify; margin-bottom: 16px;">
+                                        My professional skills align perfectly with the requirements, particularly in <span id="pClSkills">managing secure cloud infrastructure, automating deployment pipelines, and scaling microservices with 5+ years of active experience.</span> Throughout my career, I have focused on optimizing system uptimes and building collaborative architectures.
+                                    </p>
+
+                                    <p style="text-align: justify; margin-bottom: 16px;">
+                                        Thank you for your time and consideration. I welcome the opportunity to discuss how my qualifications meet your administrative needs.
+                                    </p>
+
+                                    <p style="margin-top: 40px;">
+                                        Sincerely,<br><br><br>
+                                        <strong id="pClNameSign">Karan Singh</strong>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. SCHOOL BOOK NAME SLIPS -->
+                <div class="doc-panel" id="name-slips">
+                    <div class="card" style="padding: 24px;">
+                        <h2 style="font-size: 1.5rem; margin-bottom: 12px;"><i class="fas fa-ticket-alt text-primary"></i> School Book Name Slips Maker</h2>
+                        <p style="color: var(--text-muted); margin-bottom: 24px;">Generate an A4 print sheet grid of 8 cartoon-themed school name slips for children's notebooks.</p>
+
+                        <div class="editor-grid">
+                            <div class="control-group" style="display: flex; flex-direction: column; gap: 16px;">
+                                <h3 style="font-size: 1.1rem; margin-bottom: 8px;">Slip Details</h3>
+                                
+                                <div class="form-group">
+                                    <label class="control-label">Student Name</label>
+                                    <input type="text" class="form-control" id="nsName" value="Rahul Verma">
+                                </div>
+
+                                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                                    <div>
+                                        <label class="control-label">Class</label>
+                                        <input type="text" class="form-control" id="nsClass" value="5th - A">
+                                    </div>
+                                    <div>
+                                        <label class="control-label">Roll No</label>
+                                        <input type="text" class="form-control" id="nsRoll" value="24">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="control-label">School Name</label>
+                                    <input type="text" class="form-control" id="nsSchool" value="St. Xavier's Academy, Indore">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Cartoon Theme</label>
+                                    <select class="form-control" id="nsTheme">
+                                        <option value="cartoon-blue">Space Adventures (Blue)</option>
+                                        <option value="cartoon-space">Robot Galaxy (Purple)</option>
+                                        <option value="cartoon-jungle">Forest Jungle Safari (Green)</option>
+                                    </select>
+                                </div>
+
+                                <button class="btn btn-primary" onclick="window.print()"><i class="fas fa-print"></i> Print Slips Grid (A4)</button>
+                            </div>
+
+                            <div class="preview-paper-container">
+                                <div class="a4-sheet" id="nsSheet" style="padding: 10mm; display: flex; flex-direction: column; justify-content: center;">
+                                    <div class="slip-grid" id="slipsGrid">
+                                        <!-- Grid items generated dynamically in javascript -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. EXAM QUESTION PAPER MAKER -->
+                <div class="doc-panel" id="exam-paper">
+                    <div class="card" style="padding: 24px;">
+                        <h2 style="font-size: 1.5rem; margin-bottom: 12px;"><i class="fas fa-file-invoice text-primary"></i> School Exam Question Paper Compiler</h2>
+                        <p style="color: var(--text-muted); margin-bottom: 24px;">Compile double-column school term test sheets with standard Section structure (A, B, C) and school headers.</p>
+
+                        <div class="editor-grid">
+                            <div class="control-group" style="display: flex; flex-direction: column; gap: 16px; max-height: 700px; overflow-y: auto;">
+                                <h3 style="font-size: 1.1rem; margin-bottom: 8px;">Exam Paper Details</h3>
+                                
+                                <div class="form-group">
+                                    <label class="control-label">School / Institute Name</label>
+                                    <input type="text" class="form-control" id="epSchool" value="SARASWATI VIDYA MANDIR H.S. SCHOOL">
+                                </div>
+
+                                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                                    <div>
+                                        <label class="control-label">Subject</label>
+                                        <input type="text" class="form-control" id="epSubject" value="General Science">
+                                    </div>
+                                    <div>
+                                        <label class="control-label">Class</label>
+                                        <input type="text" class="form-control" id="epClass" value="Class VIII">
+                                    </div>
+                                </div>
+
+                                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                                    <div>
+                                        <label class="control-label">Max Marks</label>
+                                        <input type="number" class="form-control" id="epMarks" value="100">
+                                    </div>
+                                    <div>
+                                        <label class="control-label">Time Duration</label>
+                                        <input type="text" class="form-control" id="epTime" value="3 Hours">
+                                    </div>
+                                </div>
+
+                                <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 8px 0;">
+
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <h4 style="font-size: 1rem;">Questions List</h4>
+                                    <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;" id="addQuestionBtn"><i class="fas fa-plus"></i> Add Question</button>
+                                </div>
+
+                                <div id="questionsInputContainer" style="display: flex; flex-direction: column; gap: 12px;">
+                                    <!-- Questions form list -->
+                                </div>
+
+                                <button class="btn btn-primary" onclick="window.print()" style="margin-top: 16px;"><i class="fas fa-print"></i> Compile &amp; Print A4</button>
+                            </div>
+
+                            <div class="preview-paper-container">
+                                <div class="a4-sheet" id="epSheet" style="font-family: Arial, sans-serif; padding: 15mm; font-size: 10pt;">
+                                    <div class="paper-header">
+                                        <h3 style="font-size: 12pt; text-align: center; font-weight: 800; text-transform: uppercase;" id="pepSchool">SARASWATI VIDYA MANDIR H.S. SCHOOL</h3>
+                                        <div style="display: flex; justify-content: space-between; font-weight: bold; margin-top: 12px;">
+                                            <span>Subject: <span id="pepSubject">General Science</span></span>
+                                            <span>Class: <span id="pepClass">Class VIII</span></span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; font-weight: bold; margin-top: 4px;">
+                                            <span>Max Marks: <span id="pepMarks">100</span></span>
+                                            <span>Time Allowed: <span id="pepTime">3 Hours</span></span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Section A -->
+                                    <div class="paper-section-title">SECTION A (Multiple Choice Questions)</div>
+                                    <ol style="margin-left: 20px; display: flex; flex-direction: column; gap: 10px;" id="pepQuestionsA">
+                                        <!-- questions -->
+                                    </ol>
+
+                                    <!-- Section B -->
+                                    <div class="paper-section-title">SECTION B (Short Answer Questions)</div>
+                                    <ol style="margin-left: 20px; display: flex; flex-direction: column; gap: 10px;" id="pepQuestionsB">
+                                        <!-- questions -->
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+        </div>
+    </main>
+
+    <site-footer></site-footer>
+
+    <script src="assets/js/components.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // --- TAB NAVIGATION ---
+            const tabs = document.querySelectorAll(".doc-tab-item");
+            const panels = document.querySelectorAll(".doc-panel");
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const tabParam = urlParams.get('tab');
+            if (tabParam) {
+                const targetTab = document.querySelector(`.doc-tab-item[data-target="${tabParam}"]`);
+                if (targetTab) {
+                    tabs.forEach(t => t.classList.remove("active"));
+                    panels.forEach(p => p.classList.remove("active"));
+                    targetTab.classList.add("active");
+                    const pnl = document.getElementById(tabParam);
+                    if (pnl) pnl.classList.add("active");
+                }
+            }
+
+            tabs.forEach(tab => {
+                tab.addEventListener("click", () => {
+                    tabs.forEach(t => t.classList.remove("active"));
+                    panels.forEach(p => p.classList.remove("active"));
+                    
+                    tab.classList.add("active");
+                    const targetId = tab.dataset.target;
+                    document.getElementById(targetId).classList.add("active");
+                    
+                    const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?tab=' + targetId;
+                    window.history.pushState({ path: newUrl }, '', newUrl);
+                });
+            });
+
+            // --- 1. AFFIDAVIT LOGIC ---
+            const affType = document.getElementById("affType");
+            const affName = document.getElementById("affName");
+            const affFather = document.getElementById("affFather");
+            const affAge = document.getElementById("affAge");
+            const affAddress = document.getElementById("affAddress");
+            const affState = document.getElementById("affState");
+
+            [affType, affName, affFather, affAge, affAddress, affState].forEach(el => {
+                el.addEventListener("input", renderAffidavit);
+                el.addEventListener("change", renderAffidavit);
+            });
+
+            function renderAffidavit() {
+                document.getElementById("pAffName").innerText = affName.value;
+                document.getElementById("pAffFather").innerText = affFather.value;
+                document.getElementById("pAffAge").innerText = affAge.value;
+                document.getElementById("pAffAddress").innerText = `${affAddress.value}, ${affState.value}`;
+
+                // Show dynamic fields based on type
+                const type = affType.value;
+                const dynamicZone = document.getElementById("affDynamicInputs");
+                const statementsZone = document.getElementById("affStatements");
+
+                // Toggle dynamic control elements display
+                if (type === "gap") {
+                    dynamicZone.innerHTML = `
+                        <div class="form-group">
+                            <label class="control-label">Gap Year Duration (e.g. 2024 to 2026)</label>
+                            <input type="text" class="form-control" id="affGapYears" value="2024 to 2026">
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label">Reason for Gap (e.g. Preparing for UPSC Exams)</label>
+                            <input type="text" class="form-control" id="affGapReason" value="Preparing for Competitive Exams">
+                        </div>
+                    `;
+                    
+                    // Add listener to new dynamic inputs
+                    document.getElementById("affGapYears").addEventListener("input", renderAffidavit);
+                    document.getElementById("affGapReason").addEventListener("input", renderAffidavit);
+
+                    const gapYears = document.getElementById("affGapYears").value;
+                    const gapReason = document.getElementById("affGapReason").value;
+
+                    statementsZone.innerHTML = `
+                        <ol style="margin-left: 20px; display: flex; flex-direction: column; gap: 12px; text-align: justify;">
+                            <li>That the deponent has completed graduation or secondary schooling in the academic session of 2024.</li>
+                            <li>That the deponent was preparing for educational competitive tests and, as such, did not enroll in any other university or job during the period <strong>${gapYears}</strong>.</li>
+                            <li>That the deponent took a temporary gap year for the reason of: <strong>${gapReason}</strong>.</li>
+                            <li>That during this gap phase, the deponent was not involved in any illegal activities or criminal acts.</li>
+                        </ol>
+                    `;
+                } else if (type === "name") {
+                    dynamicZone.innerHTML = `
+                        <div class="form-group">
+                            <label class="control-label">Incorrect Name in School Records</label>
+                            <input type="text" class="form-control" id="affWrongName" value="Rajesh Sharma">
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label">Correct Name in Govt Records (Aadhaar)</label>
+                            <input type="text" class="form-control" id="affCorrectName" value="Rajesh Kumar Sharma">
+                        </div>
+                    `;
+                    document.getElementById("affWrongName").addEventListener("input", renderAffidavit);
+                    document.getElementById("affCorrectName").addEventListener("input", renderAffidavit);
+
+                    const wrongName = document.getElementById("affWrongName").value;
+                    const correctName = document.getElementById("affCorrectName").value;
+
+                    statementsZone.innerHTML = `
+                        <ol style="margin-left: 20px; display: flex; flex-direction: column; gap: 12px; text-align: justify;">
+                            <li>That in the school certificates and educational records, the name of the deponent has been written incorrectly as <strong>${wrongName}</strong>.</li>
+                            <li>That in all government ID records like Aadhaar, PAN card and Voter IDs, the correct spelling of the deponent is <strong>${correctName}</strong>.</li>
+                            <li>That both names <strong>${wrongName}</strong> and <strong>${correctName}</strong> belong to the same person, which is the deponent myself.</li>
+                            <li>That this affidavit is executed to request record corrections in the target office database.</li>
+                        </ol>
+                    `;
+                } else if (type === "address") {
+                    statementsZone.innerHTML = `
+                        <ol style="margin-left: 20px; display: flex; flex-direction: column; gap: 12px; text-align: justify;">
+                            <li>That the deponent is currently staying at the declared residential address details listed above.</li>
+                            <li>That this address has been active and resided in for the last 3 years.</li>
+                            <li>That this address statement is being declared to serve as a valid address proof for utility connection application.</li>
+                        </ol>
+                    `;
+                }
+            }
+            renderAffidavit();
+
+            // --- 2. RENT AGREEMENT LOGIC ---
+            const ownerName = document.getElementById("ownerName");
+            const tenantName = document.getElementById("tenantName");
+            const rentAmount = document.getElementById("rentAmount");
+            const securityDeposit = document.getElementById("securityDeposit");
+            const propertyAddress = document.getElementById("propertyAddress");
+            const agreementDate = document.getElementById("agreementDate");
+
+            [ownerName, tenantName, rentAmount, securityDeposit, propertyAddress, agreementDate].forEach(el => {
+                el.addEventListener("input", renderAgreement);
+                el.addEventListener("change", renderAgreement);
+            });
+
+            function renderAgreement() {
+                document.getElementById("pOwnerName").innerText = ownerName.value;
+                document.getElementById("pTenantName").innerText = tenantName.value;
+                document.getElementById("pRentAmt").innerText = parseInt(rentAmount.value).toLocaleString('en-IN');
+                document.getElementById("pSecurityAmt").innerText = parseInt(securityDeposit.value).toLocaleString('en-IN');
+                document.getElementById("pPropAddress").innerText = propertyAddress.value;
+                
+                const d = new Date(agreementDate.value);
+                const day = d.getDate().toString().padStart(2, '0');
+                const month = (d.getMonth() + 1).toString().padStart(2, '0');
+                const year = d.getFullYear();
+                document.getElementById("pAgreeDate").innerText = `${day}-${month}-${year}`;
+            }
+            renderAgreement();
+
+            // --- 3. COVER LETTER LOGIC ---
+            const clName = document.getElementById("clName");
+            const clTitle = document.getElementById("clTitle");
+            const clCompany = document.getElementById("clCompany");
+            const clSkills = document.getElementById("clSkills");
+
+            [clName, clTitle, clCompany, clSkills].forEach(el => {
+                el.addEventListener("input", renderCoverLetter);
+            });
+
+            function renderCoverLetter() {
+                document.getElementById("pClName").innerText = clName.value;
+                document.getElementById("pClNameSign").innerText = clName.value;
+                document.getElementById("pClTitle").innerText = clTitle.value;
+                document.getElementById("pClTitleSec").innerText = clTitle.value;
+                document.getElementById("pClCompany").innerText = clCompany.value;
+                document.getElementById("pClSkills").innerText = clSkills.value;
+            }
+            renderCoverLetter();
+
+            // --- 4. NAME SLIPS LOGIC ---
+            const nsName = document.getElementById("nsName");
+            const nsClass = document.getElementById("nsClass");
+            const nsRoll = document.getElementById("nsRoll");
+            const nsSchool = document.getElementById("nsSchool");
+            const nsTheme = document.getElementById("nsTheme");
+
+            [nsName, nsClass, nsRoll, nsSchool, nsTheme].forEach(el => {
+                el.addEventListener("input", renderNameSlips);
+                el.addEventListener("change", renderNameSlips);
+            });
+
+            function renderNameSlips() {
+                const slipsGrid = document.getElementById("slipsGrid");
+                slipsGrid.innerHTML = "";
+
+                const theme = nsTheme.value;
+
+                let themeBannerText = "Space Cadets";
+                if (theme === "cartoon-space") themeBannerText = "Star Robot";
+                else if (theme === "cartoon-jungle") themeBannerText = "Dino Jungle";
+
+                // Generate 8 slips to fit onto A4 neatly
+                for (let i = 0; i < 8; i++) {
+                    const card = document.createElement("div");
+                    card.className = `name-slip-card ${theme}`;
+                    card.innerHTML = `
+                        <div class="name-slip-theme-banner">${themeBannerText}</div>
+                        <div class="name-slip-line"><strong>Name:</strong> ${nsName.value}</div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                            <div class="name-slip-line"><strong>Class:</strong> ${nsClass.value}</div>
+                            <div class="name-slip-line"><strong>Roll No:</strong> ${nsRoll.value}</div>
+                        </div>
+                        <div class="name-slip-line" style="border-bottom: 0;"><strong>Subject:</strong> _________________</div>
+                        <div class="name-slip-line" style="font-size: 0.75rem; border-bottom: 0; color: var(--text-muted); font-style: italic;">
+                            ${nsSchool.value}
+                        </div>
+                    `;
+                    slipsGrid.appendChild(card);
+                }
+            }
+            renderNameSlips();
+
+            // --- 5. EXAM QUESTION PAPER LOGIC ---
+            const epSchool = document.getElementById("epSchool");
+            const epSubject = document.getElementById("epSubject");
+            const epClass = document.getElementById("epClass");
+            const epMarks = document.getElementById("epMarks");
+            const epTime = document.getElementById("epTime");
+
+            [epSchool, epSubject, epClass, epMarks, epTime].forEach(el => {
+                el.addEventListener("input", renderExamHeaders);
+            });
+
+            function renderExamHeaders() {
+                document.getElementById("pepSchool").innerText = epSchool.value;
+                document.getElementById("pepSubject").innerText = epSubject.value;
+                document.getElementById("pepClass").innerText = epClass.value;
+                document.getElementById("pepMarks").innerText = epMarks.value;
+                document.getElementById("pepTime").innerText = epTime.value;
+            }
+
+            const initialQuestions = [
+                { type: "A", text: "Which of the following is a non-metal that remains liquid at room temperature?", marks: 2 },
+                { type: "A", text: "Sound waves cannot travel through which of the following media?", marks: 2 },
+                { type: "B", text: "Explain the difference between plant cells and animal cells with diagrams.", marks: 5 },
+                { type: "B", text: "Define the term 'Electrolysis'. State two practical applications.", marks: 5 }
+            ];
+
+            const questionsInputContainer = document.getElementById("questionsInputContainer");
+
+            function loadQuestionsInputs() {
+                questionsInputContainer.innerHTML = "";
+                initialQuestions.forEach((q, idx) => {
+                    createQuestionRow(q, idx);
+                });
+                renderExamQuestions();
+            }
+
+            function createQuestionRow(q, idx) {
+                const div = document.createElement("div");
+                div.className = "form-group";
+                div.style.cssText = "display: flex; gap: 8px; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;";
+                div.innerHTML = `
+                    <select class="form-control q-type" style="width: 100px;">
+                        <option value="A" ${q.type === 'A' ? 'selected' : ''}>Sec A</option>
+                        <option value="B" ${q.type === 'B' ? 'selected' : ''}>Sec B</option>
+                    </select>
+                    <input type="text" class="form-control q-text" style="flex: 1;" value="${q.text}">
+                    <input type="number" class="form-control q-marks" style="width: 70px;" value="${q.marks}">
+                    <button class="btn btn-secondary delete-q-btn" style="padding: 10px; color: #ef4444;"><i class="fas fa-trash"></i></button>
+                `;
+
+                // Event listeners for real-time compilation
+                div.querySelector(".q-type").addEventListener("change", syncQuestions);
+                div.querySelector(".q-text").addEventListener("input", syncQuestions);
+                div.querySelector(".q-marks").addEventListener("input", syncQuestions);
+                div.querySelector(".delete-q-btn").addEventListener("click", () => {
+                    div.remove();
+                    syncQuestions();
+                });
+
+                questionsInputContainer.appendChild(div);
+            }
+
+            document.getElementById("addQuestionBtn").addEventListener("click", () => {
+                const newQ = { type: "A", text: "Write the question text here...", marks: 2 };
+                createQuestionRow(newQ, questionsInputContainer.children.length);
+                syncQuestions();
+            });
+
+            function syncQuestions() {
+                renderExamQuestions();
+            }
+
+            function renderExamQuestions() {
+                const listA = document.getElementById("pepQuestionsA");
+                const listB = document.getElementById("pepQuestionsB");
+
+                listA.innerHTML = "";
+                listB.innerHTML = "";
+
+                const rows = questionsInputContainer.querySelectorAll(".form-group");
+                rows.forEach(row => {
+                    const type = row.querySelector(".q-type").value;
+                    const text = row.querySelector(".q-text").value;
+                    const marks = row.querySelector(".q-marks").value;
+
+                    const li = document.createElement("li");
+                    li.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; gap: 16px;">
+                            <span>${text}</span>
+                            <span style="font-weight: bold;">[${marks}]</span>
+                        </div>
+                    `;
+
+                    if (type === "A") {
+                        listA.appendChild(li);
+                    } else {
+                        listB.appendChild(li);
+                    }
+                });
+            }
+
+            loadQuestionsInputs();
+            renderExamHeaders();
+        });
+    </script>
+</body>
+</html>

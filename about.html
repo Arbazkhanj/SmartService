@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us - SmartService</title>
+    <link rel="stylesheet" href="assets/css/global.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .page-header {
+            background: var(--gradient-dark);
+            color: white;
+            padding: 100px 0 60px 0;
+            text-align: center;
+        }
+        .content-card {
+            background: white;
+            padding: 48px;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-md);
+            margin-bottom: 40px;
+        }
+        .about-feature {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-top: 40px;
+        }
+        @media (max-width: 768px) {
+            .about-feature {
+                grid-template-columns: 1fr;
+            }
+            .content-card {
+                padding: 24px;
+            }
+        }
+    </style>
+</head>
+<body style="padding-top: 70px;">
+    <site-header></site-header>
+
+    <section class="page-header">
+        <div class="container">
+            <h1 style="font-size: 2.5rem; margin-bottom: 12px; color: white;">About SmartService</h1>
+            <p style="color: #94a3b8; max-width: 600px; margin: 0 auto;">Learn more about our mission, privacy compliance, and target VLE community in India.</p>
+        </div>
+    </section>
+
+    <main class="container section-padding">
+        <div class="content-card fade-in">
+            <h2 style="margin-bottom: 24px; color: var(--text-main); border-left: 4px solid var(--primary); padding-left: 16px;">Our Core Vision</h2>
+            <p style="margin-bottom: 20px; font-size: 1.05rem;">
+                SmartService is an all-in-one digital web platform built explicitly to streamline the daily operational tasks of Common Service Centre (CSC) operators, Village Level Entrepreneurs (VLEs), students, and cyber cafe managers across India. 
+            </p>
+            <p style="margin-bottom: 20px; font-size: 1.05rem;">
+                At cyber hubs and service stalls, speed is vital. We understand that cropping customer photos, resizing signatures, modifying PDFs, and resizing government print files shouldn't require complex image editor tools or paid subscriptions. Our goal is to consolidate all daily utilities into a single, high-speed, and secure platform.
+            </p>
+            
+            <h3 style="margin: 40px 0 20px 0; color: var(--text-main);">Why We Are 100% Secure</h3>
+            <p style="margin-bottom: 20px; font-size: 1.05rem;">
+                Security and data privacy are the pillars of SmartService. Unlike typical web portals that upload files to server storage, all tools on SmartService run **entirely client-side in your web browser**. 
+            </p>
+            <p style="font-size: 1.05rem;">
+                When you upload a government ID (like Aadhaar, PAN card, or Voter card) or a personal signature, your document never leaves your machine. The crop, rotation, resize, and formatting rendering are done using your local CPU/GPU through standard HTML5 canvas technology, ensuring zero server data leaks.
+            </p>
+        </div>
+
+        <div class="about-feature">
+            <div class="interactive-card">
+                <div style="background: var(--primary-light); color: var(--primary); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; margin-bottom: 16px;">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <h4 style="margin-bottom: 8px;">Lightning Speed</h4>
+                <p style="font-size: 0.9rem;">Operations take seconds to complete, maximizing your CSC customer processing rates.</p>
+            </div>
+            <div class="interactive-card">
+                <div style="background: var(--primary-light); color: var(--primary); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; margin-bottom: 16px;">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <h4 style="margin-bottom: 8px;">Zero Data Retention</h4>
+                <p style="font-size: 0.9rem;">Everything runs in your local sandbox browser. Absolute security for sensitive government docs.</p>
+            </div>
+            <div class="interactive-card">
+                <div style="background: var(--primary-light); color: var(--primary); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; margin-bottom: 16px;">
+                    <i class="fas fa-mobile-alt"></i>
+                </div>
+                <h4 style="margin-bottom: 8px;">Mobile Optimised</h4>
+                <p style="font-size: 0.9rem;">Clean responsive grids ensure that you can edit and resize cards on-the-go from your smartphone.</p>
+            </div>
+        </div>
+    </main>
+
+    <site-footer></site-footer>
+
+    <script src="assets/js/components.js"></script>
+</body>
+</html>

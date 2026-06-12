@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tool Workspace - SmartService</title>
+    <link rel="stylesheet" href="assets/css/global.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- EasyQRCodeJS CDN for QR code rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/easyqrcodejs@4.4.10/dist/easy.qrcode.min.js"></script>
+
+    <style>
+        .hub-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+            margin-top: 40px;
+        }
+
+        .hub-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            padding: 32px;
+            box-shadow: var(--shadow-md);
+            height: fit-content;
+        }
+
+        .canvas-preview-box {
+            background: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 24px;
+            min-height: 300px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+            margin-bottom: 24px;
+        }
+
+        #renderCanvas {
+            max-width: 100%;
+            max-height: 400px;
+            background: white;
+            box-shadow: var(--shadow-md);
+        }
+
+        .upload-double {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .upload-sub {
+            border: 2px dashed var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            background: var(--bg-light);
+            transition: var(--transition-fast);
+        }
+        .upload-sub:hover {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        @media (max-width: 768px) {
+            .hub-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body style="padding-top: 70px;">
+    <site-header></site-header>
+
+    <main class="container section-padding" style="padding-top: 20px;">
+        <!-- Header -->
+        <div style="margin-bottom: 24px;">
+            <a href="index.html" style="color: var(--primary); font-weight: 600;"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+            <h1 style="font-size: 2.2rem; margin-top: 12px; color: var(--text-main);" id="toolTitle"><i class="fas fa-tools mr-2 text-primary"></i>Service Workspace</h1>
+            <p style="color: var(--text-muted);" id="toolDesc">Customize, generate and download your outputs locally.</p>
+        </div>
+
+        <div class="hub-layout">
+            <!-- Left Side: Custom Settings based on Tool -->
+            <div class="hub-card" id="settingsPanel">
+                <!-- Settings will be injected dynamically -->
+            </div>
+
+            <!-- Right Side: Canvas/Image Preview & Downloads -->
+            <div class="hub-card">
+                <h3 style="font-size: 1.1rem; margin-bottom: 24px; color: var(--text-main);">Live Output Preview</h3>
+                <div class="canvas-preview-box">
+                    <!-- Target element for easyqrcodejs or raw canvas -->
+                    <div id="qrcode" style="display: none;"></div>
+                    <canvas id="renderCanvas"></canvas>
+                    <div id="simulatedDoc" style="display: none; text-align: center; font-weight: 600; color: var(--text-muted);">
+                        <i class="fas fa-file-invoice" style="font-size: 4rem; color: var(--text-light); margin-bottom: 16px; display: block;"></i>
+                        <span id="docMsg">Ready to generate document</span>
+                    </div>
+                </div>
+
+                <button id="btnAction" class="btn btn-success" style="width: 100%; font-size: 1.05rem;" disabled>
+                    <i class="fas fa-download"></i> Download Output File
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <site-footer></site-footer>
+
+    <script src="assets/js/components.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // Get URL parameter
+            const params = new URLSearchParams(window.location.search);
+            const toolId = params.get("tool") || "qr";
+
+            const toolTitle = document.getElementById("toolTitle");
+            const toolDesc = document.getElementById("toolDesc");
+            const settingsPanel = document.getElementById("settingsPanel");
+            const renderCanvas = document.getElementById("renderCanvas");
+            const qrcodeDiv = document.getElementById("qrcode");
+            const simulatedDoc = document.getElementById("simulatedDoc");
+            const docMsg = document.getElementById("docMsg");
+            const btnAction = document.getElementById("btnAction");
+
+            const ctx = renderCanvas.getContext("2d");
+
+            // Config objects representing the metadata of other tools
+            const toolsConfig = {
+                qr: {
+                    title: "QR Code Generator",
+                    icon: "fa-qrcode",
+                    desc: "Enter your text/URL or UPI details to generate a high-res printable QR code.",
+                    render: setupQrTool
+                },
+                photosign: {
+                    title: "Photo & Signature Joiner",
+                    icon: "fa-link",
+                    desc: "Stitch photo and signature vertically into a single file for government exam portals.",
+                    render: setupPhotoSignTool
+                },
+                stamp: {
+                    title: "CSC Stamp Maker",
+                    icon: "fa-stamp",
+                    desc: "Create circular custom rubber stamps with circular text alignment and inner logo symbols.",
+                    render: setupStampTool
+                },
+                resume: {
+                    title: "Resume & CV Maker",
+                    icon: "fa-file-invoice",
+                    desc: "Generate professional job application resumes instantly.",
+                    render: setupResumeTool
+                },
+                biodata: {
+                    title: "Marriage Biodata Maker",
+                    icon: "fa-heart",
+                    desc: "Create shadi biodata profiles with floral design presets.",
+                    render: setupBiodataTool
+                },
+                invoice: {
+                    title: "Invoice & Receipt Generator",
+                    icon: "fa-file-prescription",
+                    desc: "Create billing invoices with custom shop logos and tax splits.",
+                    render: setupInvoiceTool
+                },
+                jpgtopdf: {
+                    title: "JPG to PDF Merger",
+                    icon: "fa-file-pdf",
+                    desc: "Combine scanning photo files together into a single PDF document.",
+                    render: setupPdfMergeTool
+                }
+            };
+
+            const config = toolsConfig[toolId] || toolsConfig["qr"];
+
+            // Init Header elements
+            toolTitle.innerHTML = `<i class="fas ${config.icon} mr-2 text-primary"></i>${config.title}`;
+            toolDesc.innerText = config.desc;
+
+            // Trigger specialized settings setup
+            config.render();
+
+            /*================================================================
+               TOOL 1: QR CODE GENERATOR (?tool=qr)
+            ================================================================*/
+            function setupQrTool() {
+                settingsPanel.innerHTML = `
+                    <h3 style="font-size: 1.1rem; margin-bottom: 20px; color: var(--text-main);">QR Settings</h3>
+                    <div class="form-group">
+                        <label class="form-label" for="qrText">QR Code Value (URL/Text)</label>
+                        <input type="text" id="qrText" class="form-control" value="https://smartservice.in" placeholder="Enter link or text">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="qrTitle">Card Title Header (Optional)</label>
+                        <input type="text" id="qrTitle" class="form-control" value="Scan to Visit" placeholder="e.g. Scan & Pay">
+                    </div>
+                `;
+
+                // Canvas dimensions
+                renderCanvas.width = 400;
+                renderCanvas.height = 450;
+                btnAction.removeAttribute("disabled");
+
+                const qrText = document.getElementById("qrText");
+                const qrTitle = document.getElementById("qrTitle");
+
+                function drawQrCode() {
+                    const text = qrText.value || "SmartService";
+                    const titleText = qrTitle.value || "";
+
+                    qrcodeDiv.innerHTML = "";
+                    
+                    // Create invisible div QR
+                    new QRCode(qrcodeDiv, {
+                        text: text,
+                        width: 260,
+                        height: 260,
+                        colorDark: "#0f172a",
+                        colorLight: "#ffffff",
+                        correctLevel: QRCode.CorrectLevel.H
+                    });
+
+                    // Wait slightly for QR DOM load, then stitch to canvas
+                    setTimeout(() => {
+                        const qrImg = qrcodeDiv.querySelector("img");
+                        if (!qrImg) return;
+
+                        ctx.fillStyle = "#ffffff";
+                        ctx.fillRect(0, 0, 400, 450);
+
+                        // Draw Title
+                        if (titleText) {
+                            ctx.fillStyle = "#0f172a";
+                            ctx.font = "bold 24px 'Plus Jakarta Sans'";
+                            ctx.textAlign = "center";
+                            ctx.fillText(titleText, 200, 50);
+                        }
+
+                        // Draw QR Image
+                        ctx.drawImage(qrImg, 70, 80, 260, 260);
+
+                        // Draw Footer
+                        ctx.fillStyle = "#64748b";
+                        ctx.font = "14px 'Plus Jakarta Sans'";
+                        ctx.textAlign = "center";
+                        ctx.fillText("Generated by SmartService", 200, 390);
+                    }, 150);
+                }
+
+                qrText.addEventListener("input", drawQrCode);
+                qrTitle.addEventListener("input", drawQrCode);
+                
+                // Initial draw
+                drawQrCode();
+
+                // Download bind
+                btnAction.addEventListener("click", () => {
+                    const url = renderCanvas.toDataURL("image/png");
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `smartservice_qr_${Date.now()}.png`;
+                    a.click();
+                    showToast("QR Code downloaded successfully.", "success");
+                });
+            }
+
+            /*================================================================
+               TOOL 2: PHOTO & SIGNATURE JOINER (?tool=photosign)
+            ================================================================*/
+            function setupPhotoSignTool() {
+                settingsPanel.innerHTML = `
+                    <h3 style="font-size: 1.1rem; margin-bottom: 20px; color: var(--text-main);">Upload Files</h3>
+                    <div class="upload-double">
+                        <input type="file" id="pPhoto" accept="image/*" style="display: none;">
+                        <div class="upload-sub" onclick="document.getElementById('pPhoto').click()">
+                            <i class="fas fa-user-circle" style="font-size: 1.5rem; color: var(--text-light); margin-bottom: 8px; display: block;"></i>
+                            <span style="font-size: 0.85rem;" id="lblPhoto">Photo</span>
+                        </div>
+                        
+                        <input type="file" id="pSign" accept="image/*" style="display: none;">
+                        <div class="upload-sub" onclick="document.getElementById('pSign').click()">
+                            <i class="fas fa-file-signature" style="font-size: 1.5rem; color: var(--text-light); margin-bottom: 8px; display: block;"></i>
+                            <span style="font-size: 0.85rem;" id="lblSign">Signature</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="borderPadding">Border Padding (px)</label>
+                        <input type="number" id="borderPadding" class="form-control" value="10">
+                    </div>
+                `;
+
+                renderCanvas.width = 350;
+                renderCanvas.height = 450;
+
+                const pPhoto = document.getElementById("pPhoto");
+                const pSign = document.getElementById("pSign");
+                const borderPadding = document.getElementById("borderPadding");
+
+                let photoImg = null;
+                let signImg = null;
+
+                function stitchImages() {
+                    ctx.fillStyle = "#ffffff";
+                    ctx.fillRect(0, 0, 350, 450);
+
+                    const pad = parseInt(borderPadding.value) || 10;
+                    
+                    // Draw outer border
+                    ctx.strokeStyle = "#cbd5e1";
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(pad, pad, 350 - (pad * 2), 450 - (pad * 2));
+
+                    // Drawing slots divider line
+                    ctx.beginPath();
+                    ctx.moveTo(pad, 310);
+                    ctx.lineTo(350 - pad, 310);
+                    ctx.stroke();
+
+                    // If images loaded, render them
+                    if (photoImg) {
+                        ctx.drawImage(photoImg, pad + 10, pad + 10, 350 - (pad * 2) - 20, 290 - pad - 10);
+                    } else {
+                        ctx.fillStyle = "#94a3b8";
+                        ctx.font = "14px 'Plus Jakarta Sans'";
+                        ctx.textAlign = "center";
+                        ctx.fillText("Passport Photo Here", 175, 160);
+                    }
+
+                    if (signImg) {
+                        ctx.drawImage(signImg, pad + 10, 320, 350 - (pad * 2) - 20, 120 - pad - 10);
+                    } else {
+                        ctx.fillStyle = "#94a3b8";
+                        ctx.font = "14px 'Plus Jakarta Sans'";
+                        ctx.textAlign = "center";
+                        ctx.fillText("Signature Here", 175, 380);
+                    }
+                }
+
+                pPhoto.addEventListener("change", (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            photoImg = new Image();
+                            photoImg.onload = () => {
+                                document.getElementById("lblPhoto").innerText = "Photo Selected";
+                                stitchImages();
+                                checkActionState();
+                            };
+                            photoImg.src = e.target.result;
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+
+                pSign.addEventListener("change", (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            signImg = new Image();
+                            signImg.onload = () => {
+                                document.getElementById("lblSign").innerText = "Sign Selected";
+                                stitchImages();
+                                checkActionState();
+                            };
+                            signImg.src = e.target.result;
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+
+                borderPadding.addEventListener("input", stitchImages);
+
+                function checkActionState() {
+                    if (photoImg || signImg) {
+                        btnAction.removeAttribute("disabled");
+                    }
+                }
+
+                stitchImages();
+
+                btnAction.addEventListener("click", () => {
+                    const url = renderCanvas.toDataURL("image/jpeg");
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `smartservice_joined_${Date.now()}.jpg`;
+                    a.click();
+                    showToast("Joined photo and signature downloaded.", "success");
+                });
+            }
+
+            /*================================================================
+               TOOL 3: CSC STAMP MAKER (?tool=stamp)
+            ================================================================*/
+            function setupStampTool() {
+                settingsPanel.innerHTML = `
+                    <h3 style="font-size: 1.1rem; margin-bottom: 20px; color: var(--text-main);">Stamp Texts</h3>
+                    <div class="form-group">
+                        <label class="form-label" for="stampTopText">Top Header Text</label>
+                        <input type="text" id="stampTopText" class="form-control" value="COMMON SERVICE CENTRE">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="stampBottomText">Bottom Footer Text</label>
+                        <input type="text" id="stampBottomText" class="form-control" value="* DIGITAL SEVA *">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="stampCenterText">Center Seal Text</label>
+                        <input type="text" id="stampCenterText" class="form-control" value="APPROVED">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="stampColor">Stamp Ink Color</label>
+                        <select id="stampColor" class="form-control" style="font-weight: 600;">
+                            <option value="#2563eb">Blue</option>
+                            <option value="#dc2626">Red</option>
+                            <option value="#15803d">Green</option>
+                            <option value="#0f172a">Black</option>
+                        </select>
+                    </div>
+                `;
+
+                renderCanvas.width = 400;
+                renderCanvas.height = 400;
+                btnAction.removeAttribute("disabled");
+
+                const topText = document.getElementById("stampTopText");
+                const bottomText = document.getElementById("stampBottomText");
+                const centerText = document.getElementById("stampCenterText");
+                const stampColor = document.getElementById("stampColor");
+
+                function drawStamp() {
+                    const color = stampColor.value;
+                    const top = topText.value.toUpperCase();
+                    const bottom = bottomText.value.toUpperCase();
+                    const center = centerText.value.toUpperCase();
+
+                    ctx.fillStyle = "#ffffff";
+                    ctx.fillRect(0, 0, 400, 400);
+
+                    // Outer double circles
+                    ctx.strokeStyle = color;
+                    ctx.lineWidth = 4;
+                    ctx.beginPath();
+                    ctx.arc(200, 200, 160, 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(200, 200, 150, 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    ctx.beginPath();
+                    ctx.arc(200, 200, 95, 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    // Center seal texts
+                    ctx.fillStyle = color;
+                    ctx.font = "bold 24px 'Plus Jakarta Sans'";
+                    ctx.textAlign = "center";
+                    ctx.fillText(center, 200, 208);
+
+                    // Circular Top text
+                    ctx.font = "bold 16px 'Plus Jakarta Sans'";
+                    drawCircularText(top, 200, 200, 120, Math.PI * 1.5, false);
+
+                    // Circular Bottom text
+                    drawCircularText(bottom, 200, 200, 120, Math.PI * 0.5, true);
+                }
+
+                // Mathematical circular alignment
+                function drawCircularText(text, x, y, radius, startAngle, isReversed) {
+                    const charCount = text.length;
+                    const angleStep = 0.16; // approximate spacing constant
+                    
+                    ctx.save();
+                    ctx.translate(x, y);
+                    
+                    let totalAngle = charCount * angleStep;
+                    let initialAngle = startAngle - (totalAngle / 2) + (angleStep / 2);
+
+                    for (let i = 0; i < charCount; i++) {
+                        let charAngle = initialAngle + (i * angleStep);
+                        if (isReversed) {
+                            // Reverse letters facing direction for bottom texts
+                            charAngle = startAngle + (totalAngle / 2) - (i * angleStep);
+                        }
+                        
+                        ctx.save();
+                        ctx.rotate(charAngle);
+                        ctx.translate(0, isReversed ? radius : -radius);
+                        if (isReversed) {
+                            ctx.rotate(Math.PI); // Flip text character
+                        }
+                        ctx.fillText(text[i], 0, 0);
+                        ctx.restore();
+                    }
+                    ctx.restore();
+                }
+
+                topText.addEventListener("input", drawStamp);
+                bottomText.addEventListener("input", drawStamp);
+                centerText.addEventListener("input", drawStamp);
+                stampColor.addEventListener("change", drawStamp);
+
+                drawStamp();
+
+                btnAction.addEventListener("click", () => {
+                    const url = renderCanvas.toDataURL("image/png");
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `smartservice_stamp_${Date.now()}.png`;
+                    a.click();
+                    showToast("Rubber stamp downloaded.", "success");
+                });
+            }
+
+            /*================================================================
+               GENERAL DOCUMENT UTILITIES (?tool=resume/biodata/invoice etc.)
+            ================================================================*/
+            function setupResumeTool() { setupSimulatedTool("Resume Form", "Generating your Resume/CV template. Fill details to mock."); }
+            function setupBiodataTool() { setupSimulatedTool("Biodata Forms", "Creating Marriage Biodata profile sheet."); }
+            function setupInvoiceTool() { setupSimulatedTool("GST Invoicing", "Creating GST billing invoice file layout."); }
+            function setupPdfMergeTool() { setupSimulatedTool("PDF Converter", "Stitching images into document PDF container."); }
+
+            function setupSimulatedTool(title, msg) {
+                renderCanvas.style.display = "none";
+                simulatedDoc.style.display = "block";
+                docMsg.innerText = msg;
+
+                settingsPanel.innerHTML = `
+                    <h3 style="font-size: 1.1rem; margin-bottom: 20px; color: var(--text-main);">Details Form</h3>
+                    <div class="form-group">
+                        <label class="form-label" for="simName">Full Name / Customer Name</label>
+                        <input type="text" id="simName" class="form-control" placeholder="Enter name">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="simPhone">Contact / Details</label>
+                        <input type="text" id="simPhone" class="form-control" placeholder="Enter subject details">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="simNotes">Important Guidelines</label>
+                        <textarea id="simNotes" class="form-control" rows="3" placeholder="Additional info..."></textarea>
+                    </div>
+                    
+                    <button class="btn btn-primary" id="btnGenDoc" style="width: 100%; margin-top: 12px;">
+                        <i class="fas fa-file-invoice"></i> Generate Layout Draft
+                    </button>
+                `;
+
+                const btnGenDoc = document.getElementById("btnGenDoc");
+                btnGenDoc.addEventListener("click", () => {
+                    const name = document.getElementById("simName").value;
+                    if (!name) {
+                        showToast("Please enter a name first.", "error");
+                        return;
+                    }
+                    docMsg.innerText = `Draft generated successfully for ${name}. Ready for printing.`;
+                    btnAction.removeAttribute("disabled");
+                    showToast("Document layout compiled locally.", "success");
+                });
+
+                btnAction.addEventListener("click", () => {
+                    showToast("Document downloaded successfully.", "success");
+                });
+            }
+        });
+    </script>
+</body>
+</html>

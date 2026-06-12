@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marriage Bio Data Maker - SmartService</title>
+    <link rel="stylesheet" href="assets/css/global.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- HTML2PDF library for offline client-side A4 PDF compilation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <style>
+        .split-layout {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 32px;
+            margin-top: 32px;
+        }
+
+        .editor-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            padding: 32px;
+            box-shadow: var(--shadow-md);
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        .preview-sticky {
+            position: sticky;
+            top: 90px;
+            height: fit-content;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .a4-preview-box {
+            background: #cbd5e1;
+            border-radius: var(--radius-md);
+            padding: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 600px;
+            overflow-y: auto;
+            max-height: calc(100vh - 220px);
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .a4-sheet {
+            width: 210mm;
+            min-height: 297mm;
+            background: white;
+            box-shadow: var(--shadow-xl);
+            box-sizing: border-box;
+            padding: 20mm 20mm;
+            display: flex;
+            flex-direction: column;
+            transform-origin: top center;
+            transform: scale(var(--preview-scale, 0.48));
+            margin-bottom: var(--preview-margin-bottom, -480px);
+            transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), margin-bottom 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        /* 5 Decorative Border Theme Frames */
+        .border-royal-gold::before {
+            content: '';
+            position: absolute;
+            top: 10mm;
+            left: 10mm;
+            right: 10mm;
+            bottom: 10mm;
+            border: 4px double var(--theme-border-color, #d97706);
+            pointer-events: none;
+        }
+        .border-royal-gold::after {
+            content: '';
+            position: absolute;
+            top: 13mm;
+            left: 13mm;
+            right: 13mm;
+            bottom: 13mm;
+            border: 1.5px solid var(--theme-border-color, #d97706);
+            pointer-events: none;
+        }
+
+        .border-crimson-floral::before {
+            content: '';
+            position: absolute;
+            top: 10mm;
+            left: 10mm;
+            right: 10mm;
+            bottom: 10mm;
+            border: 3px solid var(--theme-border-color, #db2777);
+            border-radius: 8px;
+            pointer-events: none;
+        }
+        .border-crimson-floral::after {
+            content: '';
+            position: absolute;
+            top: 14mm;
+            left: 14mm;
+            right: 14mm;
+            bottom: 14mm;
+            border: 1px dashed var(--theme-border-color, #db2777);
+            border-radius: 6px;
+            pointer-events: none;
+        }
+
+        .border-divine-red::before {
+            content: '';
+            position: absolute;
+            top: 8mm;
+            left: 8mm;
+            right: 8mm;
+            bottom: 8mm;
+            border: 5px double var(--theme-border-color, #dc2626);
+            pointer-events: none;
+        }
+        .border-divine-red::after {
+            content: '';
+            position: absolute;
+            top: 12mm;
+            left: 12mm;
+            right: 12mm;
+            bottom: 12mm;
+            border: 2px solid var(--theme-border-color, #dc2626);
+            pointer-events: none;
+        }
+
+        .border-peacock-blue::before {
+            content: '';
+            position: absolute;
+            top: 10mm;
+            left: 10mm;
+            right: 10mm;
+            bottom: 10mm;
+            border: 3px solid var(--theme-border-color, #0284c7);
+            pointer-events: none;
+        }
+        .border-peacock-blue::after {
+            content: '';
+            position: absolute;
+            top: 13mm;
+            left: 13mm;
+            right: 13mm;
+            bottom: 13mm;
+            border: 1px dashed var(--theme-border-color, #0284c7);
+            pointer-events: none;
+        }
+
+        .border-elegant-purple::before {
+            content: '';
+            position: absolute;
+            top: 10mm;
+            left: 10mm;
+            right: 10mm;
+            bottom: 10mm;
+            border: 4px double var(--theme-border-color, #7c3aed);
+            pointer-events: none;
+        }
+        .border-elegant-purple::after {
+            content: '';
+            position: absolute;
+            top: 15mm;
+            left: 15mm;
+            right: 15mm;
+            bottom: 15mm;
+            border: 1px dotted var(--theme-border-color, #7c3aed);
+            pointer-events: none;
+        }
+
+        /* Theme Configs */
+        :root {
+            --theme-border-color: #d97706; /* Golden Royal */
+            --theme-heading-color: #9d174d; /* Crimson Rose */
+            --theme-text-color: #0f172a;
+        }
+
+        .theme-select-row {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+        .theme-dot {
+            padding: 10px 4px;
+            border-radius: var(--radius-sm);
+            border: 2px solid var(--border-color);
+            cursor: pointer;
+            text-align: center;
+            font-size: 0.8rem;
+            font-weight: 700;
+            transition: var(--transition-fast);
+        }
+        .theme-dot.active {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        /* Symbol Select */
+        .symbol-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .symbol-btn {
+            background: var(--bg-light);
+            border: 1px solid var(--border-color);
+            padding: 8px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            text-align: center;
+            font-size: 1.25rem;
+            transition: var(--transition-fast);
+        }
+        .symbol-btn.active {
+            background: var(--primary-light);
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        /* Form sections */
+        .form-section {
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            margin-bottom: 20px;
+            background: var(--bg-light);
+            position: relative;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 8px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .section-title-input {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            background: white;
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            max-width: 220px;
+        }
+        
+        .section-actions {
+            display: flex;
+            gap: 6px;
+        }
+        
+        .action-btn-sm {
+            padding: 6px 10px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+            background: white;
+            transition: var(--transition-fast);
+        }
+        .action-btn-sm:hover:not(:disabled) {
+            background: var(--primary-light);
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+        
+        .field-row {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            background: white;
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+        }
+        .field-inputs {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .field-label-input {
+            font-weight: 600;
+            font-size: 0.8rem;
+            padding: 6px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+        }
+        .field-value-input {
+            font-size: 0.85rem;
+            padding: 8px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+        }
+
+        /* Passport photo container in form */
+        .photo-upload-container {
+            border: 2px dashed var(--border-color);
+            padding: 16px;
+            text-align: center;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            background: var(--bg-light);
+            margin-bottom: 24px;
+            transition: var(--transition-fast);
+        }
+        .photo-upload-container:hover {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        .bio-photo-box {
+            width: 90px;
+            height: 110px;
+            border: 2.5px solid var(--theme-border-color, #d97706);
+            background: #f8fafc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border-radius: 4px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+        .bio-photo-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Biodata view layouts */
+        .bio-title-container {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .bio-symbol {
+            font-size: 28px;
+            color: var(--theme-border-color);
+            margin-bottom: 8px;
+        }
+        .bio-header-text {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--theme-heading-color);
+            text-decoration: underline;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        .bio-sec-title {
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--theme-heading-color);
+            border-bottom: 1.5px solid var(--theme-border-color);
+            padding-bottom: 4px;
+            margin: 20px 0 12px 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .bio-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10px;
+            color: var(--theme-text-color);
+        }
+        .bio-table td {
+            padding: 6px 0;
+            vertical-align: top;
+        }
+        .bio-td-label {
+            width: 38%;
+            font-weight: 700;
+            color: var(--theme-text-color);
+        }
+        .bio-td-colon {
+            width: 4%;
+            text-align: center;
+        }
+        .bio-td-value {
+            width: 58%;
+            font-weight: 500;
+        }
+
+        @media (max-width: 992px) {
+            .split-layout {
+                grid-template-columns: 1fr;
+            }
+            .a4-sheet {
+                transform: scale(0.7);
+            }
+            .a4-preview-box {
+                min-height: auto;
+                justify-content: center;
+                max-height: 600px;
+            }
+        }
+        @media (max-width: 600px) {
+            .a4-sheet {
+                transform: scale(0.42);
+            }
+        }
+
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 0;
+            }
+            .no-print, site-header, site-footer, .editor-card, .style-card {
+                display: none !important;
+            }
+            body, html {
+                background: white !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            .split-layout {
+                margin: 0 !important;
+                display: block !important;
+                padding: 0 !important;
+            }
+            .preview-sticky {
+                position: static !important;
+                height: auto !important;
+                display: block !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .a4-preview-box {
+                background: white !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                box-shadow: none !important;
+                overflow: visible !important;
+                max-height: none !important;
+                display: block !important;
+            }
+            .a4-sheet {
+                transform: scale(1) !important;
+                box-shadow: none !important;
+                margin: 0 auto !important;
+                padding: 20mm 20mm !important;
+                width: 210mm !important;
+                height: 297mm !important;
+                box-sizing: border-box !important;
+                page-break-after: avoid;
+                page-break-inside: avoid;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+        }
+    </style>
+</head>
+<body style="padding-top: 70px;">
+    <site-header></site-header>
+
+    <main class="container section-padding" style="padding-top: 20px;">
+        <!-- Header -->
+        <div style="margin-bottom: 24px;" class="no-print">
+            <a href="index.html" style="color: var(--primary); font-weight: 600;"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+            <h1 style="font-size: 2.2rem; margin-top: 12px; color: var(--text-main);"><i class="fas fa-heart mr-2 text-primary"></i>Marriage Biodata Maker</h1>
+            <p style="color: var(--text-muted);">Fill details, choose traditional border themes, symbol headers, and print/download on A4.</p>
+        </div>
+
+        <div class="split-layout">
+            <!-- Left Side: Inputs Form -->
+            <div class="editor-card no-print" id="formPanel">
+                <h2 style="font-size: 1.25rem; color: var(--text-main); margin-bottom: 20px;">Customize Biodata Sections</h2>
+
+                <!-- Theme / Border Frame -->
+                <div class="form-section">
+                    <label class="form-label" style="font-weight: 700;">Traditional Border Theme</label>
+                    <div class="theme-select-row">
+                        <div class="theme-dot active" id="themeGold" data-border="#d97706" data-heading="#9d174d" data-class="border-royal-gold">Gold</div>
+                        <div class="theme-dot" id="themePink" data-border="#db2777" data-heading="#be185d" data-class="border-crimson-floral">Pink</div>
+                        <div class="theme-dot" id="themeRed" data-border="#dc2626" data-heading="#991b1b" data-class="border-divine-red">Red</div>
+                        <div class="theme-dot" id="themeBlue" data-border="#0284c7" data-heading="#1e3a8a" data-class="border-peacock-blue">Blue</div>
+                        <div class="theme-dot" id="themePurple" data-border="#7c3aed" data-heading="#4c1d95" data-class="border-elegant-purple">Purple</div>
+                    </div>
+                </div>
+
+                <!-- Language / भाषा Toggle -->
+                <div class="form-section">
+                    <label class="form-label" style="font-weight: 700;">Language / भाषा</label>
+                    <div style="display: flex; gap: 12px;">
+                        <button id="langEnBtn" class="btn btn-secondary active" style="flex: 1; font-weight: 700; padding: 10px;">English</button>
+                        <button id="langHiBtn" class="btn btn-secondary" style="flex: 1; font-weight: 700; padding: 10px;">हिन्दी (Hindi)</button>
+                    </div>
+                </div>
+
+                <!-- Symbol Select -->
+                <div class="form-section">
+                    <label class="form-label" style="font-weight: 700;">Auspicious Symbol / चिह्न</label>
+                    <div class="symbol-grid">
+                        <button class="symbol-btn active" data-symbol="🙏">🙏</button>
+                        <button class="symbol-btn" data-symbol="ॐ">ॐ</button>
+                        <button class="symbol-btn" data-symbol="卐">卐</button>
+                        <button class="symbol-btn" data-symbol="☬">☬</button>
+                        <button class="symbol-btn" data-symbol="">None</button>
+                    </div>
+                </div>
+
+                <!-- Passport Photo Upload Area -->
+                <div class="photo-upload-container" id="photoUploadZone">
+                    <i class="fas fa-camera" style="font-size: 1.75rem; color: var(--text-light); margin-bottom: 8px; display: block;"></i>
+                    <span id="photoStatusLabel" style="font-size: 0.85rem; font-weight: 600;">Upload Passport Photo</span>
+                    <input type="file" id="photoInput" accept="image/*" style="display: none;">
+                </div>
+                <button id="removePhotoBtn" class="btn btn-secondary" style="width: 100%; margin-bottom: 24px; padding: 8px 16px; font-size: 0.85rem; display: none;">Remove Photo</button>
+
+                <!-- Sections Container Repeater -->
+                <div id="sectionsContainer"></div>
+
+                <!-- Add Section Button -->
+                <button id="addSectionBtn" class="btn btn-secondary" style="width: 100%; font-size: 0.9rem; padding: 12px 18px; margin-bottom: 24px;">
+                    <i class="fas fa-plus mr-1"></i> Add Custom Section
+                </button>
+
+                <button id="resetAllBtn" class="btn btn-secondary" style="width: 100%; background: #fee2e2; border-color: #fca5a5; color: #b91c1c;">
+                    <i class="fas fa-trash-alt"></i> Reset All Data
+                </button>
+            </div>
+
+            <!-- Right Side: A4 Preview -->
+            <div class="preview-sticky">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;" class="no-print">
+                    <!-- Zoom Slider -->
+                    <div style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 700; color: var(--text-muted);">
+                        <i class="fas fa-search-plus"></i> Zoom:
+                        <input type="range" id="zoomSlider" min="0.4" max="1.0" step="0.05" value="0.48" style="width: 90px; height: 6px; cursor: pointer; vertical-align: middle;">
+                        <span id="zoomPercent">48%</span>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-primary" id="downloadPdfBtn"><i class="fas fa-file-pdf"></i> Download PDF</button>
+                        <button class="btn btn-success" id="printBtn"><i class="fas fa-print"></i> Print</button>
+                    </div>
+                </div>
+
+                <div class="a4-preview-box">
+                    <div class="a4-sheet border-royal-gold" id="biodataPage">
+                        <!-- Dynamic contents injected here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <site-footer></site-footer>
+
+    <script src="assets/js/components.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // Data State
+            let sections = [];
+            let photoDataURL = "";
+            let themeBorderColor = "#d97706";
+            let themeHeadingColor = "#9d174d";
+            let themeClass = "border-royal-gold";
+            let selectedSymbol = "🙏";
+            let currentLanguage = "en";
+
+            let sectionIdCounter = 100;
+            let fieldIdCounter = 1000;
+
+            // DOM elements
+            const sectionsContainer = document.getElementById("sectionsContainer");
+            const addSectionBtn = document.getElementById("addSectionBtn");
+            const photoUploadZone = document.getElementById("photoUploadZone");
+            const photoInput = document.getElementById("photoInput");
+            const removePhotoBtn = document.getElementById("removePhotoBtn");
+            const photoStatusLabel = document.getElementById("photoStatusLabel");
+
+            const resetAllBtn = document.getElementById("resetAllBtn");
+            const zoomSlider = document.getElementById("zoomSlider");
+            const zoomPercent = document.getElementById("zoomPercent");
+            const printBtn = document.getElementById("printBtn");
+            const downloadPdfBtn = document.getElementById("downloadPdfBtn");
+            const biodataPage = document.getElementById("biodataPage");
+
+            const themeDots = document.querySelectorAll(".theme-dot");
+            const symbolBtns = document.querySelectorAll(".symbol-btn");
+
+            // English-Hindi mappings
+            const translationMap = {
+                'en': {
+                    'biodata': 'BIO-DATA',
+                    'Personal Details': 'Personal Details',
+                    'Family Background': 'Family Background',
+                    'Contact Information': 'Contact Information',
+                    'Full Name': 'Full Name',
+                    'Date of Birth': 'Date of Birth',
+                    'Time of Birth': 'Time of Birth',
+                    'Place of Birth': 'Place of Birth',
+                    'Rashi / Nakshatra': 'Rashi / Nakshatra',
+                    'Height': 'Height',
+                    'Complexion / Caste': 'Complexion / Caste',
+                    'Education': 'Education',
+                    'Occupation / Job': 'Occupation / Job',
+                    'Father\'s Name': 'Father\'s Name',
+                    'Father\'s Occupation': 'Father\'s Occupation',
+                    'Mother\'s Name': 'Mother\'s Name',
+                    'Brothers & Sisters': 'Brothers & Sisters',
+                    'Maternal Uncle (Mama)': 'Maternal Uncle (Mama)',
+                    'Mobile Number': 'Mobile Number',
+                    'Residential Address': 'Residential Address'
+                },
+                'hi': {
+                    'biodata': 'बायो-डाटा',
+                    'Personal Details': 'व्यक्तिगत विवरण',
+                    'Family Background': 'पारिवारिक विवरण',
+                    'Contact Information': 'संपर्क विवरण',
+                    'Full Name': 'पूरा नाम',
+                    'Date of Birth': 'जन्म तिथि',
+                    'Time of Birth': 'जन्म समय',
+                    'Place of Birth': 'जन्म स्थान',
+                    'Rashi / Nakshatra': 'राशि / नक्षत्र',
+                    'Height': 'ऊंचाई',
+                    'Complexion / Caste': 'रंग / जाति',
+                    'Education': 'शैक्षणिक योग्यता',
+                    'Occupation / Job': 'व्यवसाय / नौकरी',
+                    'Father\'s Name': 'पिता का नाम',
+                    'Father\'s Occupation': 'पिता का व्यवसाय',
+                    'Mother\'s Name': 'माता का नाम',
+                    'Brothers & Sisters': 'भाई और बहन',
+                    'Maternal Uncle (Mama)': 'मामा जी का नाम',
+                    'Mobile Number': 'मोबाइल नंबर',
+                    'Residential Address': 'आवासीय पता'
+                }
+            };
+
+            // Initialize default values
+            function initializeDefaultSections() {
+                return [
+                    { id: "sec1", name: "Personal Details", fields: [
+                        { id: "f1", label: "Full Name", value: "Neha Sharma", type: "text" },
+                        { id: "f2", label: "Date of Birth", value: "15 July 1998", type: "text" },
+                        { id: "f3", label: "Time of Birth", value: "08:45 AM", type: "text" },
+                        { id: "f4", label: "Place of Birth", value: "Delhi, India", type: "text" },
+                        { id: "f5", label: "Rashi / Nakshatra", value: "Cancer / Pushya", type: "text" },
+                        { id: "f6", label: "Height", value: "5'4''", type: "text" },
+                        { id: "f7", label: "Complexion / Caste", value: "Fair / Brahmin", type: "text" },
+                        { id: "f8", label: "Education", value: "M.Sc. in Information Technology", type: "text" },
+                        { id: "f9", label: "Occupation / Job", value: "Software Analyst at MNC, Noida", type: "text" }
+                    ]},
+                    { id: "sec2", name: "Family Background", fields: [
+                        { id: "f10", label: "Father's Name", value: "Shri Ramesh Sharma", type: "text" },
+                        { id: "f11", label: "Father's Occupation", value: "Retired Government Officer", type: "text" },
+                        { id: "f12", label: "Mother's Name", value: "Smt. Savita Sharma", type: "text" },
+                        { id: "f13", label: "Brothers & Sisters", value: "1 Elder Brother (Married)", type: "text" },
+                        { id: "f14", label: "Maternal Uncle (Mama)", value: "Shri Sunil Kumar (Business Owner, Delhi)", type: "text" }
+                    ]},
+                    { id: "sec3", name: "Contact Information", fields: [
+                        { id: "f15", label: "Mobile Number", value: "+91 98765 43210, +91 87654 32109", type: "text" },
+                        { id: "f16", label: "Residential Address", value: "Flat No. 402, Sector 15, Vasundhara, Noida, UP", type: "textarea" }
+                    ]}
+                ];
+            }
+
+            // State persistence
+            function saveState() {
+                localStorage.setItem("smartservice_biodata_sections", JSON.stringify(sections));
+                localStorage.setItem("smartservice_biodata_photo", photoDataURL);
+                localStorage.setItem("smartservice_biodata_theme_border", themeBorderColor);
+                localStorage.setItem("smartservice_biodata_theme_heading", themeHeadingColor);
+                localStorage.setItem("smartservice_biodata_theme_class", themeClass);
+                localStorage.setItem("smartservice_biodata_symbol", selectedSymbol);
+                localStorage.setItem("smartservice_biodata_lang", currentLanguage);
+            }
+
+            function translateState(targetLang) {
+                const sourceLang = currentLanguage;
+                sections.forEach(sec => {
+                    // Check if section name matches translation map key
+                    for (const [keyEn, valEn] of Object.entries(translationMap['en'])) {
+                        if (sec.name === translationMap[sourceLang][keyEn]) {
+                            sec.name = translationMap[targetLang][keyEn];
+                            break;
+                        }
+                    }
+                    
+                    // Check fields
+                    sec.fields.forEach(f => {
+                        for (const [keyEn, valEn] of Object.entries(translationMap['en'])) {
+                            if (f.label === translationMap[sourceLang][keyEn]) {
+                                f.label = translationMap[targetLang][keyEn];
+                                break;
+                            }
+                        }
+                    });
+                });
+                currentLanguage = targetLang;
+            }
+
+            function loadState() {
+                const storedSections = localStorage.getItem("smartservice_biodata_sections");
+                photoDataURL = localStorage.getItem("smartservice_biodata_photo") || "";
+                themeBorderColor = localStorage.getItem("smartservice_biodata_theme_border") || "#d97706";
+                themeHeadingColor = localStorage.getItem("smartservice_biodata_theme_heading") || "#9d174d";
+                themeClass = localStorage.getItem("smartservice_biodata_theme_class") || "border-royal-gold";
+                selectedSymbol = localStorage.getItem("smartservice_biodata_symbol");
+                if (selectedSymbol === null) {
+                    selectedSymbol = "🙏";
+                }
+                currentLanguage = localStorage.getItem("smartservice_biodata_lang") || "en";
+
+                if (storedSections) {
+                    try {
+                        sections = JSON.parse(storedSections);
+                    } catch(e) {
+                        console.error("Failed to parse sections:", e);
+                        sections = initializeDefaultSections();
+                    }
+                } else {
+                    sections = initializeDefaultSections();
+                    if (currentLanguage === "hi") {
+                        translateState("hi");
+                    }
+                }
+
+                // Sync elements
+                biodataPage.className = "a4-sheet " + themeClass;
+                
+                // Set theme dot active state
+                themeDots.forEach(d => {
+                    if (d.dataset.class === themeClass) d.classList.add("active");
+                    else d.classList.remove("active");
+                });
+
+                // Set symbol button active state
+                symbolBtns.forEach(b => {
+                    if (b.dataset.symbol === selectedSymbol) b.classList.add("active");
+                    else b.classList.remove("active");
+                });
+
+                // Set language button active state
+                if (currentLanguage === "en") {
+                    document.getElementById("langEnBtn").classList.add("active");
+                    document.getElementById("langHiBtn").classList.remove("active");
+                } else {
+                    document.getElementById("langEnBtn").classList.remove("active");
+                    document.getElementById("langHiBtn").classList.add("active");
+                }
+
+                if (photoDataURL) {
+                    photoStatusLabel.innerText = "Photo Selected";
+                    removePhotoBtn.style.display = "block";
+                } else {
+                    photoStatusLabel.innerText = "Upload Passport Photo";
+                    removePhotoBtn.style.display = "none";
+                }
+            }
+
+            // Zoom controller logic
+            function applyZoom(scale) {
+                biodataPage.style.setProperty("--preview-scale", scale);
+                const offset = 1123 * (1 - scale) * -1;
+                biodataPage.style.setProperty("--preview-margin-bottom", offset + "px");
+                zoomPercent.innerText = Math.round(scale * 100) + "%";
+                localStorage.setItem("smartservice_biodata_zoom", scale);
+            }
+
+            zoomSlider.addEventListener("input", (e) => {
+                const scale = parseFloat(e.target.value);
+                applyZoom(scale);
+            });
+
+            const storedZoom = localStorage.getItem("smartservice_biodata_zoom");
+            if (storedZoom) {
+                zoomSlider.value = storedZoom;
+                applyZoom(parseFloat(storedZoom));
+            } else {
+                applyZoom(0.48);
+            }
+
+            // Language handlers
+            document.getElementById("langEnBtn").addEventListener("click", () => {
+                if (currentLanguage !== "en") {
+                    translateState("en");
+                    document.getElementById("langEnBtn").classList.add("active");
+                    document.getElementById("langHiBtn").classList.remove("active");
+                    saveState();
+                    renderFormEditor();
+                    updateBiodataPreview();
+                    showToast("Switched to English labels.", "info");
+                }
+            });
+
+            document.getElementById("langHiBtn").addEventListener("click", () => {
+                if (currentLanguage !== "hi") {
+                    translateState("hi");
+                    document.getElementById("langEnBtn").classList.remove("active");
+                    document.getElementById("langHiBtn").classList.add("active");
+                    saveState();
+                    renderFormEditor();
+                    updateBiodataPreview();
+                    showToast("Switched to Hindi (हिन्दी) labels.", "info");
+                }
+            });
+
+            // Form editor render
+            function renderFormEditor() {
+                sectionsContainer.innerHTML = "";
+                sections.forEach((sec, sIdx) => {
+                    const sectionDiv = document.createElement("div");
+                    sectionDiv.className = "form-section";
+
+                    let fieldsHTML = "";
+                    sec.fields.forEach((field) => {
+                        fieldsHTML += `
+                            <div class="field-row" data-field-id="${field.id}">
+                                <div class="field-inputs">
+                                    <input type="text" class="field-label-input" value="${escapeHtml(field.label)}" data-field-id="${field.id}" data-type="label" placeholder="Field Label">
+                                    ${field.type === 'textarea' ? 
+                                        `<textarea class="field-value-input" rows="2" data-field-id="${field.id}" data-type="value" placeholder="Field Details">${escapeHtml(field.value)}</textarea>` :
+                                        `<input type="text" class="field-value-input" value="${escapeHtml(field.value)}" data-field-id="${field.id}" data-type="value" placeholder="Field Details">`
+                                    }
+                                </div>
+                                <button class="action-btn-sm remove-field-btn" data-sec-id="${sec.id}" data-field-id="${field.id}" style="color:#ef4444; border-color:#fca5a5; margin-top:24px;">✖</button>
+                            </div>
+                        `;
+                    });
+
+                    sectionDiv.innerHTML = `
+                        <div class="section-header">
+                            <input type="text" class="section-title-input" value="${escapeHtml(sec.name)}" data-sec-id="${sec.id}">
+                            <div class="section-actions">
+                                <button class="action-btn-sm move-up-btn" data-index="${sIdx}" ${sIdx === 0 ? 'disabled' : ''}>↑ Up</button>
+                                <button class="action-btn-sm move-down-btn" data-index="${sIdx}" ${sIdx === sections.length - 1 ? 'disabled' : ''}>↓ Down</button>
+                                <button class="action-btn-sm add-field-btn" data-sec-id="${sec.id}">+ Field</button>
+                                <button class="action-btn-sm remove-sec-btn" data-sec-id="${sec.id}" style="color:#ef4444; border-color:#fca5a5;">✖ Remove</button>
+                            </div>
+                        </div>
+                        <div class="fields-list">
+                            ${fieldsHTML}
+                        </div>
+                    `;
+
+                    sectionsContainer.appendChild(sectionDiv);
+                });
+
+                attachEditorListeners();
+            }
+
+            function attachEditorListeners() {
+                // Section Title updates
+                document.querySelectorAll(".section-title-input").forEach(input => {
+                    input.addEventListener("input", (e) => {
+                        const sec = sections.find(s => s.id === e.target.dataset.secId);
+                        if (sec) sec.name = e.target.value;
+                        saveState();
+                        updateBiodataPreview();
+                    });
+                });
+
+                // Field Label & Value updates
+                document.querySelectorAll(".field-label-input, .field-value-input").forEach(input => {
+                    input.addEventListener("input", (e) => {
+                        const fieldId = e.target.dataset.fieldId;
+                        const type = e.target.dataset.type;
+                        
+                        for (let sec of sections) {
+                            const field = sec.fields.find(f => f.id === fieldId);
+                            if (field) {
+                                if (type === "label") {
+                                    field.label = e.target.value;
+                                } else {
+                                    field.value = e.target.value;
+                                }
+                                saveState();
+                                updateBiodataPreview();
+                                break;
+                            }
+                        }
+                    });
+                });
+
+                // Move Up
+                document.querySelectorAll(".move-up-btn").forEach(btn => {
+                    btn.addEventListener("click", () => {
+                        const idx = parseInt(btn.dataset.index);
+                        if (idx > 0) {
+                            [sections[idx], sections[idx - 1]] = [sections[idx - 1], sections[idx]];
+                            saveState();
+                            renderFormEditor();
+                            updateBiodataPreview();
+                            showToast("Section moved up.", "info");
+                        }
+                    });
+                });
+
+                // Move Down
+                document.querySelectorAll(".move-down-btn").forEach(btn => {
+                    btn.addEventListener("click", () => {
+                        const idx = parseInt(btn.dataset.index);
+                        if (idx < sections.length - 1) {
+                            [sections[idx], sections[idx + 1]] = [sections[idx + 1], sections[idx]];
+                            saveState();
+                            renderFormEditor();
+                            updateBiodataPreview();
+                            showToast("Section moved down.", "info");
+                        }
+                    });
+                });
+
+                // Add field to section
+                document.querySelectorAll(".add-field-btn").forEach(btn => {
+                    btn.addEventListener("click", () => {
+                        const sec = sections.find(s => s.id === btn.dataset.secId);
+                        if (sec) {
+                            const newField = {
+                                id: "f" + (++fieldIdCounter),
+                                label: "New Field",
+                                value: "",
+                                type: "text"
+                            };
+                            sec.fields.push(newField);
+                            saveState();
+                            renderFormEditor();
+                            updateBiodataPreview();
+                            showToast("Added new field.", "info");
+                        }
+                    });
+                });
+
+                // Remove field from section
+                document.querySelectorAll(".remove-field-btn").forEach(btn => {
+                    btn.addEventListener("click", () => {
+                        const sec = sections.find(s => s.id === btn.dataset.secId);
+                        if (sec) {
+                            sec.fields = sec.fields.filter(f => f.id !== btn.dataset.fieldId);
+                            saveState();
+                            renderFormEditor();
+                            updateBiodataPreview();
+                            showToast("Removed field.", "info");
+                        }
+                    });
+                });
+
+                // Remove entire section
+                document.querySelectorAll(".remove-sec-btn").forEach(btn => {
+                    btn.addEventListener("click", () => {
+                        sections = sections.filter(s => s.id !== btn.dataset.secId);
+                        saveState();
+                        renderFormEditor();
+                        updateBiodataPreview();
+                        showToast("Section deleted.", "info");
+                    });
+                });
+            }
+
+            // Sync values to paper layout preview
+            function updateBiodataPreview() {
+                let sheetHTML = "";
+                
+                // Header block
+                sheetHTML += `
+                    <div class="bio-header-container" style="display: flex; justify-content: center; align-items: center; position: relative; margin-bottom: 24px; min-height: 80px;">
+                        <div class="bio-title-container" style="text-align: center;">
+                            ${selectedSymbol ? `<div class="bio-symbol" style="font-size: 28px; color: var(--theme-border-color); margin-bottom: 4px;">${selectedSymbol}</div>` : ""}
+                            <div class="bio-header-text" style="font-size: 20px; font-weight: 800; color: var(--theme-heading-color); text-decoration: underline; letter-spacing: 1.5px; text-transform: uppercase;">
+                                ${currentLanguage === 'en' ? 'BIO-DATA' : 'बायो-डाटा'}
+                            </div>
+                        </div>
+                        ${photoDataURL ? `
+                            <div class="bio-photo-box" style="position: absolute; right: 0; top: 0; border-color: var(--theme-border-color);"><img src="${photoDataURL}" alt="Photo"></div>
+                        ` : ""}
+                    </div>
+                `;
+
+                // Render Sections
+                sections.forEach(sec => {
+                    if (sec.fields.length === 0) return;
+
+                    sheetHTML += `
+                        <div class="bio-sec-title" style="font-size: 13px; font-weight: 800; color: var(--theme-heading-color); border-bottom: 1.5px solid var(--theme-border-color); padding-bottom: 4px; margin: 20px 0 12px 0; text-transform: uppercase; letter-spacing: 0.5px;">${escapeHtml(sec.name)}</div>
+                    `;
+
+                    let rows = "";
+                    sec.fields.forEach(f => {
+                        rows += `
+                            <tr>
+                                <td class="bio-td-label" style="width: 38%; font-weight: 700; padding: 6px 0; vertical-align: top; font-size: 11px;">${escapeHtml(f.label)}</td>
+                                <td class="bio-td-colon" style="width: 4%; text-align: center; padding: 6px 0; vertical-align: top; font-size: 11px;">:</td>
+                                <td class="bio-td-value" style="width: 58%; font-weight: 500; padding: 6px 0; vertical-align: top; font-size: 11px;">${f.type === 'textarea' ? escapeHtml(f.value).replace(/\n/g, '<br>') : escapeHtml(f.value)}</td>
+                            </tr>
+                        `;
+                    });
+
+                    sheetHTML += `
+                        <table class="bio-table" style="width: 100%; border-collapse: collapse; font-size: 11px; color: var(--theme-text-color);">
+                            <tbody>${rows}</tbody>
+                        </table>
+                    `;
+                });
+
+                biodataPage.innerHTML = sheetHTML;
+                biodataPage.style.setProperty("--theme-border-color", themeBorderColor);
+                biodataPage.style.setProperty("--theme-heading-color", themeHeadingColor);
+            }
+
+            function escapeHtml(str) {
+                if(!str) return '';
+                return String(str).replace(/[&<>]/g, function(m) {
+                    if(m === '&') return '&amp;';
+                    if(m === '<') return '&lt;';
+                    if(m === '>') return '&gt;';
+                    return m;
+                });
+            }
+
+            // Theme click bindings
+            themeDots.forEach(dot => {
+                dot.addEventListener("click", () => {
+                    themeDots.forEach(d => d.classList.remove("active"));
+                    dot.classList.add("active");
+
+                    themeBorderColor = dot.dataset.border;
+                    themeHeadingColor = dot.dataset.heading;
+                    themeClass = dot.dataset.class;
+
+                    biodataPage.className = "a4-sheet " + themeClass;
+                    saveState();
+                    updateBiodataPreview();
+                });
+            });
+
+            // Symbol click bindings
+            symbolBtns.forEach(btn => {
+                btn.addEventListener("click", () => {
+                    symbolBtns.forEach(b => b.classList.remove("active"));
+                    btn.classList.add("active");
+                    
+                    selectedSymbol = btn.dataset.symbol;
+                    saveState();
+                    updateBiodataPreview();
+                });
+            });
+
+            // Photo handlers
+            photoUploadZone.addEventListener("click", () => photoInput.click());
+
+            photoInput.addEventListener("change", (e) => {
+                if (e.target.files && e.target.files[0]) {
+                    const file = e.target.files[0];
+                    if (file.size > 2 * 1024 * 1024) {
+                        showToast("Photo must be smaller than 2MB.", "error");
+                        return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        photoDataURL = ev.target.result;
+                        photoStatusLabel.innerText = "Photo Selected";
+                        removePhotoBtn.style.display = "block";
+                        saveState();
+                        updateBiodataPreview();
+                        showToast("Photo uploaded successfully.", "success");
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            removePhotoBtn.addEventListener("click", () => {
+                photoDataURL = "";
+                photoInput.value = "";
+                photoStatusLabel.innerText = "Upload Passport Photo";
+                removePhotoBtn.style.display = "none";
+                saveState();
+                updateBiodataPreview();
+                showToast("Photo removed.", "info");
+            });
+
+            // Add custom section
+            addSectionBtn.addEventListener("click", () => {
+                const newId = "sec" + (++sectionIdCounter);
+                sections.push({
+                    id: newId,
+                    name: "Additional Information",
+                    fields: [{
+                        id: "f" + (++fieldIdCounter),
+                        label: "Field Key",
+                        value: "Enter details here",
+                        type: "text"
+                    }]
+                });
+                saveState();
+                renderFormEditor();
+                updateBiodataPreview();
+                showToast("Added custom category section.", "success");
+            });
+
+            // Reset all values to default template
+            resetAllBtn.addEventListener("click", () => {
+                sections = initializeDefaultSections();
+                photoDataURL = "";
+                photoInput.value = "";
+                themeBorderColor = "#d97706";
+                themeHeadingColor = "#9d174d";
+                themeClass = "border-royal-gold";
+                selectedSymbol = "🙏";
+                currentLanguage = "en";
+
+                biodataPage.className = "a4-sheet border-royal-gold";
+                
+                themeDots.forEach(d => {
+                    if (d.id === "themeGold") d.classList.add("active");
+                    else d.classList.remove("active");
+                });
+
+                symbolBtns.forEach(b => {
+                    if (b.dataset.symbol === "🙏") b.classList.add("active");
+                    else b.classList.remove("active");
+                });
+
+                document.getElementById("langEnBtn").classList.add("active");
+                document.getElementById("langHiBtn").classList.remove("active");
+
+                photoStatusLabel.innerText = "Upload Passport Photo";
+                removePhotoBtn.style.display = "none";
+
+                saveState();
+                renderFormEditor();
+                updateBiodataPreview();
+                showToast("All data fields reset to default.", "info");
+            });
+
+            // Print triggers
+            printBtn.addEventListener("click", () => {
+                window.print();
+            });
+
+            // PDF download triggers
+            downloadPdfBtn.addEventListener("click", async () => {
+                const element = document.getElementById("biodataPage");
+                
+                // Save current inline styles to restore later
+                const originalTransform = element.style.transform;
+                const originalMarginBottom = element.style.marginBottom;
+                const originalTransition = element.style.transition;
+                
+                // Temporarily disable scaling transitions/transforms to capture clean 100% size
+                element.style.transition = "none";
+                element.style.transform = "none";
+                element.style.marginBottom = "0";
+                
+                // Brief delay to allow layout recalculation
+                await new Promise(resolve => setTimeout(resolve, 50));
+                
+                const opt = {
+                    margin: 0,
+                    filename: 'smartservice_marital_biodata_' + Date.now() + '.pdf',
+                    image: { type: 'jpeg', quality: 1.0 },
+                    html2canvas: { 
+                        scale: 4, // 4x canvas resolution prevents blurriness when zoomed in
+                        letterRendering: true, 
+                        useCORS: true,
+                        scrollY: 0,
+                        scrollX: 0
+                    },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
+
+                try {
+                    showToast("Compiling PDF document...", "info");
+                    await html2pdf().set(opt).from(element).save();
+                    showToast("PDF downloaded successfully.", "success");
+                } catch(error) {
+                    console.error("PDF generation error:", error);
+                    showToast("Failed to compile PDF. Try using system print instead.", "error");
+                } finally {
+                    // Restore original preview scale
+                    element.style.transition = originalTransition;
+                    element.style.transform = originalTransform;
+                    element.style.marginBottom = originalMarginBottom;
+                }
+            });
+
+            // Load saved state or default
+            loadState();
+
+            // Initial render execution
+            renderFormEditor();
+            updateBiodataPreview();
+        });
+    </script>
+</body>
+</html>

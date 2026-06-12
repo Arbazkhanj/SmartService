@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Age Calculator - SmartService</title>
+    <link rel="stylesheet" href="assets/css/global.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        .calc-grid {
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 32px;
+            margin-top: 40px;
+        }
+
+        .input-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            padding: 32px;
+            box-shadow: var(--shadow-md);
+            height: fit-content;
+        }
+
+        .results-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .main-age-card {
+            background: var(--gradient-primary);
+            color: white;
+            border-radius: var(--radius-lg);
+            padding: 32px;
+            text-align: center;
+            box-shadow: var(--shadow-lg);
+        }
+        .main-age-num {
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 8px;
+        }
+
+        .stats-tile-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 16px;
+        }
+        .stats-tile {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+        }
+        .stats-tile-num {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 4px;
+        }
+        .stats-tile-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-light);
+            text-transform: uppercase;
+        }
+
+        .birthday-card {
+            background: #fffbeb;
+            border: 1px solid #fef3c7;
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .birthday-icon {
+            background: #fef3c7;
+            color: #d97706;
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 992px) {
+            .calc-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body style="padding-top: 70px;">
+    <site-header></site-header>
+
+    <main class="container section-padding" style="padding-top: 20px;">
+        <!-- Header -->
+        <div style="margin-bottom: 24px;">
+            <a href="index.html" style="color: var(--primary); font-weight: 600;"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+            <h1 style="font-size: 2.2rem; margin-top: 12px; color: var(--text-main);"><i class="fas fa-birthday-cake mr-2 text-primary"></i>Age Calculator</h1>
+            <p style="color: var(--text-muted);">Calculate your exact age, total duration logs, and count down to your next birthday.</p>
+        </div>
+
+        <div class="calc-grid">
+            <!-- Left Side - Inputs -->
+            <div class="input-card fade-in">
+                <h3 style="font-size: 1.1rem; margin-bottom: 24px; color: var(--text-main);">Enter Dates</h3>
+                <form id="ageForm">
+                    <div class="form-group">
+                        <label class="form-label" for="dob">Date of Birth (DOB)</label>
+                        <input type="date" id="dob" class="form-control" required style="font-weight: 600;">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="asOfDate">Age at the Date of</label>
+                        <input type="date" id="asOfDate" class="form-control" required style="font-weight: 600;">
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 1rem; margin-top: 12px;">
+                        <i class="fas fa-calculator"></i> Calculate Age
+                    </button>
+                </form>
+            </div>
+
+            <!-- Right Side - Results -->
+            <div class="results-panel" id="resultsPanel" style="display: none;">
+                <!-- Main Age Panel -->
+                <div class="main-age-card fade-in">
+                    <div class="main-age-num" id="mainAgeDisplay">0 Years</div>
+                    <div style="font-weight: 600; font-size: 1.1rem; opacity: 0.9;" id="subAgeDisplay">0 Months | 0 Days</div>
+                </div>
+
+                <!-- Birthday Countdown -->
+                <div class="birthday-card fade-in" style="animation-delay: 0.1s;">
+                    <div class="birthday-icon">
+                        <i class="fas fa-gift"></i>
+                    </div>
+                    <div>
+                        <h4 style="color: #d97706; margin-bottom: 4px;">Next Birthday</h4>
+                        <p style="font-weight: 600; color: #78350f;" id="birthdayCountdown">0 Months and 0 Days remaining</p>
+                    </div>
+                </div>
+
+                <!-- Aggregate breakdown Grid -->
+                <h3 style="font-size: 1.1rem; color: var(--text-main); margin-top: 16px;">Age in Total Units</h3>
+                <div class="stats-tile-grid">
+                    <div class="stats-tile fade-in" style="animation-delay: 0.15s;">
+                        <div class="stats-tile-num" id="totalMonths">0</div>
+                        <div class="stats-tile-label">Total Months</div>
+                    </div>
+                    <div class="stats-tile fade-in" style="animation-delay: 0.2s;">
+                        <div class="stats-tile-num" id="totalWeeks">0</div>
+                        <div class="stats-tile-label">Total Weeks</div>
+                    </div>
+                    <div class="stats-tile fade-in" style="animation-delay: 0.25s;">
+                        <div class="stats-tile-num" id="totalDays">0</div>
+                        <div class="stats-tile-label">Total Days</div>
+                    </div>
+                    <div class="stats-tile fade-in" style="animation-delay: 0.3s;">
+                        <div class="stats-tile-num" id="totalHours">0</div>
+                        <div class="stats-tile-label">Total Hours</div>
+                    </div>
+                    <div class="stats-tile fade-in" style="animation-delay: 0.35s;">
+                        <div class="stats-tile-num" id="totalMinutes">0</div>
+                        <div class="stats-tile-label">Total Minutes</div>
+                    </div>
+                    <div class="stats-tile fade-in" style="animation-delay: 0.4s;">
+                        <div class="stats-tile-num" id="totalSeconds">0</div>
+                        <div class="stats-tile-label">Total Seconds</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <site-footer></site-footer>
+
+    <script src="assets/js/components.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const form = document.getElementById("ageForm");
+            const dobInput = document.getElementById("dob");
+            const asOfDateInput = document.getElementById("asOfDate");
+
+            const resultsPanel = document.getElementById("resultsPanel");
+            const mainAgeDisplay = document.getElementById("mainAgeDisplay");
+            const subAgeDisplay = document.getElementById("subAgeDisplay");
+            const birthdayCountdown = document.getElementById("birthdayCountdown");
+
+            const totalMonths = document.getElementById("totalMonths");
+            const totalWeeks = document.getElementById("totalWeeks");
+            const totalDays = document.getElementById("totalDays");
+            const totalHours = document.getElementById("totalHours");
+            const totalMinutes = document.getElementById("totalMinutes");
+            const totalSeconds = document.getElementById("totalSeconds");
+
+            // Pre-populate asOfDate with today
+            const today = new Date().toISOString().split("T")[0];
+            asOfDateInput.value = today;
+
+            form.addEventListener("submit", (e) => {
+                e.preventDefault();
+
+                const dobVal = new Date(dobInput.value);
+                const asOfVal = new Date(asOfDateInput.value);
+
+                if (dobVal > asOfVal) {
+                    showToast("Birth date cannot be in the future relative to the comparison date.", "error");
+                    return;
+                }
+
+                calculateDetailedAge(dobVal, asOfVal);
+            });
+
+            function calculateDetailedAge(dob, asOf) {
+                // Main age math
+                let years = asOf.getFullYear() - dob.getFullYear();
+                let months = asOf.getMonth() - dob.getMonth();
+                let days = asOf.getDate() - dob.getDate();
+
+                if (days < 0) {
+                    months--;
+                    // Get days in previous month
+                    const prevMonth = new Date(asOf.getFullYear(), asOf.getMonth(), 0);
+                    days += prevMonth.getDate();
+                }
+
+                if (months < 0) {
+                    years--;
+                    months += 12;
+                }
+
+                // Show main displays
+                mainAgeDisplay.innerText = `${years} Year${years !== 1 ? 's' : ''}`;
+                subAgeDisplay.innerText = `${months} Month${months !== 1 ? 's' : ''} | ${days} Day${days !== 1 ? 's' : ''}`;
+
+                // Aggregate units calculations
+                const diffTime = Math.abs(asOf - dob);
+                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                const diffWeeks = Math.floor(diffDays / 7);
+                const diffMonths = (asOf.getFullYear() - dob.getFullYear()) * 12 + (asOf.getMonth() - dob.getMonth());
+
+                totalMonths.innerText = diffMonths.toLocaleString();
+                totalWeeks.innerText = diffWeeks.toLocaleString();
+                totalDays.innerText = diffDays.toLocaleString();
+                totalHours.innerText = (diffDays * 24).toLocaleString();
+                totalMinutes.innerText = (diffDays * 24 * 60).toLocaleString();
+                totalSeconds.innerText = Math.floor(diffTime / 1000).toLocaleString();
+
+                // Next birthday countdown
+                let nextBday = new Date(asOf.getFullYear(), dob.getMonth(), dob.getDate());
+                if (nextBday < asOf) {
+                    nextBday.setFullYear(asOf.getFullYear() + 1);
+                }
+
+                let nextBdayDiff = nextBday - asOf;
+                let nextBdayDays = Math.floor(nextBdayDiff / (1000 * 60 * 60 * 24));
+                
+                let nextBdayMonths = 0;
+                // Calculate months and days specifically
+                let tempBday = new Date(asOf.getFullYear(), asOf.getMonth(), asOf.getDate());
+                while (true) {
+                    tempBday.setMonth(tempBday.getMonth() + 1);
+                    if (tempBday > nextBday) {
+                        tempBday.setMonth(tempBday.getMonth() - 1);
+                        break;
+                    }
+                    nextBdayMonths++;
+                }
+                let nextRemainingDays = Math.floor((nextBday - tempBday) / (1000 * 60 * 60 * 24));
+
+                birthdayCountdown.innerText = `${nextBdayMonths} Month${nextBdayMonths !== 1 ? 's' : ''} and ${nextRemainingDays} Day${nextRemainingDays !== 1 ? 's' : ''} remaining`;
+
+                // Display Results panel
+                resultsPanel.style.display = "flex";
+                showToast("Calculated exact age successfully.", "success");
+            }
+        });
+    </script>
+</body>
+</html>

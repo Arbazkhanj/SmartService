@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Govt ID Card Print Tool - SmartService</title>
+    <link rel="stylesheet" href="assets/css/global.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* Tool Layout Custom Styles */
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 32px;
+            margin-top: 40px;
+        }
+        
+        .control-panel {
+            background: white;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            padding: 24px;
+            box-shadow: var(--shadow-md);
+            height: fit-content;
+        }
+
+        .preview-panel {
+            background: #e2e8f0;
+            border-radius: var(--radius-lg);
+            padding: 32px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 600px;
+            overflow-x: auto;
+        }
+
+        /* Upload Container */
+        .upload-slot {
+            border: 2px dashed var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            margin-bottom: 16px;
+            background: var(--bg-light);
+        }
+        .upload-slot:hover {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+        .upload-slot i {
+            font-size: 1.5rem;
+            color: var(--text-light);
+            margin-bottom: 8px;
+        }
+
+        /* Position Control Pad */
+        .pad-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            max-width: 140px;
+            margin: 0 auto;
+        }
+        .pad-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1rem;
+            color: var(--text-muted);
+            transition: var(--transition-fast);
+        }
+        .pad-btn:hover {
+            background: var(--primary-light);
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        /* Print Canvas Sheets mimicking real paper sizes */
+        .paper-sheet {
+            background: white;
+            box-shadow: var(--shadow-xl);
+            box-sizing: border-box;
+            position: relative;
+            transform-origin: top center;
+            transition: transform 0.2s;
+        }
+
+        /* Standard A4 Paper size in mm for printing: 210mm x 297mm */
+        .paper-a4 {
+            width: 210mm;
+            height: 297mm;
+            padding: 15mm 10mm;
+            display: grid;
+            grid-template-columns: repeat(2, auto);
+            justify-content: center;
+            grid-auto-rows: min-content;
+            gap: 10mm 10mm;
+            align-content: start;
+        }
+
+        /* Standard 4x6 Photo paper size: 101.6mm x 152.4mm (4in x 6in) */
+        .paper-4x6 {
+            width: 101.6mm;
+            height: 152.4mm;
+            padding: 8mm;
+            display: flex;
+            flex-direction: column;
+            gap: 8mm;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ID Card wrapper */
+        .id-card-render {
+            width: 85.6mm;
+            height: 54.0mm;
+            border: 1px solid #d1d5db;
+            background: #ffffff;
+            box-sizing: border-box;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .id-card-render.selected {
+            outline: 3px solid var(--primary);
+        }
+        
+        /* The uploaded image itself inside the card container */
+        .id-image {
+            max-width: 100%;
+            max-height: 100%;
+            transform-origin: center center;
+            transition: transform 0.05s ease;
+            pointer-events: none;
+            display: none;
+        }
+
+        .empty-placeholder {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            font-weight: 600;
+            text-align: center;
+        }
+
+        /* Toggle Options */
+        .option-group {
+            display: flex;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+        .option-btn {
+            flex: 1;
+            padding: 10px;
+            background: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-align: center;
+            color: var(--text-muted);
+            transition: var(--transition-fast);
+        }
+        .option-btn.active {
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+
+        @media (max-width: 992px) {
+            .workspace-grid {
+                grid-template-columns: 1fr;
+            }
+            .preview-panel {
+                padding: 16px;
+            }
+            .paper-sheet {
+                transform: scale(0.8);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .paper-sheet {
+                transform: scale(0.45);
+            }
+        }
+
+        /* PRINT CONFIGURATION */
+        @media print {
+            @page {
+                size: auto;
+                margin: 0;
+            }
+            .no-print, site-header, site-footer {
+                display: none !important;
+            }
+            body, html {
+                background: white !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .workspace-grid {
+                margin: 0 !important;
+                display: block !important;
+            }
+            .preview-panel {
+                background: white !important;
+                padding: 0 !important;
+                display: block !important;
+                min-height: auto !important;
+            }
+            .paper-sheet {
+                box-shadow: none !important;
+                transform: scale(1) !important;
+                margin: 0 !important;
+                border: none !important;
+                page-break-after: avoid;
+                page-break-inside: avoid;
+            }
+            .id-card-render {
+                border: 1px solid #000 !important;
+            }
+            .id-card-render.selected {
+                outline: none !important;
+            }
+            .id-card-render:not(.has-image) {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body style="padding-top: 70px;">
+    <site-header></site-header>
+
+    <main class="container section-padding" style="padding-top: 20px;">
+        <!-- Header -->
+        <div style="margin-bottom: 24px;" class="no-print">
+            <a href="index.html" style="color: var(--primary); font-weight: 600;"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+            <h1 style="font-size: 2.2rem; margin-top: 12px; color: var(--text-main);"><i class="fas fa-print mr-2 text-primary"></i>Govt ID Card Print Tool</h1>
+            <p style="color: var(--text-muted);">Upload front & back files. Reposition and print on A4/4x6 paper with exact standard size.</p>
+        </div>
+
+        <div class="workspace-grid">
+            <!-- Left Panel - Controls -->
+            <div class="control-panel no-print">
+                <!-- Step 1: Upload Front & Back -->
+                <h3 style="font-size: 1.1rem; margin-bottom: 16px; color: var(--text-main);"><span style="background: var(--primary-light); color: var(--primary); width: 24px; height: 24px; display: inline-flex; justify-content: center; align-items: center; border-radius: 50%; font-size: 0.8rem; margin-right: 8px;">1</span>Upload ID Card</h3>
+                
+                <input type="file" id="frontFile" accept="image/*" style="display: none;">
+                <div class="upload-slot" onclick="document.getElementById('frontFile').click()">
+                    <i class="fas fa-id-card"></i>
+                    <h5 style="font-size: 0.9rem; margin-bottom: 4px;">Upload Front Side</h5>
+                    <p style="font-size: 0.75rem; color: var(--text-light);" id="frontStatus">JPG, PNG (Max 5MB)</p>
+                </div>
+
+                <input type="file" id="backFile" accept="image/*" style="display: none;">
+                <div class="upload-slot" onclick="document.getElementById('backFile').click()">
+                    <i class="fas fa-id-card"></i>
+                    <h5 style="font-size: 0.9rem; margin-bottom: 4px;">Upload Back Side</h5>
+                    <p style="font-size: 0.75rem; color: var(--text-light);" id="backStatus">JPG, PNG (Max 5MB)</p>
+                </div>
+
+                <!-- Step 2: Settings -->
+                <h3 style="font-size: 1.1rem; margin: 24px 0 16px 0; color: var(--text-main);"><span style="background: var(--primary-light); color: var(--primary); width: 24px; height: 24px; display: inline-flex; justify-content: center; align-items: center; border-radius: 50%; font-size: 0.8rem; margin-right: 8px;">2</span>Print Setup</h3>
+                
+                <div class="form-group">
+                    <label class="form-label">Card Orientation</label>
+                    <div class="option-group">
+                        <button class="option-btn active" id="orientationLandscape">Landscape</button>
+                        <button class="option-btn" id="orientationPortrait">Portrait</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Paper Sheet Size</label>
+                    <div class="option-group">
+                        <button class="option-btn active" id="paperA4">A4 Size</button>
+                        <button class="option-btn" id="paper4x6">4" x 6" Photo</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Card Corner Radius</label>
+                    <input type="range" id="cardRadius" class="custom-slider" min="0" max="24" value="4">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.75rem; margin-top: 4px; color: var(--text-light);">
+                        <span>0px (Square)</span>
+                        <span>24px (Round)</span>
+                    </div>
+                </div>
+
+                <!-- Step 3: Shift / Adjustments -->
+                <h3 style="font-size: 1.1rem; margin: 24px 0 16px 0; color: var(--text-main);"><span style="background: var(--primary-light); color: var(--primary); width: 24px; height: 24px; display: inline-flex; justify-content: center; align-items: center; border-radius: 50%; font-size: 0.8rem; margin-right: 8px;">3</span>Shift Adjust (Edit Side)</h3>
+                
+                <div class="option-group" style="margin-bottom: 12px;">
+                    <button class="option-btn active" id="selectFront">Front Card</button>
+                    <button class="option-btn" id="selectBack">Back Card</button>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Zoom Scale</label>
+                    <input type="range" id="imgScale" class="custom-slider" min="50" max="250" value="100">
+                    <div style="text-align: right; font-size: 0.8rem; margin-top: 4px; font-weight: 600; color: var(--primary);" id="scaleLabel">100%</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" style="text-align: center;">Shift Alignment</label>
+                    <div class="pad-grid">
+                        <div></div>
+                        <button class="pad-btn" id="moveUp"><i class="fas fa-arrow-up"></i></button>
+                        <div></div>
+                        
+                        <button class="pad-btn" id="moveLeft"><i class="fas fa-arrow-left"></i></button>
+                        <button class="pad-btn" id="moveCenter"><i class="fas fa-crosshairs"></i></button>
+                        <button class="pad-btn" id="moveRight"><i class="fas fa-arrow-right"></i></button>
+                        
+                        <div></div>
+                        <button class="pad-btn" id="moveDown"><i class="fas fa-arrow-down"></i></button>
+                        <div></div>
+                    </div>
+                </div>
+
+                <!-- Print CTA -->
+                <button id="btnPrint" class="btn btn-success" style="width: 100%; margin-top: 24px; font-size: 1.05rem;">
+                    <i class="fas fa-print"></i> Print ID Cards
+                </button>
+            </div>
+
+            <!-- Right Panel - Live Preview -->
+            <div class="preview-panel">
+                <div style="margin-bottom: 16px; font-weight: 600; color: var(--text-muted); font-size: 0.95rem;" class="no-print">
+                    <i class="fas fa-eye mr-1"></i> Live Printable Paper Layout (Exact Scaling)
+                </div>
+
+                <!-- The Paper Sheet -->
+                <div class="paper-sheet paper-a4" id="paperContainer">
+                    
+                    <!-- Front Card Renderer -->
+                    <div class="id-card-render selected" id="renderCardFront">
+                        <div class="empty-placeholder" id="placeholderFront">
+                            <i class="fas fa-cloud-upload-alt" style="font-size: 1.25rem; margin-bottom: 4px; display: block;"></i>
+                            Front Card Empty
+                        </div>
+                        <img src="" class="id-image" id="imgFront">
+                    </div>
+
+                    <!-- Back Card Renderer -->
+                    <div class="id-card-render" id="renderCardBack">
+                        <div class="empty-placeholder" id="placeholderBack">
+                            <i class="fas fa-cloud-upload-alt" style="font-size: 1.25rem; margin-bottom: 4px; display: block;"></i>
+                            Back Card Empty
+                        </div>
+                        <img src="" class="id-image" id="imgBack">
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <site-footer></site-footer>
+
+    <script src="assets/js/components.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // Document references
+            const frontFile = document.getElementById("frontFile");
+            const backFile = document.getElementById("backFile");
+            const imgFront = document.getElementById("imgFront");
+            const imgBack = document.getElementById("imgBack");
+            const placeholderFront = document.getElementById("placeholderFront");
+            const placeholderBack = document.getElementById("placeholderBack");
+            
+            const frontStatus = document.getElementById("frontStatus");
+            const backStatus = document.getElementById("backStatus");
+
+            const orientationLandscape = document.getElementById("orientationLandscape");
+            const orientationPortrait = document.getElementById("orientationPortrait");
+            const paperA4 = document.getElementById("paperA4");
+            const paper4x6 = document.getElementById("paper4x6");
+            const paperContainer = document.getElementById("paperContainer");
+
+            const cardRadius = document.getElementById("cardRadius");
+            const renderCardFront = document.getElementById("renderCardFront");
+            const renderCardBack = document.getElementById("renderCardBack");
+
+            const selectFront = document.getElementById("selectFront");
+            const selectBack = document.getElementById("selectBack");
+            const imgScale = document.getElementById("imgScale");
+            const scaleLabel = document.getElementById("scaleLabel");
+
+            const moveUp = document.getElementById("moveUp");
+            const moveDown = document.getElementById("moveDown");
+            const moveLeft = document.getElementById("moveLeft");
+            const moveRight = document.getElementById("moveRight");
+            const moveCenter = document.getElementById("moveCenter");
+
+            const btnPrint = document.getElementById("btnPrint");
+
+            // State variables
+            let selectedSide = "front"; // "front" or "back"
+            let cardOrientation = "landscape"; // "landscape" or "portrait"
+            
+            // Image Transform states
+            const transforms = {
+                front: { x: 0, y: 0, scale: 100 },
+                back: { x: 0, y: 0, scale: 100 }
+            };
+
+            // Helper to apply shifts
+            function updateTransforms() {
+                const fTransform = `translate(${transforms.front.x}px, ${transforms.front.y}px) scale(${transforms.front.scale / 100})`;
+                imgFront.style.transform = fTransform;
+
+                const bTransform = `translate(${transforms.back.x}px, ${transforms.back.y}px) scale(${transforms.back.scale / 100})`;
+                imgBack.style.transform = bTransform;
+            }
+
+            // Sync slider value
+            function syncSlider() {
+                const currentScale = transforms[selectedSide].scale;
+                imgScale.value = currentScale;
+                scaleLabel.innerText = `${currentScale}%`;
+            }
+
+            // Select active side
+            function setActiveSide(side) {
+                selectedSide = side;
+                if (side === "front") {
+                    selectFront.classList.add("active");
+                    selectBack.classList.remove("active");
+                    renderCardFront.classList.add("selected");
+                    renderCardBack.classList.remove("selected");
+                } else {
+                    selectFront.classList.remove("active");
+                    selectBack.classList.add("active");
+                    renderCardFront.classList.remove("selected");
+                    renderCardBack.classList.add("selected");
+                }
+                syncSlider();
+            }
+
+            selectFront.addEventListener("click", () => setActiveSide("front"));
+            selectBack.addEventListener("click", () => setActiveSide("back"));
+            renderCardFront.addEventListener("click", () => setActiveSide("front"));
+            renderCardBack.addEventListener("click", () => setActiveSide("back"));
+
+            // Scale slider listener
+            imgScale.addEventListener("input", (e) => {
+                const scaleVal = parseInt(e.target.value);
+                transforms[selectedSide].scale = scaleVal;
+                scaleLabel.innerText = `${scaleVal}%`;
+                updateTransforms();
+            });
+
+            // Adjustments shifting events
+            const STEP = 5; // pixels
+            moveUp.addEventListener("click", () => {
+                transforms[selectedSide].y -= STEP;
+                updateTransforms();
+            });
+            moveDown.addEventListener("click", () => {
+                transforms[selectedSide].y += STEP;
+                updateTransforms();
+            });
+            moveLeft.addEventListener("click", () => {
+                transforms[selectedSide].x -= STEP;
+                updateTransforms();
+            });
+            moveRight.addEventListener("click", () => {
+                transforms[selectedSide].x += STEP;
+                updateTransforms();
+            });
+            moveCenter.addEventListener("click", () => {
+                transforms[selectedSide].x = 0;
+                transforms[selectedSide].y = 0;
+                transforms[selectedSide].scale = 100;
+                syncSlider();
+                updateTransforms();
+            });
+
+            // Handle file loads
+            function setupImage(file, imgElement, placeholderElement, statusElement, sideKey) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    imgElement.src = e.target.result;
+                    imgElement.style.display = "block";
+                    placeholderElement.style.display = "none";
+                    imgElement.parentElement.classList.add("has-image");
+                    statusElement.innerText = file.name.substring(0, 15) + "...";
+                    showToast(`${sideKey.charAt(0).toUpperCase() + sideKey.slice(1)} card loaded successfully.`, "success");
+                };
+                reader.readAsDataURL(file);
+            }
+
+            frontFile.addEventListener("change", (e) => {
+                const file = e.target.files[0];
+                if (file) setupImage(file, imgFront, placeholderFront, frontStatus, "front");
+            });
+
+            backFile.addEventListener("change", (e) => {
+                const file = e.target.files[0];
+                if (file) setupImage(file, imgBack, placeholderBack, backStatus, "back");
+            });
+
+            // Radius configuration
+            cardRadius.addEventListener("input", (e) => {
+                const rVal = `${e.target.value}px`;
+                renderCardFront.style.borderRadius = rVal;
+                renderCardBack.style.borderRadius = rVal;
+            });
+
+            // Paper selections
+            paperA4.addEventListener("click", () => {
+                paperA4.classList.add("active");
+                paper4x6.classList.remove("active");
+                paperContainer.className = "paper-sheet paper-a4";
+            });
+
+            paper4x6.addEventListener("click", () => {
+                paper4x6.classList.add("active");
+                paperA4.classList.remove("active");
+                paperContainer.className = "paper-sheet paper-4x6";
+            });
+
+            // Orientation selections
+            orientationLandscape.addEventListener("click", () => {
+                orientationLandscape.classList.add("active");
+                orientationPortrait.classList.remove("active");
+                
+                cardOrientation = "landscape";
+                renderCardFront.style.width = "85.6mm";
+                renderCardFront.style.height = "54.0mm";
+                renderCardBack.style.width = "85.6mm";
+                renderCardBack.style.height = "54.0mm";
+            });
+
+            orientationPortrait.addEventListener("click", () => {
+                orientationPortrait.classList.add("active");
+                orientationLandscape.classList.remove("active");
+
+                cardOrientation = "portrait";
+                renderCardFront.style.width = "54.0mm";
+                renderCardFront.style.height = "85.6mm";
+                renderCardBack.style.width = "54.0mm";
+                renderCardBack.style.height = "85.6mm";
+            });
+
+            // Print Event
+            btnPrint.addEventListener("click", () => {
+                if (!imgFront.src && !imgBack.src) {
+                    showToast("Please upload at least one card image side before printing.", "error");
+                    return;
+                }
+                window.print();
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 140" width="280" height="140">
+    <defs>
+        
+        <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#eff6ff" />
+            <stop offset="100%" stop-color="#dbeafe" />
+        </linearGradient>
+        <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+            <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#0f172a" flood-opacity="0.08" />
+        </filter>
+    </defs>
+    
+    <rect width="280" height="140" fill="url(#bgGrad)" />
+    
+    <g opacity="0.08">
+        <pattern id="grid-blue" width="16" height="16" patternUnits="userSpaceOnUse">
+            <path d="M 16 0 L 0 0 0 16" fill="none" stroke="#3b82f6" stroke-width="1"/>
+        </pattern>
+        <rect width="280" height="140" fill="url(#grid-blue)" />
+    </g>
+    
+    <!-- Abstract background circles -->
+    <circle cx="30" cy="110" r="30" fill="none" stroke="#3b82f6" stroke-width="1" opacity="0.1" />
+    <circle cx="250" cy="30" r="40" fill="none" stroke="#3b82f6" stroke-width="1" opacity="0.1" />
+    
+    <!-- Central Content Group -->
+    <g filter="url(#shadow)">
+        
+    <!-- A4 sheet with photo grid -->
+    <rect x="95" y="15" width="90" height="110" rx="4" fill="#ffffff" stroke="#3b82f6" stroke-width="2" />
+    <!-- Photo 1 -->
+    <rect x="103" y="25" width="22" height="28" rx="2" fill="#3b82f6" />
+    <circle cx="114" cy="34" r="5" fill="#ffffff" /> <path d="M107,48 C107,42 121,42 121,48 Z" fill="#ffffff" />
+    <!-- Photo 2 -->
+    <rect x="131" y="25" width="22" height="28" rx="2" fill="#3b82f6" />
+    <circle cx="142" cy="34" r="5" fill="#ffffff" /> <path d="M135,48 C135,42 149,42 149,48 Z" fill="#ffffff" />
+    <!-- Photo 3 -->
+    <rect x="159" y="25" width="22" height="28" rx="2" fill="#3b82f6" />
+    <circle cx="170" cy="34" r="5" fill="#ffffff" /> <path d="M163,48 C163,42 177,42 177,48 Z" fill="#ffffff" />
+    <!-- Row 2 -->
+    <rect x="103" y="60" width="22" height="28" rx="2" fill="#3b82f6" />
+    <circle cx="114" cy="69" r="5" fill="#ffffff" /> <path d="M107,83 C107,77 121,77 121,83 Z" fill="#ffffff" />
+    <!-- Photo 5 -->
+    <rect x="131" y="60" width="22" height="28" rx="2" fill="#3b82f6" />
+    <circle cx="142" cy="69" r="5" fill="#ffffff" /> <path d="M135,83 C135,77 149,77 149,83 Z" fill="#ffffff" />
+    <!-- Photo 6 -->
+    <rect x="159" y="60" width="22" height="28" rx="2" fill="#3b82f6" />
+    <circle cx="170" cy="69" r="5" fill="#ffffff" /> <path d="M163,83 C163,77 177,77 177,83 Z" fill="#ffffff" />
+
+    </g>
+</svg>

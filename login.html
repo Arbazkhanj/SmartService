@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Console Login - SmartService</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Secure local console login for SmartService CSC VLE Tools. Offline and secure.">
+    <link rel="icon" type="image/png" href="assets/images/favicon.png">
+    
+    <!-- CSS and Fonts -->
+    <link rel="stylesheet" href="assets/css/global.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background: #090d16;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        /* Ambient background glow elements */
+        .ambient-glow-1 {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(37, 99, 235, 0.25) 0%, transparent 70%);
+            top: -10%;
+            left: -10%;
+            z-index: 1;
+            filter: blur(40px);
+            animation: pulse-slow 8s infinite alternate ease-in-out;
+        }
+        .ambient-glow-2 {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(124, 58, 237, 0.22) 0%, transparent 70%);
+            bottom: -15%;
+            right: -10%;
+            z-index: 1;
+            filter: blur(60px);
+            animation: pulse-slow 12s infinite alternate-reverse ease-in-out;
+        }
+
+        @keyframes pulse-slow {
+            0% { transform: scale(1) translate(0, 0); }
+            100% { transform: scale(1.15) translate(30px, 20px); }
+        }
+
+        /* Glassmorphic Card Container */
+        .login-card {
+            background: rgba(15, 23, 42, 0.45);
+            backdrop-filter: blur(20px) saturate(160%);
+            -webkit-backdrop-filter: blur(20px) saturate(160%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: var(--radius-xl, 24px);
+            padding: 48px 40px;
+            width: 100%;
+            max-width: 440px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            z-index: 10;
+            position: relative;
+            animation: slideUpFade 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        @keyframes slideUpFade {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Brand styling */
+        .login-brand {
+            text-align: center;
+            margin-bottom: 36px;
+        }
+        .brand-logo {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            background: var(--gradient-primary);
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+            margin-bottom: 16px;
+        }
+        .brand-logo svg {
+            width: 28px;
+            height: 28px;
+            fill: none;
+        }
+        .login-title {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 6px;
+            letter-spacing: -0.5px;
+        }
+        .login-subtitle {
+            font-size: 0.875rem;
+            color: #94a3b8;
+        }
+
+        /* Hint Credentials Banner */
+        .hint-badge {
+            background: rgba(37, 99, 235, 0.1);
+            border: 1px dashed rgba(37, 99, 235, 0.25);
+            color: #60a5fa;
+            border-radius: var(--radius-sm, 8px);
+            padding: 10px 14px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 28px;
+        }
+
+        /* Form Controls */
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        .input-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            font-size: 1.1rem;
+            transition: var(--transition-fast);
+        }
+        .input-field {
+            width: 100%;
+            padding: 14px 20px 14px 48px;
+            border-radius: var(--radius-md, 12px);
+            border: 1.5px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.04);
+            color: #ffffff;
+            font-size: 0.95rem;
+            font-weight: 500;
+            outline: none;
+            transition: var(--transition-normal);
+        }
+        .input-field:focus {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+        }
+        .input-field:focus + .input-icon {
+            color: #3b82f6;
+        }
+
+        /* Password Toggle Button */
+        .password-toggle {
+            position: absolute;
+            right: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            padding: 4px;
+            user-select: none;
+        }
+        .password-toggle:hover {
+            color: #3b82f6;
+        }
+
+        /* Remember Me & Utility links */
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            margin-bottom: 28px;
+        }
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #94a3b8;
+            cursor: pointer;
+            user-select: none;
+        }
+        .remember-me input {
+            cursor: pointer;
+            accent-color: #3b82f6;
+            width: 15px;
+            height: 15px;
+        }
+        .forgot-password {
+            color: #3b82f6;
+            font-weight: 600;
+            text-decoration: none;
+            transition: var(--transition-fast);
+        }
+        .forgot-password:hover {
+            color: #60a5fa;
+            text-decoration: underline;
+        }
+
+        /* Error Notification Banner */
+        .error-banner {
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            color: #f87171;
+            border-radius: var(--radius-sm, 8px);
+            padding: 12px 16px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            animation: shake 0.4s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+
+        /* Button Styling */
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            border-radius: var(--radius-md, 12px);
+            border: none;
+            background: var(--gradient-primary);
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: var(--transition-normal);
+        }
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+        }
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        /* Spinner */
+        .spinner {
+            display: none;
+            width: 18px;
+            height: 18px;
+            border: 2.5px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #ffffff;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ambient-glow-1"></div>
+    <div class="ambient-glow-2"></div>
+
+    <div class="login-card">
+        <div class="login-brand">
+            <div class="brand-logo">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M7 11.5L10.5 15L17 8.5" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+            </div>
+            <h1 class="login-title">Secure Portal Login</h1>
+            <p class="login-subtitle">SmartService CSC Administration Console</p>
+        </div>
+
+        <!-- Credentials Hint -->
+        <div class="hint-badge">
+            <i class="fas fa-info-circle"></i>
+            <span>Hint: Use <strong>admin</strong> for ID & Password.</span>
+        </div>
+
+        <!-- Error message banner -->
+        <div class="error-banner" id="errorBanner">
+            <i class="fas fa-exclamation-circle"></i>
+            <span id="errorMessage">Invalid Username or Password</span>
+        </div>
+
+        <form id="loginForm">
+            <!-- Username Input -->
+            <div class="input-group">
+                <input type="text" id="username" class="input-field" placeholder="VLE ID / Username" required autocomplete="username">
+                <i class="fas fa-user-shield input-icon"></i>
+            </div>
+
+            <!-- Password Input -->
+            <div class="input-group">
+                <input type="password" id="password" class="input-field" placeholder="Security Password" required autocomplete="current-password">
+                <i class="fas fa-lock input-icon"></i>
+                <span class="password-toggle" id="passwordToggle">
+                    <i class="fas fa-eye" id="toggleIcon"></i>
+                </span>
+            </div>
+
+            <!-- Options Row -->
+            <div class="form-options">
+                <label class="remember-me">
+                    <input type="checkbox" id="rememberMe">
+                    <span>Remember Console ID</span>
+                </label>
+                <a href="#" class="forgot-password" onclick="alert('Demo Mode: Contact SmartService Admin for password reset.')">Forgot Password?</a>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn-login" id="loginBtn">
+                <span class="btn-text">Authenticate Securely</span>
+                <span class="spinner" id="btnSpinner"></span>
+            </button>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const loginForm = document.getElementById("loginForm");
+            const usernameInput = document.getElementById("username");
+            const passwordInput = document.getElementById("password");
+            const passwordToggle = document.getElementById("passwordToggle");
+            const toggleIcon = document.getElementById("toggleIcon");
+            const errorBanner = document.getElementById("errorBanner");
+            const errorMessage = document.getElementById("errorMessage");
+            
+            const loginBtn = document.getElementById("loginBtn");
+            const btnSpinner = document.getElementById("btnSpinner");
+            const btnText = loginBtn.querySelector(".btn-text");
+            const rememberMe = document.getElementById("rememberMe");
+
+            // Redirect if already logged in
+            if (localStorage.getItem("smartservice_logged_in") === "true") {
+                window.location.href = "index.html";
+            }
+
+            // Restore remembered username
+            const savedUser = localStorage.getItem("smartservice_remembered_vle");
+            if (savedUser) {
+                usernameInput.value = savedUser;
+                rememberMe.checked = true;
+            }
+
+            // Password view toggle
+            passwordToggle.addEventListener("click", () => {
+                if (passwordInput.type === "password") {
+                    passwordInput.type = "text";
+                    toggleIcon.className = "fas fa-eye-slash";
+                } else {
+                    passwordInput.type = "password";
+                    toggleIcon.className = "fas fa-eye";
+                }
+            });
+
+            // Handle submission
+            loginForm.addEventListener("submit", (e) => {
+                e.preventDefault();
+                
+                // Reset errors
+                errorBanner.style.display = "none";
+
+                // Read input values
+                const username = usernameInput.value.trim();
+                const password = passwordInput.value;
+
+                // Set loading state
+                loginBtn.disabled = true;
+                btnSpinner.style.display = "block";
+                btnText.innerText = "Verifying...";
+
+                // Simulate secure processing delay
+                setTimeout(() => {
+                    if (username === "admin" && password === "admin") {
+                        // Success
+                        localStorage.setItem("smartservice_logged_in", "true");
+                        
+                        if (rememberMe.checked) {
+                            localStorage.setItem("smartservice_remembered_vle", username);
+                        } else {
+                            localStorage.removeItem("smartservice_remembered_vle");
+                        }
+
+                        // Redirect to index
+                        window.location.href = "index.html";
+                    } else {
+                        // Failure
+                        errorMessage.innerText = "Authentication Failed: Incorrect ID or Password";
+                        errorBanner.style.display = "flex";
+                        
+                        // Reset button
+                        loginBtn.disabled = false;
+                        btnSpinner.style.display = "none";
+                        btnText.innerText = "Authenticate Securely";
+                    }
+                }, 1000);
+            });
+        });
+    </script>
+</body>
+</html>

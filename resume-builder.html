@@ -1,0 +1,1853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume & CV Builder - SmartService</title>
+    <link rel="stylesheet" href="assets/css/global.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- HTML2PDF library for offline client-side A4 PDF compilation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <style>
+        .split-layout {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 32px;
+            margin-top: 32px;
+        }
+
+        .editor-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            padding: 32px;
+            box-shadow: var(--shadow-md);
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        .preview-sticky {
+            position: sticky;
+            top: 90px;
+            height: fit-content;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* A4 Page Ratio preview screen */
+        .a4-preview-box {
+            background: #cbd5e1;
+            border-radius: var(--radius-md);
+            padding: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 600px;
+            overflow-y: auto;
+            max-height: calc(100vh - 220px);
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        /* Actual printable paper sheet container */
+        .resume-paper {
+            width: 210mm;
+            min-height: 297mm;
+            background: white;
+            box-shadow: var(--shadow-xl);
+            box-sizing: border-box;
+            padding: 15mm 15mm;
+            display: flex;
+            flex-direction: column;
+            transform-origin: top center;
+            transform: scale(var(--preview-scale, 0.55));
+            margin-bottom: var(--preview-margin-bottom, -480px);
+            transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), margin-bottom 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Modern Sidebar Template classes */
+        .resume-modern-container {
+            display: flex;
+            min-height: 267mm;
+            margin: -15mm -15mm;
+        }
+        .resume-modern-sidebar {
+            width: 32%;
+            background-color: #f8fafc;
+            border-right: 2px solid var(--resume-primary-color, #166534);
+            padding: 15mm 6mm;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .resume-modern-main {
+            width: 68%;
+            padding: 15mm 10mm;
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar-section-title {
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--resume-primary-color, #166534);
+            border-bottom: 1.5px solid var(--resume-primary-color, #166534);
+            padding-bottom: 4px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        /* Executive Banner Template classes */
+        .resume-exec-banner {
+            margin: -15mm -15mm 10mm -15mm;
+            padding: 10mm 15mm;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .resume-exec-body {
+            display: grid;
+            grid-template-columns: 1fr 1.8fr;
+            gap: 20px;
+        }
+        .resume-exec-left {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .resume-exec-right {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+
+        /* Editor Section Repeater */
+        .form-section {
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            margin-bottom: 20px;
+            background: var(--bg-light);
+            position: relative;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 8px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .section-title-input {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            background: white;
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            max-width: 220px;
+        }
+        
+        .section-actions {
+            display: flex;
+            gap: 6px;
+        }
+        
+        .action-btn-sm {
+            padding: 6px 10px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+            background: white;
+            transition: var(--transition-fast);
+        }
+        .action-btn-sm:hover:not(:disabled) {
+            background: var(--primary-light);
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+        
+        .field-row {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            background: white;
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+        }
+        .field-inputs {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .field-label-input {
+            font-weight: 600;
+            font-size: 0.8rem;
+            padding: 6px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+        }
+        .field-value-input {
+            font-size: 0.85rem;
+            padding: 8px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+        }
+        
+        /* Controls Styles card */
+        .style-card {
+            background: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            margin-top: 24px;
+        }
+        
+        .style-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        .style-row:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Passport photo container in form */
+        .photo-upload-container {
+            border: 2px dashed var(--border-color);
+            padding: 16px;
+            text-align: center;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            background: var(--bg-light);
+            margin-bottom: 24px;
+            transition: var(--transition-fast);
+        }
+        .photo-upload-container:hover {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        /* RESUME PAPER INTERNAL TYPOGRAPHY */
+        .resume-title {
+            text-align: center;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+        .resume-header {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 2px solid var(--resume-primary-color, #166534);
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+        }
+        .contact-details p {
+            margin: 2px 0;
+            font-size: 10px;
+        }
+        .resume-photo-box {
+            width: 85px;
+            height: 105px;
+            border: 1px solid #94a3b8;
+            background: #f8fafc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .resume-photo-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .resume-section-title {
+            padding: 5px 8px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: white;
+            background-color: var(--resume-primary-color, #166534);
+            margin: 16px 0 10px 0;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+        }
+
+        .resume-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 8px 0;
+        }
+        .resume-table th, .resume-table td {
+            border: 1px solid #334155;
+            padding: 5px;
+            text-align: left;
+            font-size: 10px;
+        }
+        .resume-table th {
+            background-color: #f1f5f9;
+            font-weight: 700;
+        }
+
+        .resume-bullet-list {
+            margin-left: 20px;
+            list-style-type: disc;
+            font-size: 10px;
+        }
+        .resume-bullet-list li {
+            margin-bottom: 4px;
+        }
+
+        .resume-two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            font-size: 10px;
+        }
+        .resume-two-col p {
+            margin-bottom: 4px;
+        }
+
+        .resume-signature-row {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 32px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        @media (max-width: 992px) {
+            .split-layout {
+                grid-template-columns: 1fr;
+            }
+            .resume-paper {
+                transform: scale(0.7);
+                margin-bottom: -150px;
+            }
+            .a4-preview-box {
+                max-height: 500px;
+            }
+        }
+        @media (max-width: 600px) {
+            .resume-paper {
+                transform: scale(0.48);
+                margin-bottom: -360px;
+            }
+        }
+
+        /* Native print overrides */
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 0;
+            }
+            .no-print, site-header, site-footer, .style-card, #formPanel, .editor-card {
+                display: none !important;
+            }
+            body, html {
+                background: white !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            .split-layout {
+                display: block !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .preview-sticky {
+                position: static !important;
+                height: auto !important;
+                display: block !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .a4-preview-box {
+                background: white !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                box-shadow: none !important;
+                overflow: visible !important;
+                max-height: none !important;
+                display: block !important;
+            }
+            .resume-paper {
+                transform: scale(1) !important;
+                box-shadow: none !important;
+                margin: 0 auto !important;
+                padding: 15mm !important;
+                width: 210mm !important;
+                height: 297mm !important;
+                box-sizing: border-box !important;
+                page-break-after: avoid;
+                page-break-inside: avoid;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+        }
+    </style>
+</head>
+<body style="padding-top: 70px;">
+    <site-header></site-header>
+
+    <main class="container section-padding" style="padding-top: 20px;">
+        <!-- Header -->
+        <div style="margin-bottom: 24px;" class="no-print">
+            <a href="index.html" style="color: var(--primary); font-weight: 600;"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+            <h1 style="font-size: 2.2rem; margin-top: 12px; color: var(--text-main);"><i class="fas fa-file-invoice mr-2 text-primary"></i>Resume & CV Maker</h1>
+            <p style="color: var(--text-muted);">Fill details, choose traditional colors and fonts, drag sections, and download A4 print-ready PDFs.</p>
+        </div>
+
+        <div class="split-layout">
+            <!-- Left Panel: Inputs Form -->
+            <div class="editor-card no-print" id="formPanel">
+                <h2 style="font-size: 1.25rem; color: var(--text-main); margin-bottom: 20px;">Customize Resume Sections</h2>
+
+                <!-- Format template selector (Moved to Top) -->
+                <div class="form-group" style="margin-bottom: 24px; background: var(--bg-light); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+                    <label class="form-label" style="font-weight: 700; color: var(--primary);"><i class="fas fa-palette mr-1"></i> Choose Resume Format / Template</label>
+                    <select id="templateFormatSelect" class="form-control" style="border-color: var(--primary);">
+                        <option value="classic" selected>Classic Indian Format (Table Academic)</option>
+                        <option value="modern">Modern Sidebar Format (Two-column layout)</option>
+                        <option value="minimalist">Minimalist Elegant Format (Centered Serif)</option>
+                        <option value="executive">Executive Banner Format (Solid Top Header)</option>
+                        <option value="creative">Creative Tech Format (Infographic/Chips)</option>
+                        <option value="elegant">Elegant Serif Format (Literary/Legal)</option>
+                    </select>
+                </div>
+
+                <!-- Passport Photo Upload Area -->
+                <div class="photo-upload-container" id="photoUploadZone">
+                    <i class="fas fa-camera" style="font-size: 1.75rem; color: var(--text-light); margin-bottom: 8px; display: block;"></i>
+                    <span id="photoStatusLabel" style="font-size: 0.85rem; font-weight: 600;">Upload Passport Photo</span>
+                    <input type="file" id="photoInput" accept="image/*" style="display: none;">
+                </div>
+                <button id="removePhotoBtn" class="btn btn-secondary" style="width: 100%; margin-bottom: 24px; padding: 8px 16px; font-size: 0.85rem; display: none;">Remove Photo</button>
+
+                <!-- Sections Container Repeater -->
+                <div id="sectionsContainer"></div>
+
+                <!-- Add Section Button -->
+                <button id="addSectionBtn" class="btn btn-secondary" style="width: 100%; font-size: 0.9rem; padding: 12px 18px; margin-bottom: 24px;">
+                    <i class="fas fa-plus mr-1"></i> Add Custom Section
+                </button>
+
+                <!-- Style settings Card -->
+                <div class="style-card">
+                    <h3 style="font-size: 1rem; font-weight: 700; color: var(--text-main); margin-bottom: 16px;">Style Settings</h3>
+
+                    <div class="style-row">
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label class="form-label">Theme Color</label>
+                            <input type="color" id="themeColorPicker" value="#166534" style="width: 100%; height: 38px; border: 1px solid var(--border-color); padding:0; cursor:pointer;">
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label class="form-label">Heading Font</label>
+                            <select id="headingFontSelect" class="form-control">
+                                <option value="'Times New Roman', Times, serif" selected>Times New Roman</option>
+                                <option value="Georgia, serif">Georgia</option>
+                                <option value="Arial, sans-serif">Arial</option>
+                                <option value="'Plus Jakarta Sans', sans-serif">Plus Jakarta Sans</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="style-row" style="margin-top: 12px;">
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label class="form-label">Heading Size</label>
+                            <select id="headingSizeSelect" class="form-control">
+                                <option value="18px">Small (18px)</option>
+                                <option value="22px" selected>Normal (22px)</option>
+                                <option value="26px">Large (26px)</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label class="form-label">Body Font</label>
+                            <select id="bodyFontSelect" class="form-control">
+                                <option value="'Times New Roman', Times, serif" selected>Times New Roman</option>
+                                <option value="Georgia, serif">Georgia</option>
+                                <option value="Arial, sans-serif">Arial</option>
+                                <option value="'Plus Jakarta Sans', sans-serif">Plus Jakarta Sans</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Body Font Size -->
+                    <div class="style-row" style="margin-top: 12px;">
+                        <div class="form-group" style="margin-bottom:0; grid-column: span 2;">
+                            <label class="form-label">Body Font Size</label>
+                            <select id="bodySizeSelect" class="form-control">
+                                <option value="10px">Small (10px)</option>
+                                <option value="11px" selected>Normal (11px)</option>
+                                <option value="12px">Medium (12px)</option>
+                                <option value="13px">Large (13px)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button id="resetAllBtn" class="btn btn-secondary" style="width: 100%; margin-top: 16px; background: #fee2e2; border-color: #fca5a5; color: #b91c1c;">
+                        <i class="fas fa-trash-alt"></i> Reset All Data
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Panel: Live PDF Sheet Preview -->
+            <div class="preview-sticky">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;" class="no-print">
+                    <!-- Zoom Slider -->
+                    <div style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 700; color: var(--text-muted);">
+                        <i class="fas fa-search-plus"></i> Zoom:
+                        <input type="range" id="zoomSlider" min="0.4" max="1.0" step="0.05" value="0.55" style="width: 90px; height: 6px; cursor: pointer; vertical-align: middle;">
+                        <span id="zoomPercent">55%</span>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-primary" id="downloadPdfBtn"><i class="fas fa-file-pdf"></i> Download PDF</button>
+                        <button class="btn btn-success" id="printBtn"><i class="fas fa-print"></i> Print</button>
+                    </div>
+                </div>
+
+                <div class="a4-preview-box">
+                    <div class="resume-paper" id="resumePaper">
+                        <!-- Dynamic content injected here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <site-footer></site-footer>
+
+    <script src="assets/js/components.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // Data State
+            let sections = [];
+            let photoDataURL = "";
+            
+            // Fonts / Style options
+            let themeColor = "#166534";
+            let headingFont = "'Times New Roman', Times, serif";
+            let headingSize = "22px";
+            let bodyFont = "'Times New Roman', Times, serif";
+            let bodySize = "11px";
+            let templateFormat = "classic";
+
+            let sectionIdCounter = 100;
+            let fieldIdCounter = 1000;
+
+            // DOM elements
+            const sectionsContainer = document.getElementById("sectionsContainer");
+            const addSectionBtn = document.getElementById("addSectionBtn");
+            const photoUploadZone = document.getElementById("photoUploadZone");
+            const photoInput = document.getElementById("photoInput");
+            const removePhotoBtn = document.getElementById("removePhotoBtn");
+            const photoStatusLabel = document.getElementById("photoStatusLabel");
+
+            const templateFormatSelect = document.getElementById("templateFormatSelect");
+            const themeColorPicker = document.getElementById("themeColorPicker");
+            const headingFontSelect = document.getElementById("headingFontSelect");
+            const headingSizeSelect = document.getElementById("headingSizeSelect");
+            const bodyFontSelect = document.getElementById("bodyFontSelect");
+            const bodySizeSelect = document.getElementById("bodySizeSelect");
+            const resetAllBtn = document.getElementById("resetAllBtn");
+
+            const zoomSlider = document.getElementById("zoomSlider");
+            const zoomPercent = document.getElementById("zoomPercent");
+            const printBtn = document.getElementById("printBtn");
+            const downloadPdfBtn = document.getElementById("downloadPdfBtn");
+            const resumePaper = document.getElementById("resumePaper");
+
+            // Initialize default values
+            function initializeDefaultSections() {
+                return [
+                    { id: "sec1", name: "Personal Details", fields: [
+                        { id: "f1", label: "Full Name", value: "Ramesh Kumar Sharma", type: "text" },
+                        { id: "f2", label: "Address", value: "H.No. 45, Sector 12, New Delhi - 110001", type: "text" },
+                        { id: "f3", label: "Contact Number", value: "+91 9876543210", type: "text" },
+                        { id: "f4", label: "Email ID", value: "ramesh.sharma@example.com", type: "text" }
+                    ]},
+                    { id: "sec2", name: "Career Objective", fields: [
+                        { id: "f5", label: "Objective", value: "To secure a challenging position in a reputed organization where I can utilize my skills and contribute to organizational growth while enhancing my knowledge.", type: "textarea" }
+                    ]},
+                    { id: "sec3", name: "Academic Qualification", fields: [
+                        { id: "f6", label: "10th Examination", value: "CBSE Board | Passing Year: 2015 | Score: 85% Marks | First Division", type: "text" },
+                        { id: "f7", label: "12th Examination", value: "CBSE Board | Passing Year: 2017 | Score: 78% Marks | First Division", type: "text" },
+                        { id: "f8", label: "Bachelor of Commerce", value: "Delhi University | Passing Year: 2020 | Score: 72% Marks | First Division", type: "text" }
+                    ]},
+                    { id: "sec4", name: "Professional Qualification", fields: [
+                        { id: "f9", label: "Diploma in Computer Application", value: "NIELIT Institute | Passing Year: 2018 | A Grade", type: "text" }
+                    ]},
+                    { id: "sec5", name: "Extra Qualification / Skills", fields: [
+                        { id: "f10", label: "Key Skills", value: "English & Hindi Typing (40 wpm), MS Office Specialist, Basic Tally ERP Accounting", type: "text" }
+                    ]},
+                    { id: "sec6", name: "Work Experience", fields: [
+                        { id: "f11", label: "Experience Details", value: "Junior Accountant at ABC Pvt Ltd (2021 - 2023):\n- Handled GST billing splits and TDS calculations.\n- Managed digital record ledger balances.", type: "textarea" }
+                    ]},
+                    { id: "sec7", name: "Personal Information", fields: [
+                        { id: "f12", label: "Father's Name", value: "Shri Suresh Sharma", type: "text" },
+                        { id: "f13", label: "Date of Birth", value: "15/08/1997", type: "text" },
+                        { id: "f14", label: "Gender", value: "Male", type: "text" },
+                        { id: "f15", label: "Marital Status", value: "Unmarried", type: "text" },
+                        { id: "f16", label: "Nationality", value: "Indian", type: "text" },
+                        { id: "f17", label: "Languages Known", value: "Hindi, English", type: "text" }
+                    ]},
+                    { id: "sec8", name: "Declaration", fields: [
+                        { id: "f18", label: "Self Declaration Statement", value: "I hereby declare that all the information mentioned above is true and correct to the best of my knowledge and belief.", type: "textarea" }
+                    ]},
+                    { id: "sec9", name: "Signature Details", fields: [
+                        { id: "f19", label: "Place", value: "New Delhi", type: "text" },
+                        { id: "f20", label: "Date", value: new Date().toLocaleDateString('en-IN'), type: "text" },
+                        { id: "f21", label: "Signature Name", value: "Ramesh Kumar Sharma", type: "text" }
+                    ]}
+                ];
+            }
+
+            // State persistence
+            function saveState() {
+                localStorage.setItem("smartservice_resume_sections", JSON.stringify(sections));
+                localStorage.setItem("smartservice_resume_photo", photoDataURL);
+                localStorage.setItem("smartservice_resume_theme_color", themeColor);
+                localStorage.setItem("smartservice_resume_heading_font", headingFont);
+                localStorage.setItem("smartservice_resume_heading_size", headingSize);
+                localStorage.setItem("smartservice_resume_body_font", bodyFont);
+                localStorage.setItem("smartservice_resume_body_size", bodySize);
+                localStorage.setItem("smartservice_resume_template_format", templateFormat);
+            }
+
+            function loadState() {
+                const storedSections = localStorage.getItem("smartservice_resume_sections");
+                if (storedSections) {
+                    try {
+                        sections = JSON.parse(storedSections);
+                    } catch (e) {
+                        console.error("Failed to parse stored sections:", e);
+                        sections = initializeDefaultSections();
+                    }
+                } else {
+                    sections = initializeDefaultSections();
+                }
+
+                photoDataURL = localStorage.getItem("smartservice_resume_photo") || "";
+                themeColor = localStorage.getItem("smartservice_resume_theme_color") || "#166534";
+                headingFont = localStorage.getItem("smartservice_resume_heading_font") || "'Times New Roman', Times, serif";
+                headingSize = localStorage.getItem("smartservice_resume_heading_size") || "22px";
+                bodyFont = localStorage.getItem("smartservice_resume_body_font") || "'Times New Roman', Times, serif";
+                bodySize = localStorage.getItem("smartservice_resume_body_size") || "11px";
+                templateFormat = localStorage.getItem("smartservice_resume_template_format") || "classic";
+
+                // Sync controls with loaded variables
+                themeColorPicker.value = themeColor;
+                headingFontSelect.value = headingFont;
+                headingSizeSelect.value = headingSize;
+                bodyFontSelect.value = bodyFont;
+                bodySizeSelect.value = bodySize;
+                templateFormatSelect.value = templateFormat;
+
+                if (photoDataURL) {
+                    photoStatusLabel.innerText = "Photo Selected";
+                    removePhotoBtn.style.display = "block";
+                } else {
+                    photoStatusLabel.innerText = "Upload Passport Photo";
+                    removePhotoBtn.style.display = "none";
+                }
+            }
+
+            // Zoom controller logic
+            function applyZoom(scale) {
+                resumePaper.style.setProperty("--preview-scale", scale);
+                // bottom margin offset: height of A4 is 297mm which is about 1123px in our stylesheet container
+                const offset = 1123 * (1 - scale) * -1;
+                resumePaper.style.setProperty("--preview-margin-bottom", offset + "px");
+                zoomPercent.innerText = Math.round(scale * 100) + "%";
+                localStorage.setItem("smartservice_resume_zoom", scale);
+            }
+
+            zoomSlider.addEventListener("input", (e) => {
+                const scale = parseFloat(e.target.value);
+                applyZoom(scale);
+            });
+
+            // Load zoom setting
+            const storedZoom = localStorage.getItem("smartservice_resume_zoom");
+            if (storedZoom) {
+                zoomSlider.value = storedZoom;
+                applyZoom(parseFloat(storedZoom));
+            } else {
+                applyZoom(0.55);
+            }
+
+            // Render form layout editor
+            function renderFormEditor() {
+                sectionsContainer.innerHTML = "";
+                sections.forEach((sec, sIdx) => {
+                    const sectionDiv = document.createElement("div");
+                    sectionDiv.className = "form-section";
+
+                    let fieldsHTML = "";
+                    sec.fields.forEach((field) => {
+                        fieldsHTML += `
+                            <div class="field-row" data-field-id="${field.id}">
+                                <div class="field-inputs">
+                                    <input type="text" class="field-label-input" value="${escapeHtml(field.label)}" data-field-id="${field.id}" data-type="label" placeholder="Field Label">
+                                    ${field.type === 'textarea' ? 
+                                        `<textarea class="field-value-input" rows="2" data-field-id="${field.id}" data-type="value" placeholder="Field Details">${escapeHtml(field.value)}</textarea>` :
+                                        `<input type="text" class="field-value-input" value="${escapeHtml(field.value)}" data-field-id="${field.id}" data-type="value" placeholder="Field Details">`
+                                    }
+                                </div>
+                                <button class="action-btn-sm remove-field-btn" data-sec-id="${sec.id}" data-field-id="${field.id}" style="color:#ef4444; border-color:#fca5a5; margin-top:24px;">✖</button>
+                            </div>
+                        `;
+                    });
+
+                    sectionDiv.innerHTML = `
+                        <div class="section-header">
+                            <input type="text" class="section-title-input" value="${escapeHtml(sec.name)}" data-sec-id="${sec.id}">
+                            <div class="section-actions">
+                                <button class="action-btn-sm move-up-btn" data-index="${sIdx}" ${sIdx === 0 ? 'disabled' : ''}>↑ Up</button>
+                                <button class="action-btn-sm move-down-btn" data-index="${sIdx}" ${sIdx === sections.length - 1 ? 'disabled' : ''}>↓ Down</button>
+                                <button class="action-btn-sm add-field-btn" data-sec-id="${sec.id}">+ Field</button>
+                                <button class="action-btn-sm remove-sec-btn" data-sec-id="${sec.id}" style="color:#ef4444; border-color:#fca5a5;">✖ Remove</button>
+                            </div>
+                        </div>
+                        <div class="fields-list">
+                            ${fieldsHTML}
+                        </div>
+                    `;
+
+                    sectionsContainer.appendChild(sectionDiv);
+                });
+
+                attachEditorListeners();
+            }
+
+            function attachEditorListeners() {
+                // Section Title updates
+                document.querySelectorAll(".section-title-input").forEach(input => {
+                    input.addEventListener("input", (e) => {
+                        const sec = sections.find(s => s.id === e.target.dataset.secId);
+                        if (sec) sec.name = e.target.value;
+                        saveState();
+                        updateResumePreview();
+                    });
+                });
+
+                // Field Label & Value updates
+                document.querySelectorAll(".field-label-input, .field-value-input").forEach(input => {
+                    input.addEventListener("input", (e) => {
+                        const fieldId = e.target.dataset.fieldId;
+                        const type = e.target.dataset.type;
+                        
+                        // Search for matches
+                        for (let sec of sections) {
+                            const field = sec.fields.find(f => f.id === fieldId);
+                            if (field) {
+                                if (type === "label") {
+                                    field.label = e.target.value;
+                                } else {
+                                    field.value = e.target.value;
+                                }
+                                saveState();
+                                updateResumePreview();
+                                break;
+                            }
+                        }
+                    });
+                });
+
+                // Move Up
+                document.querySelectorAll(".move-up-btn").forEach(btn => {
+                    btn.addEventListener("click", () => {
+                        const idx = parseInt(btn.dataset.index);
+                        if (idx > 0) {
+                            [sections[idx], sections[idx - 1]] = [sections[idx - 1], sections[idx]];
+                            saveState();
+                            renderFormEditor();
+                            updateResumePreview();
+                            showToast("Section moved up.", "info");
+                        }
+                    });
+                });
+
+                // Move Down
+                document.querySelectorAll(".move-down-btn").forEach(btn => {
+                    btn.addEventListener("click", () => {
+                        const idx = parseInt(btn.dataset.index);
+                        if (idx < sections.length - 1) {
+                            [sections[idx], sections[idx + 1]] = [sections[idx + 1], sections[idx]];
+                            saveState();
+                            renderFormEditor();
+                            updateResumePreview();
+                            showToast("Section moved down.", "info");
+                        }
+                    });
+                });
+
+                // Add field to section
+                document.querySelectorAll(".add-field-btn").forEach(btn => {
+                    btn.addEventListener("click", () => {
+                        const sec = sections.find(s => s.id === btn.dataset.secId);
+                        if (sec) {
+                            const newField = {
+                                id: "f" + (++fieldIdCounter),
+                                label: "New Field Key",
+                                value: "",
+                                type: "text"
+                            };
+                            sec.fields.push(newField);
+                            saveState();
+                            renderFormEditor();
+                            updateResumePreview();
+                            showToast("Added new field.", "info");
+                        }
+                    });
+                });
+
+                // Remove field from section
+                document.querySelectorAll(".remove-field-btn").forEach(btn => {
+                    btn.addEventListener("click", () => {
+                        const sec = sections.find(s => s.id === btn.dataset.secId);
+                        if (sec) {
+                            sec.fields = sec.fields.filter(f => f.id !== btn.dataset.fieldId);
+                            saveState();
+                            renderFormEditor();
+                            updateResumePreview();
+                            showToast("Removed field.", "info");
+                        }
+                    });
+                });
+
+                // Remove entire section
+                document.querySelectorAll(".remove-sec-btn").forEach(btn => {
+                    btn.addEventListener("click", () => {
+                        sections = sections.filter(s => s.id !== btn.dataset.secId);
+                        saveState();
+                        renderFormEditor();
+                        updateResumePreview();
+                        showToast("Section deleted.", "info");
+                    });
+                });
+            }
+
+            // 1. Classic Template Rendering
+            function renderClassicTemplate() {
+                let html = "";
+                html += `<div class="resume-title" style="font-family: ${headingFont}; font-size: ${headingSize}; color: ${themeColor};">RESUME</div>`;
+                
+                let nameVal = "Your Name", addrVal = "Address Details", phoneVal = "Phone Details", emailVal = "Email Details";
+                const personalSec = sections.find(s => s.name === "Personal Details");
+                if (personalSec) {
+                    personalSec.fields.forEach(f => {
+                        if (f.label === "Full Name") nameVal = f.value;
+                        if (f.label === "Address") addrVal = f.value;
+                        if (f.label === "Contact Number") phoneVal = f.value;
+                        if (f.label === "Email ID") emailVal = f.value;
+                    });
+                }
+
+                html += `
+                    <div class="resume-header" style="border-bottom-color: ${themeColor};">
+                        <div class="header-left">
+                            <h1 style="font-family: ${headingFont}; font-size: calc(${headingSize} + 2px); color: #0f172a; margin: 0 0 8px 0; font-weight: 800;">${escapeHtml(nameVal)}</h1>
+                            <div class="contact-details" style="font-family: ${bodyFont}; font-size: ${bodySize}; color: #334155;">
+                                <p style="margin: 2px 0;"><strong>Address:</strong> ${escapeHtml(addrVal)}</p>
+                                <p style="margin: 2px 0;"><strong>Contact:</strong> ${escapeHtml(phoneVal)}</p>
+                                <p style="margin: 2px 0;"><strong>Email ID:</strong> ${escapeHtml(emailVal)}</p>
+                            </div>
+                        </div>
+                        ${photoDataURL ? `<div class="resume-photo-box" style="border-color: ${themeColor};"><img src="${photoDataURL}" alt="Photo"></div>` : ""}
+                    </div>
+                `;
+
+                sections.forEach(sec => {
+                    if (sec.name === "Personal Details" || sec.fields.length === 0) return;
+
+                    html += `<div class="resume-section-title" style="background-color: ${themeColor}; font-family: ${headingFont};">${escapeHtml(sec.name).toUpperCase()}</div>`;
+
+                    if (sec.name === "Academic Qualification") {
+                        let rows = "";
+                        sec.fields.forEach(f => {
+                            rows += `<tr><td style="font-weight:600; width:30%; font-size: ${bodySize};">${escapeHtml(f.label)}</td><td style="font-size: ${bodySize};">${escapeHtml(f.value)}</td></tr>`;
+                        });
+                        html += `<table class="resume-table" style="font-family: ${bodyFont};"><thead><tr><th style="font-size: ${bodySize};">Qualification</th><th style="font-size: ${bodySize};">Academic Board / College Details</th></tr></thead><tbody>${rows}</tbody></table>`;
+                    }
+                    else if (sec.name === "Professional Qualification") {
+                        let rows = "";
+                        sec.fields.forEach(f => {
+                            rows += `<tr><td style="font-weight:600; width:30%; font-size: ${bodySize};">${escapeHtml(f.label)}</td><td style="font-size: ${bodySize};">${escapeHtml(f.value)}</td></tr>`;
+                        });
+                        html += `<table class="resume-table" style="font-family: ${bodyFont};"><thead><tr><th style="font-size: ${bodySize};">Course/Certificate</th><th style="font-size: ${bodySize};">Institution & Grade details</th></tr></thead><tbody>${rows}</tbody></table>`;
+                    }
+                    else if (sec.name === "Extra Qualification / Skills") {
+                        let listHTML = "";
+                        sec.fields.forEach(f => {
+                            const items = f.value.split(",");
+                            items.forEach(itm => {
+                                if (itm.trim()) listHTML += `<li style="font-size: ${bodySize}; margin-bottom: 4px;">${escapeHtml(itm.trim())}</li>`;
+                            });
+                        });
+                        html += `<ul class="resume-bullet-list" style="font-family: ${bodyFont}; margin-left: 20px; list-style-type: disc;">${listHTML || `<li style="font-size: ${bodySize};">No extra skills listed.</li>`}</ul>`;
+                    }
+                    else if (sec.name === "Work Experience") {
+                        let valText = sec.fields[0] ? sec.fields[0].value : "";
+                        html += `<div style="font-family: ${bodyFont}; font-size: ${bodySize}; line-height: 1.4; color:#334155; white-space: pre-line; margin-bottom: 8px;">${escapeHtml(valText) || "Fresher"}</div>`;
+                    }
+                    else if (sec.name === "Personal Information") {
+                        let father = "", dob = "", gender = "", marital = "", nationality = "", languages = "";
+                        sec.fields.forEach(f => {
+                            if (f.label === "Father's Name") father = f.value;
+                            if (f.label === "Date of Birth") dob = f.value;
+                            if (f.label === "Gender") gender = f.value;
+                            if (f.label === "Marital Status") marital = f.value;
+                            if (f.label === "Nationality") nationality = f.value;
+                            if (f.label === "Languages Known") languages = f.value;
+                        });
+
+                        html += `
+                            <div class="resume-two-col" style="font-family: ${bodyFont}; font-size: ${bodySize};">
+                                <div>
+                                    <p style="margin: 2px 0;"><strong>Father's Name:</strong> ${escapeHtml(father)}</p>
+                                    <p style="margin: 2px 0;"><strong>Gender:</strong> ${escapeHtml(gender)}</p>
+                                    <p style="margin: 2px 0;"><strong>Nationality:</strong> ${escapeHtml(nationality)}</p>
+                                </div>
+                                <div>
+                                    <p style="margin: 2px 0;"><strong>Date of Birth:</strong> ${escapeHtml(dob)}</p>
+                                    <p style="margin: 2px 0;"><strong>Marital Status:</strong> ${escapeHtml(marital)}</p>
+                                    <p style="margin: 2px 0;"><strong>Languages Known:</strong> ${escapeHtml(languages)}</p>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    else if (sec.name === "Declaration") {
+                        let declText = sec.fields[0] ? sec.fields[0].value : "";
+                        html += `<div style="font-family: ${bodyFont}; font-size: ${bodySize}; text-align: justify; line-height: 1.4; color: #334155;">${escapeHtml(declText)}</div>`;
+                    }
+                    else if (sec.name === "Signature Details") {
+                        let place = "", date = "", signature = "";
+                        sec.fields.forEach(f => {
+                            if (f.label === "Place") place = f.value;
+                            if (f.label === "Date") date = f.value;
+                            if (f.label === "Signature Name") signature = f.value;
+                        });
+
+                        html += `
+                            <div class="resume-signature-row" style="font-family: ${bodyFont}; font-size: ${bodySize}; display: flex; justify-content: space-between; margin-top: 24px;">
+                                <div>Place: ${escapeHtml(place)}<br>Date: ${escapeHtml(date)}</div>
+                                <div style="text-align: right;"><br>(${escapeHtml(signature)})</div>
+                            </div>
+                        `;
+                    }
+                    else {
+                        sec.fields.forEach(f => {
+                            html += `<p style="font-size: ${bodySize}; font-family: ${bodyFont}; margin: 2px 0;"><strong>${escapeHtml(f.label)}:</strong> ${escapeHtml(f.value)}</p>`;
+                        });
+                    }
+                });
+
+                html += `<hr style="margin-top:20px; border:none; border-top: 1px solid #cbd5e1;"><div style="font-size: calc(${bodySize} - 2px); font-family: ${bodyFont}; color:#94a3b8; text-align:center; margin-top:8px;">Generated by SmartService Resume Creator Portal</div>`;
+                return html;
+            }
+
+            // 2. Modern Sidebar Template Rendering
+            function renderModernSidebarTemplate() {
+                let nameVal = "Your Name", addrVal = "Address Details", phoneVal = "Phone Details", emailVal = "Email Details";
+                const personalSec = sections.find(s => s.name === "Personal Details");
+                if (personalSec) {
+                    personalSec.fields.forEach(f => {
+                        if (f.label === "Full Name") nameVal = f.value;
+                        if (f.label === "Address") addrVal = f.value;
+                        if (f.label === "Contact Number") phoneVal = f.value;
+                        if (f.label === "Email ID") emailVal = f.value;
+                    });
+                }
+
+                let sidebarHTML = "";
+                
+                // Photo upload
+                if (photoDataURL) {
+                    sidebarHTML += `
+                        <div style="display: flex; justify-content: center; margin-bottom: 20px;">
+                            <div class="resume-photo-box" style="border-radius: 50%; width: 100px; height: 100px; border: 3px solid ${themeColor}; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);"><img src="${photoDataURL}" alt="Photo"></div>
+                        </div>
+                    `;
+                }
+
+                // Contact Details
+                sidebarHTML += `
+                    <div>
+                        <div class="sidebar-section-title" style="color: ${themeColor}; border-bottom-color: ${themeColor};">Contact</div>
+                        <div style="font-family: ${bodyFont}; font-size: ${bodySize}; color: #334155; display: flex; flex-direction: column; gap: 8px;">
+                            <p style="margin: 0; line-height: 1.3;"><i class="fas fa-envelope" style="color: ${themeColor}; width: 14px;"></i> ${escapeHtml(emailVal)}</p>
+                            <p style="margin: 0; line-height: 1.3;"><i class="fas fa-phone" style="color: ${themeColor}; width: 14px;"></i> ${escapeHtml(phoneVal)}</p>
+                            <p style="margin: 0; line-height: 1.3;"><i class="fas fa-map-marker-alt" style="color: ${themeColor}; width: 14px;"></i> ${escapeHtml(addrVal)}</p>
+                        </div>
+                    </div>
+                `;
+
+                // Skills
+                const skillsSec = sections.find(s => s.name === "Extra Qualification / Skills");
+                if (skillsSec && skillsSec.fields.length > 0) {
+                    let skillsList = "";
+                    skillsSec.fields.forEach(f => {
+                        const items = f.value.split(",");
+                        items.forEach(itm => {
+                            if (itm.trim()) {
+                                skillsList += `<span style="background: ${themeColor}1a; color: ${themeColor}; padding: 4px 8px; border-radius: 4px; font-size: calc(${bodySize} - 1px); font-weight: 600; display: inline-block; margin: 2px;">${escapeHtml(itm.trim())}</span>`;
+                            }
+                        });
+                    });
+                    sidebarHTML += `
+                        <div style="margin-top: 15px;">
+                            <div class="sidebar-section-title" style="color: ${themeColor}; border-bottom-color: ${themeColor};">Skills</div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                                ${skillsList || "No skills listed"}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // Personal Info
+                const personalInfoSec = sections.find(s => s.name === "Personal Information");
+                if (personalInfoSec) {
+                    let pInfoHTML = "";
+                    personalInfoSec.fields.forEach(f => {
+                        pInfoHTML += `<p style="margin: 4px 0; line-height: 1.3; font-size: calc(${bodySize} - 1px);"><strong>${escapeHtml(f.label)}:</strong><br>${escapeHtml(f.value)}</p>`;
+                    });
+                    sidebarHTML += `
+                        <div style="margin-top: 15px;">
+                            <div class="sidebar-section-title" style="color: ${themeColor}; border-bottom-color: ${themeColor};">Personal Info</div>
+                            <div style="font-family: ${bodyFont}; color: #334155;">
+                                ${pInfoHTML}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // Main column sections
+                let mainHTML = "";
+                
+                // Header Candidate Name
+                mainHTML += `
+                    <div style="margin-bottom: 24px; border-bottom: 2px solid ${themeColor}; padding-bottom: 12px;">
+                        <h1 style="font-family: ${headingFont}; font-size: calc(${headingSize} + 6px); color: #0f172a; margin: 0 0 4px 0; font-weight: 800; text-transform: uppercase;">${escapeHtml(nameVal)}</h1>
+                        <p style="font-family: ${bodyFont}; font-size: calc(${bodySize} + 1px); color: ${themeColor}; font-weight: 600; margin: 0; letter-spacing: 1px; text-transform: uppercase;">Professional Resume</p>
+                    </div>
+                `;
+
+                sections.forEach(sec => {
+                    if (sec.name === "Personal Details" || sec.name === "Extra Qualification / Skills" || sec.name === "Personal Information" || sec.fields.length === 0) return;
+
+                    mainHTML += `<div style="font-family: ${headingFont}; font-size: ${headingSize}; color: ${themeColor}; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; margin: 18px 0 10px 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">${escapeHtml(sec.name)}</div>`;
+
+                    if (sec.name === "Academic Qualification" || sec.name === "Professional Qualification") {
+                        let itemsHTML = "";
+                        sec.fields.forEach(f => {
+                            itemsHTML += `
+                                <div style="margin-bottom: 10px; font-family: ${bodyFont};">
+                                    <div style="font-weight: 700; font-size: ${bodySize}; color: #0f172a;">${escapeHtml(f.label)}</div>
+                                    <div style="font-size: calc(${bodySize} - 1px); color: #475569;">${escapeHtml(f.value)}</div>
+                                </div>
+                            `;
+                        });
+                        mainHTML += `<div>${itemsHTML}</div>`;
+                    }
+                    else if (sec.name === "Work Experience") {
+                        let valText = sec.fields[0] ? sec.fields[0].value : "";
+                        mainHTML += `<div style="font-family: ${bodyFont}; font-size: ${bodySize}; line-height: 1.4; color:#334155; white-space: pre-line; margin-bottom: 8px;">${escapeHtml(valText) || "Fresher"}</div>`;
+                    }
+                    else if (sec.name === "Declaration") {
+                        let declText = sec.fields[0] ? sec.fields[0].value : "";
+                        mainHTML += `<div style="font-family: ${bodyFont}; font-size: ${bodySize}; text-align: justify; line-height: 1.4; color: #334155;">${escapeHtml(declText)}</div>`;
+                    }
+                    else if (sec.name === "Signature Details") {
+                        let place = "", date = "", signature = "";
+                        sec.fields.forEach(f => {
+                            if (f.label === "Place") place = f.value;
+                            if (f.label === "Date") date = f.value;
+                            if (f.label === "Signature Name") signature = f.value;
+                        });
+
+                        mainHTML += `
+                            <div style="font-family: ${bodyFont}; font-size: ${bodySize}; display: flex; justify-content: space-between; margin-top: 24px; color: #334155;">
+                                <div>Place: ${escapeHtml(place)}<br>Date: ${escapeHtml(date)}</div>
+                                <div style="text-align: right;"><br>(${escapeHtml(signature)})</div>
+                            </div>
+                        `;
+                    }
+                    else {
+                        sec.fields.forEach(f => {
+                            mainHTML += `<p style="font-size: ${bodySize}; font-family: ${bodyFont}; margin: 2px 0;"><strong>${escapeHtml(f.label)}:</strong> ${escapeHtml(f.value)}</p>`;
+                        });
+                    }
+                });
+
+                mainHTML += `<hr style="margin-top: auto; border:none; border-top: 1px solid #cbd5e1;"><div style="font-size: calc(${bodySize} - 2px); font-family: ${bodyFont}; color:#94a3b8; text-align:center; margin-top:8px;">Generated by SmartService Resume Creator Portal</div>`;
+
+                return `
+                    <div class="resume-modern-container">
+                        <div class="resume-modern-sidebar" style="border-right-color: ${themeColor};">
+                            ${sidebarHTML}
+                        </div>
+                        <div class="resume-modern-main">
+                            ${mainHTML}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // 3. Minimalist Template Rendering
+            function renderMinimalistTemplate() {
+                let html = "";
+                let nameVal = "Your Name", addrVal = "Address Details", phoneVal = "Phone Details", emailVal = "Email Details";
+                const personalSec = sections.find(s => s.name === "Personal Details");
+                if (personalSec) {
+                    personalSec.fields.forEach(f => {
+                        if (f.label === "Full Name") nameVal = f.value;
+                        if (f.label === "Address") addrVal = f.value;
+                        if (f.label === "Contact Number") phoneVal = f.value;
+                        if (f.label === "Email ID") emailVal = f.value;
+                    });
+                }
+
+                // Centered Top Header
+                html += `
+                    <div style="text-align: center; margin-bottom: 24px;">
+                        ${photoDataURL ? `
+                            <div style="display: flex; justify-content: center; margin-bottom: 12px;">
+                                <div class="resume-photo-box" style="border-radius: 8px; width: 80px; height: 95px; border: 1px solid #94a3b8;"><img src="${photoDataURL}" alt="Photo"></div>
+                            </div>
+                        ` : ""}
+                        <h1 style="font-family: ${headingFont}; font-size: calc(${headingSize} + 6px); color: #0f172a; margin: 0 0 6px 0; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">${escapeHtml(nameVal)}</h1>
+                        <div style="font-family: ${bodyFont}; font-size: ${bodySize}; color: #475569; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;">
+                            <span><i class="fas fa-phone" style="color: ${themeColor};"></i> ${escapeHtml(phoneVal)}</span>
+                            <span>•</span>
+                            <span><i class="fas fa-envelope" style="color: ${themeColor};"></i> ${escapeHtml(emailVal)}</span>
+                            <span>•</span>
+                            <span><i class="fas fa-map-marker-alt" style="color: ${themeColor};"></i> ${escapeHtml(addrVal)}</span>
+                        </div>
+                    </div>
+                `;
+
+                // Sections
+                sections.forEach(sec => {
+                    if (sec.name === "Personal Details" || sec.fields.length === 0) return;
+
+                    html += `
+                        <div style="display: flex; align-items: center; justify-content: center; margin: 18px 0 10px 0;">
+                            <div style="flex: 1; border-bottom: 1px solid #e2e8f0;"></div>
+                            <div style="padding: 0 12px; font-family: ${headingFont}; font-size: ${headingSize}; color: ${themeColor}; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;">${escapeHtml(sec.name)}</div>
+                            <div style="flex: 1; border-bottom: 1px solid #e2e8f0;"></div>
+                        </div>
+                    `;
+
+                    if (sec.name === "Academic Qualification" || sec.name === "Professional Qualification") {
+                        let itemsHTML = "";
+                        sec.fields.forEach(f => {
+                            itemsHTML += `
+                                <div style="margin-bottom: 6px; font-family: ${bodyFont}; font-size: ${bodySize}; display: flex; justify-content: space-between;">
+                                    <span style="font-weight: 700; color: #334155;">${escapeHtml(f.label)}</span>
+                                    <span style="color: #64748b; font-style: italic; text-align: right; max-width: 60%;">${escapeHtml(f.value)}</span>
+                                </div>
+                            `;
+                        });
+                        html += `<div style="padding: 0 10px;">${itemsHTML}</div>`;
+                    }
+                    else if (sec.name === "Extra Qualification / Skills") {
+                        let listHTML = "";
+                        sec.fields.forEach(f => {
+                            const items = f.value.split(",");
+                            items.forEach(itm => {
+                                if (itm.trim()) listHTML += `• ${escapeHtml(itm.trim())} &nbsp;&nbsp; `;
+                            });
+                        });
+                        html += `
+                            <div style="font-family: ${bodyFont}; font-size: ${bodySize}; text-align: center; color: #334155; padding: 0 10px;">
+                                ${listHTML || "No skills listed."}
+                            </div>
+                        `;
+                    }
+                    else if (sec.name === "Work Experience") {
+                        let valText = sec.fields[0] ? sec.fields[0].value : "";
+                        html += `<div style="font-family: ${bodyFont}; font-size: ${bodySize}; line-height: 1.4; color:#334155; white-space: pre-line; padding: 0 10px;">${escapeHtml(valText) || "Fresher"}</div>`;
+                    }
+                    else if (sec.name === "Personal Information") {
+                        let father = "", dob = "", gender = "", marital = "", nationality = "", languages = "";
+                        sec.fields.forEach(f => {
+                            if (f.label === "Father's Name") father = f.value;
+                            if (f.label === "Date of Birth") dob = f.value;
+                            if (f.label === "Gender") gender = f.value;
+                            if (f.label === "Marital Status") marital = f.value;
+                            if (f.label === "Nationality") nationality = f.value;
+                            if (f.label === "Languages Known") languages = f.value;
+                        });
+
+                        html += `
+                            <div class="resume-two-col" style="font-family: ${bodyFont}; font-size: ${bodySize}; padding: 0 10px;">
+                                <div>
+                                    <p style="margin: 2px 0;"><strong>Father's Name:</strong> ${escapeHtml(father)}</p>
+                                    <p style="margin: 2px 0;"><strong>Gender:</strong> ${escapeHtml(gender)}</p>
+                                    <p style="margin: 2px 0;"><strong>Nationality:</strong> ${escapeHtml(nationality)}</p>
+                                </div>
+                                <div>
+                                    <p style="margin: 2px 0;"><strong>Date of Birth:</strong> ${escapeHtml(dob)}</p>
+                                    <p style="margin: 2px 0;"><strong>Marital Status:</strong> ${escapeHtml(marital)}</p>
+                                    <p style="margin: 2px 0;"><strong>Languages Known:</strong> ${escapeHtml(languages)}</p>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    else if (sec.name === "Declaration") {
+                        let declText = sec.fields[0] ? sec.fields[0].value : "";
+                        html += `<div style="font-family: ${bodyFont}; font-size: ${bodySize}; text-align: justify; line-height: 1.4; color: #334155; padding: 0 10px;">${escapeHtml(declText)}</div>`;
+                    }
+                    else if (sec.name === "Signature Details") {
+                        let place = "", date = "", signature = "";
+                        sec.fields.forEach(f => {
+                            if (f.label === "Place") place = f.value;
+                            if (f.label === "Date") date = f.value;
+                            if (f.label === "Signature Name") signature = f.value;
+                        });
+
+                        html += `
+                            <div class="resume-signature-row" style="font-family: ${bodyFont}; font-size: ${bodySize}; display: flex; justify-content: space-between; margin-top: 24px; padding: 0 10px;">
+                                <div>Place: ${escapeHtml(place)}<br>Date: ${escapeHtml(date)}</div>
+                                <div style="text-align: right;"><br>(${escapeHtml(signature)})</div>
+                            </div>
+                        `;
+                    }
+                    else {
+                        sec.fields.forEach(f => {
+                            html += `<p style="font-size: ${bodySize}; font-family: ${bodyFont}; margin: 2px 0; padding: 0 10px;"><strong>${escapeHtml(f.label)}:</strong> ${escapeHtml(f.value)}</p>`;
+                        });
+                    }
+                });
+
+                html += `<hr style="margin-top:24px; border:none; border-top: 1px solid #cbd5e1;"><div style="font-size: calc(${bodySize} - 2px); font-family: ${bodyFont}; color:#94a3b8; text-align:center; margin-top:8px;">Generated by SmartService Resume Creator Portal</div>`;
+                return html;
+            }
+
+            // 4. Executive Banner Template Rendering
+            function renderExecutiveTemplate() {
+                let nameVal = "Your Name", addrVal = "Address Details", phoneVal = "Phone Details", emailVal = "Email Details";
+                const personalSec = sections.find(s => s.name === "Personal Details");
+                if (personalSec) {
+                    personalSec.fields.forEach(f => {
+                        if (f.label === "Full Name") nameVal = f.value;
+                        if (f.label === "Address") addrVal = f.value;
+                        if (f.label === "Contact Number") phoneVal = f.value;
+                        if (f.label === "Email ID") emailVal = f.value;
+                    });
+                }
+
+                // Banner HTML
+                let bannerHTML = `
+                    <div class="resume-exec-banner" style="background-color: ${themeColor};">
+                        <div>
+                            <h1 style="font-family: ${headingFont}; font-size: calc(${headingSize} + 6px); color: white; margin: 0 0 6px 0; font-weight: 800; text-transform: uppercase;">${escapeHtml(nameVal)}</h1>
+                            <div style="font-family: ${bodyFont}; font-size: ${bodySize}; color: rgba(255,255,255,0.9); display: flex; flex-direction: column; gap: 4px;">
+                                <span><i class="fas fa-phone"></i> ${escapeHtml(phoneVal)}</span>
+                                <span><i class="fas fa-envelope"></i> ${escapeHtml(emailVal)}</span>
+                                <span><i class="fas fa-map-marker-alt"></i> ${escapeHtml(addrVal)}</span>
+                            </div>
+                        </div>
+                        ${photoDataURL ? `
+                            <div class="resume-photo-box" style="border: 3px solid white; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.15);"><img src="${photoDataURL}" alt="Photo"></div>
+                        ` : ""}
+                    </div>
+                `;
+
+                // Left Column HTML
+                let leftHTML = "";
+                
+                // Skills
+                const skillsSec = sections.find(s => s.name === "Extra Qualification / Skills");
+                if (skillsSec && skillsSec.fields.length > 0) {
+                    let skillsList = "";
+                    skillsSec.fields.forEach(f => {
+                        const items = f.value.split(",");
+                        items.forEach(itm => {
+                            if (itm.trim()) {
+                                skillsList += `<li style="margin-bottom: 4px; font-size: ${bodySize};">${escapeHtml(itm.trim())}</li>`;
+                            }
+                        });
+                    });
+                    leftHTML += `
+                        <div>
+                            <div style="font-family: ${headingFont}; font-size: ${headingSize}; color: ${themeColor}; border-bottom: 2px solid ${themeColor}; padding-bottom: 4px; margin-bottom: 10px; font-weight: 700; text-transform: uppercase;">Skills</div>
+                            <ul style="font-family: ${bodyFont}; margin-left: 20px; list-style-type: square; color: #334155;">
+                                ${skillsList || "<li>No skills listed</li>"}
+                            </ul>
+                        </div>
+                    `;
+                }
+
+                // Personal Info
+                const personalInfoSec = sections.find(s => s.name === "Personal Information");
+                if (personalInfoSec) {
+                    let pInfoHTML = "";
+                    personalInfoSec.fields.forEach(f => {
+                        pInfoHTML += `<p style="margin: 4px 0; line-height: 1.3; font-size: calc(${bodySize} - 1px);"><strong>${escapeHtml(f.label)}:</strong><br>${escapeHtml(f.value)}</p>`;
+                    });
+                    leftHTML += `
+                        <div style="margin-top: 15px;">
+                            <div style="font-family: ${headingFont}; font-size: ${headingSize}; color: ${themeColor}; border-bottom: 2px solid ${themeColor}; padding-bottom: 4px; margin-bottom: 10px; font-weight: 700; text-transform: uppercase;">Personal Info</div>
+                            <div style="font-family: ${bodyFont}; color: #334155;">
+                                ${pInfoHTML}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // Right Column HTML
+                let rightHTML = "";
+                
+                sections.forEach(sec => {
+                    if (sec.name === "Personal Details" || sec.name === "Extra Qualification / Skills" || sec.name === "Personal Information" || sec.fields.length === 0) return;
+
+                    // Skip Signature details for right side, we will render it below the grid
+                    if (sec.name === "Signature Details") return;
+
+                    rightHTML += `<div style="font-family: ${headingFont}; font-size: ${headingSize}; color: ${themeColor}; border-bottom: 2px solid ${themeColor}; padding-bottom: 4px; margin: 15px 0 10px 0; font-weight: 700; text-transform: uppercase;">${escapeHtml(sec.name)}</div>`;
+
+                    if (sec.name === "Academic Qualification" || sec.name === "Professional Qualification") {
+                        let rows = "";
+                        sec.fields.forEach(f => {
+                            rows += `<tr><td style="font-weight:600; width:30%; font-size: ${bodySize};">${escapeHtml(f.label)}</td><td style="font-size: ${bodySize};">${escapeHtml(f.value)}</td></tr>`;
+                        });
+                        rightHTML += `<table class="resume-table" style="font-family: ${bodyFont}; margin-bottom: 10px;"><thead><tr><th style="font-size: ${bodySize};">Degree/Course</th><th style="font-size: ${bodySize};">Institution & Board Details</th></tr></thead><tbody>${rows}</tbody></table>`;
+                    }
+                    else if (sec.name === "Work Experience") {
+                        let valText = sec.fields[0] ? sec.fields[0].value : "";
+                        rightHTML += `<div style="font-family: ${bodyFont}; font-size: ${bodySize}; line-height: 1.4; color:#334155; white-space: pre-line; margin-bottom: 8px;">${escapeHtml(valText) || "Fresher"}</div>`;
+                    }
+                    else if (sec.name === "Declaration") {
+                        let declText = sec.fields[0] ? sec.fields[0].value : "";
+                        rightHTML += `<div style="font-family: ${bodyFont}; font-size: ${bodySize}; text-align: justify; line-height: 1.4; color: #334155;">${escapeHtml(declText)}</div>`;
+                    }
+                    else {
+                        sec.fields.forEach(f => {
+                            rightHTML += `<p style="font-size: ${bodySize}; font-family: ${bodyFont}; margin: 2px 0;"><strong>${escapeHtml(f.label)}:</strong> ${escapeHtml(f.value)}</p>`;
+                        });
+                    }
+                });
+
+                // Signature Details
+                let signatureHTML = "";
+                const signatureSec = sections.find(s => s.name === "Signature Details");
+                if (signatureSec) {
+                    let place = "", date = "", signature = "";
+                    signatureSec.fields.forEach(f => {
+                        if (f.label === "Place") place = f.value;
+                        if (f.label === "Date") date = f.value;
+                        if (f.label === "Signature Name") signature = f.value;
+                    });
+
+                    signatureHTML += `
+                        <div style="font-family: ${bodyFont}; font-size: ${bodySize}; display: flex; justify-content: space-between; margin-top: 30px; color: #334155; border-top: 1px solid #cbd5e1; padding-top: 15px;">
+                            <div>Place: ${escapeHtml(place)}<br>Date: ${escapeHtml(date)}</div>
+                            <div style="text-align: right;"><br>(${escapeHtml(signature)})</div>
+                        </div>
+                    `;
+                }
+
+                return `
+                    ${bannerHTML}
+                    <div class="resume-exec-body">
+                        <div class="resume-exec-left">
+                            ${leftHTML}
+                        </div>
+                        <div class="resume-exec-right">
+                            ${rightHTML}
+                        </div>
+                    </div>
+                    ${signatureHTML}
+                    <div style="font-size: calc(${bodySize} - 2px); font-family: ${bodyFont}; color:#94a3b8; text-align:center; margin-top:30px;">Generated by SmartService Resume Creator Portal</div>
+                `;
+            }
+
+            // 5. Creative Tech Format Rendering
+            function renderCreativeTemplate() {
+                let nameVal = "Your Name", addrVal = "Address Details", phoneVal = "Phone Details", emailVal = "Email Details";
+                const personalSec = sections.find(s => s.name === "Personal Details");
+                if (personalSec) {
+                    personalSec.fields.forEach(f => {
+                        if (f.label === "Full Name") nameVal = f.value;
+                        if (f.label === "Address") addrVal = f.value;
+                        if (f.label === "Contact Number") phoneVal = f.value;
+                        if (f.label === "Email ID") emailVal = f.value;
+                    });
+                }
+
+                let html = "";
+                
+                // Creative Header
+                html += `
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid ${themeColor}; padding-bottom: 15px; margin-bottom: 20px;">
+                        <div>
+                            <h1 style="font-family: ${headingFont}; font-size: calc(${headingSize} + 6px); color: ${themeColor}; margin: 0 0 6px 0; font-weight: 800; letter-spacing: -0.5px; text-transform: uppercase;">${escapeHtml(nameVal)}</h1>
+                            <div style="font-family: ${bodyFont}; font-size: ${bodySize}; color: #475569; display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px;">
+                                <span style="background: #f1f5f9; padding: 3px 8px; border-radius: 6px;"><i class="fas fa-phone" style="color: ${themeColor}; margin-right: 4px;"></i> ${escapeHtml(phoneVal)}</span>
+                                <span style="background: #f1f5f9; padding: 3px 8px; border-radius: 6px;"><i class="fas fa-envelope" style="color: ${themeColor}; margin-right: 4px;"></i> ${escapeHtml(emailVal)}</span>
+                                <span style="background: #f1f5f9; padding: 3px 8px; border-radius: 6px;"><i class="fas fa-map-marker-alt" style="color: ${themeColor}; margin-right: 4px;"></i> ${escapeHtml(addrVal)}</span>
+                            </div>
+                        </div>
+                        ${photoDataURL ? `
+                            <div class="resume-photo-box" style="border-radius: 12px; width: 85px; height: 105px; border: 2px solid ${themeColor}; box-shadow: var(--shadow-md);"><img src="${photoDataURL}" alt="Photo"></div>
+                        ` : ""}
+                    </div>
+                `;
+
+                // Render remaining sections
+                sections.forEach(sec => {
+                    if (sec.name === "Personal Details" || sec.fields.length === 0) return;
+
+                    html += `
+                        <div style="margin-top: 18px; margin-bottom: 12px;">
+                            <h3 style="font-family: ${headingFont}; font-size: ${headingSize}; color: ${themeColor}; font-weight: 800; text-transform: uppercase; margin: 0 0 6px 0; display: flex; align-items: center; gap: 8px;">
+                                <span style="display: inline-block; width: 4px; height: 16px; background-color: ${themeColor}; border-radius: 2px;"></span>
+                                ${escapeHtml(sec.name)}
+                            </h3>
+                        </div>
+                    `;
+
+                    if (sec.name === "Academic Qualification" || sec.name === "Professional Qualification") {
+                        let timelineHTML = "";
+                        sec.fields.forEach(f => {
+                            timelineHTML += `
+                                <div style="position: relative; padding-left: 20px; margin-bottom: 12px; border-left: 2px solid #e2e8f0; margin-left: 6px;">
+                                    <div style="position: absolute; left: -6px; top: 4px; width: 10px; height: 10px; border-radius: 50%; background-color: ${themeColor}; border: 2px solid white;"></div>
+                                    <div style="font-weight: 700; font-size: ${bodySize}; color: #1e293b; font-family: ${bodyFont};">${escapeHtml(f.label)}</div>
+                                    <div style="font-size: calc(${bodySize} - 1px); color: #475569; font-family: ${bodyFont};">${escapeHtml(f.value)}</div>
+                                </div>
+                            `;
+                        });
+                        html += timelineHTML;
+                    }
+                    else if (sec.name === "Extra Qualification / Skills") {
+                        let chipsHTML = "";
+                        sec.fields.forEach(f => {
+                            const items = f.value.split(",");
+                            items.forEach(itm => {
+                                if (itm.trim()) {
+                                    chipsHTML += `<span style="display: inline-block; background: ${themeColor}15; color: ${themeColor}; padding: 4px 10px; border-radius: 12px; margin: 3px; font-weight: 600; font-size: calc(${bodySize} - 1px); font-family: ${bodyFont};">${escapeHtml(itm.trim())}</span>`;
+                                }
+                            });
+                        });
+                        html += `<div style="display: flex; flex-wrap: wrap; padding: 4px 0;">${chipsHTML || "No skills listed."}</div>`;
+                    }
+                    else if (sec.name === "Work Experience") {
+                        let valText = sec.fields[0] ? sec.fields[0].value : "";
+                        html += `
+                            <div style="position: relative; padding-left: 20px; border-left: 2px solid #e2e8f0; margin-left: 6px; font-family: ${bodyFont}; font-size: ${bodySize}; line-height: 1.4; color:#334155; white-space: pre-line;">
+                                <div style="position: absolute; left: -6px; top: 4px; width: 10px; height: 10px; border-radius: 50%; background-color: ${themeColor}; border: 2px solid white;"></div>
+                                ${escapeHtml(valText) || "Fresher"}
+                            </div>
+                        `;
+                    }
+                    else if (sec.name === "Personal Information") {
+                        let father = "", dob = "", gender = "", marital = "", nationality = "", languages = "";
+                        sec.fields.forEach(f => {
+                            if (f.label === "Father's Name") father = f.value;
+                            if (f.label === "Date of Birth") dob = f.value;
+                            if (f.label === "Gender") gender = f.value;
+                            if (f.label === "Marital Status") marital = f.value;
+                            if (f.label === "Nationality") nationality = f.value;
+                            if (f.label === "Languages Known") languages = f.value;
+                        });
+
+                        html += `
+                            <div class="resume-two-col" style="font-family: ${bodyFont}; font-size: ${bodySize}; background: #f8fafc; padding: 10px; border-radius: 8px;">
+                                <div>
+                                    <p style="margin: 2px 0;"><strong>Father's Name:</strong> ${escapeHtml(father)}</p>
+                                    <p style="margin: 2px 0;"><strong>Gender:</strong> ${escapeHtml(gender)}</p>
+                                    <p style="margin: 2px 0;"><strong>Nationality:</strong> ${escapeHtml(nationality)}</p>
+                                </div>
+                                <div>
+                                    <p style="margin: 2px 0;"><strong>Date of Birth:</strong> ${escapeHtml(dob)}</p>
+                                    <p style="margin: 2px 0;"><strong>Marital Status:</strong> ${escapeHtml(marital)}</p>
+                                    <p style="margin: 2px 0;"><strong>Languages Known:</strong> ${escapeHtml(languages)}</p>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    else if (sec.name === "Declaration") {
+                        let declText = sec.fields[0] ? sec.fields[0].value : "";
+                        html += `<div style="font-family: ${bodyFont}; font-size: ${bodySize}; text-align: justify; line-height: 1.4; color: #334155;">${escapeHtml(declText)}</div>`;
+                    }
+                    else if (sec.name === "Signature Details") {
+                        let place = "", date = "", signature = "";
+                        sec.fields.forEach(f => {
+                            if (f.label === "Place") place = f.value;
+                            if (f.label === "Date") date = f.value;
+                            if (f.label === "Signature Name") signature = f.value;
+                        });
+
+                        html += `
+                            <div class="resume-signature-row" style="font-family: ${bodyFont}; font-size: ${bodySize}; display: flex; justify-content: space-between; margin-top: 24px; border-top: 1px dashed #cbd5e1; padding-top: 10px;">
+                                <div>Place: ${escapeHtml(place)}<br>Date: ${escapeHtml(date)}</div>
+                                <div style="text-align: right;"><br>(${escapeHtml(signature)})</div>
+                            </div>
+                        `;
+                    }
+                    else {
+                        sec.fields.forEach(f => {
+                            html += `<p style="font-size: ${bodySize}; font-family: ${bodyFont}; margin: 2px 0;"><strong>${escapeHtml(f.label)}:</strong> ${escapeHtml(f.value)}</p>`;
+                        });
+                    }
+                });
+
+                html += `<hr style="margin-top:20px; border:none; border-top: 1px solid #cbd5e1;"><div style="font-size: calc(${bodySize} - 2px); font-family: ${bodyFont}; color:#94a3b8; text-align:center; margin-top:8px;">Generated by SmartService Resume Creator Portal</div>`;
+                return html;
+            }
+
+            // 6. Elegant Serif Format Rendering
+            function renderElegantSerifTemplate() {
+                let nameVal = "Your Name", addrVal = "Address Details", phoneVal = "Phone Details", emailVal = "Email Details";
+                const personalSec = sections.find(s => s.name === "Personal Details");
+                if (personalSec) {
+                    personalSec.fields.forEach(f => {
+                        if (f.label === "Full Name") nameVal = f.value;
+                        if (f.label === "Address") addrVal = f.value;
+                        if (f.label === "Contact Number") phoneVal = f.value;
+                        if (f.label === "Email ID") emailVal = f.value;
+                    });
+                }
+
+                let html = "";
+                
+                // Centered Serif Header
+                html += `
+                    <div style="text-align: center; margin-bottom: 24px;">
+                        <h1 style="font-family: ${headingFont}; font-size: calc(${headingSize} + 8px); color: ${themeColor}; margin: 0 0 6px 0; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;">${escapeHtml(nameVal)}</h1>
+                        <div style="font-family: ${bodyFont}; font-size: ${bodySize}; color: #334155; margin-bottom: 12px;">
+                            ${escapeHtml(phoneVal)} &nbsp;♦&nbsp; ${escapeHtml(emailVal)} &nbsp;♦&nbsp; ${escapeHtml(addrVal)}
+                        </div>
+                        <div style="border-bottom: 1.5px solid ${themeColor}; width: 100%; margin: 8px auto;"></div>
+                        <div style="border-bottom: 0.5px solid ${themeColor}; width: 95%; margin: 2px auto 16px auto;"></div>
+                        
+                        ${photoDataURL ? `
+                            <div style="display: flex; justify-content: center; margin-bottom: 16px;">
+                                <div class="resume-photo-box" style="border: 2px solid ${themeColor}; padding: 3px; background: white;"><img src="${photoDataURL}" alt="Photo"></div>
+                            </div>
+                        ` : ""}
+                    </div>
+                `;
+
+                // Render sections
+                sections.forEach(sec => {
+                    if (sec.name === "Personal Details" || sec.fields.length === 0) return;
+
+                    html += `
+                        <div style="text-align: center; margin-top: 20px; margin-bottom: 10px;">
+                            <span style="font-family: ${headingFont}; font-size: calc(${headingSize} - 2px); color: ${themeColor}; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;">${escapeHtml(sec.name)}</span>
+                            <div style="border-bottom: 1px solid #cbd5e1; width: 60%; margin: 4px auto 0 auto;"></div>
+                        </div>
+                    `;
+
+                    if (sec.name === "Academic Qualification" || sec.name === "Professional Qualification") {
+                        let academicHTML = "";
+                        sec.fields.forEach(f => {
+                            academicHTML += `
+                                <div style="margin-bottom: 10px; font-family: ${bodyFont}; font-size: ${bodySize}; line-height: 1.4; color: #1e293b;">
+                                    <span style="font-weight: 700;">${escapeHtml(f.label)}:</span> ${escapeHtml(f.value)}
+                                </div>
+                            `;
+                        });
+                        html += `<div style="text-align: left; padding: 0 15px;">${academicHTML}</div>`;
+                    }
+                    else if (sec.name === "Extra Qualification / Skills") {
+                        let skillsList = "";
+                        sec.fields.forEach(f => {
+                            const items = f.value.split(",");
+                            items.forEach((itm, idx) => {
+                                if (itm.trim()) {
+                                    skillsList += (idx > 0 ? " &nbsp;•&nbsp; " : "") + `<span style="font-family: ${bodyFont}; font-size: ${bodySize}; color: #334155;">${escapeHtml(itm.trim())}</span>`;
+                                }
+                            });
+                        });
+                        html += `<div style="text-align: center; padding: 4px 15px;">${skillsList || "No skills listed."}</div>`;
+                    }
+                    else if (sec.name === "Work Experience") {
+                        let valText = sec.fields[0] ? sec.fields[0].value : "";
+                        html += `<div style="font-family: ${bodyFont}; font-size: ${bodySize}; line-height: 1.5; color:#334155; white-space: pre-line; text-align: justify; padding: 0 15px;">${escapeHtml(valText) || "Fresher"}</div>`;
+                    }
+                    else if (sec.name === "Personal Information") {
+                        let father = "", dob = "", gender = "", marital = "", nationality = "", languages = "";
+                        sec.fields.forEach(f => {
+                            if (f.label === "Father's Name") father = f.value;
+                            if (f.label === "Date of Birth") dob = f.value;
+                            if (f.label === "Gender") gender = f.value;
+                            if (f.label === "Marital Status") marital = f.value;
+                            if (f.label === "Nationality") nationality = f.value;
+                            if (f.label === "Languages Known") languages = f.value;
+                        });
+
+                        html += `
+                            <div class="resume-two-col" style="font-family: ${bodyFont}; font-size: ${bodySize}; padding: 0 15px; line-height: 1.4;">
+                                <div>
+                                    <p style="margin: 2px 0;"><strong>Father's Name:</strong> ${escapeHtml(father)}</p>
+                                    <p style="margin: 2px 0;"><strong>Gender:</strong> ${escapeHtml(gender)}</p>
+                                    <p style="margin: 2px 0;"><strong>Nationality:</strong> ${escapeHtml(nationality)}</p>
+                                </div>
+                                <div>
+                                    <p style="margin: 2px 0;"><strong>Date of Birth:</strong> ${escapeHtml(dob)}</p>
+                                    <p style="margin: 2px 0;"><strong>Marital Status:</strong> ${escapeHtml(marital)}</p>
+                                    <p style="margin: 2px 0;"><strong>Languages Known:</strong> ${escapeHtml(languages)}</p>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    else if (sec.name === "Declaration") {
+                        let declText = sec.fields[0] ? sec.fields[0].value : "";
+                        html += `<div style="font-family: ${bodyFont}; font-size: ${bodySize}; text-align: justify; line-height: 1.5; color: #334155; padding: 0 15px;">${escapeHtml(declText)}</div>`;
+                    }
+                    else if (sec.name === "Signature Details") {
+                        let place = "", date = "", signature = "";
+                        sec.fields.forEach(f => {
+                            if (f.label === "Place") place = f.value;
+                            if (f.label === "Date") date = f.value;
+                            if (f.label === "Signature Name") signature = f.value;
+                        });
+
+                        html += `
+                            <div class="resume-signature-row" style="font-family: ${bodyFont}; font-size: ${bodySize}; display: flex; justify-content: space-between; margin-top: 24px; padding: 0 15px;">
+                                <div>Place: ${escapeHtml(place)}<br>Date: ${escapeHtml(date)}</div>
+                                <div style="text-align: right;"><br>(${escapeHtml(signature)})</div>
+                            </div>
+                        `;
+                    }
+                    else {
+                        sec.fields.forEach(f => {
+                            html += `<p style="font-size: ${bodySize}; font-family: ${bodyFont}; margin: 2px 0; padding: 0 15px;"><strong>${escapeHtml(f.label)}:</strong> ${escapeHtml(f.value)}</p>`;
+                        });
+                    }
+                });
+
+                html += `<hr style="margin-top:20px; border:none; border-top: 1px solid #cbd5e1;"><div style="font-size: calc(${bodySize} - 2px); font-family: ${bodyFont}; color:#94a3b8; text-align:center; margin-top:8px;">Generated by SmartService Resume Creator Portal</div>`;
+                return html;
+            }
+
+            // Sync values to paper layout preview
+            function updateResumePreview() {
+                let paperHTML = "";
+                
+                if (templateFormat === "classic") {
+                    paperHTML = renderClassicTemplate();
+                } else if (templateFormat === "modern") {
+                    paperHTML = renderModernSidebarTemplate();
+                } else if (templateFormat === "minimalist") {
+                    paperHTML = renderMinimalistTemplate();
+                } else if (templateFormat === "executive") {
+                    paperHTML = renderExecutiveTemplate();
+                } else if (templateFormat === "creative") {
+                    paperHTML = renderCreativeTemplate();
+                } else if (templateFormat === "elegant") {
+                    paperHTML = renderElegantSerifTemplate();
+                }
+
+                resumePaper.innerHTML = paperHTML;
+                resumePaper.style.setProperty("--resume-primary-color", themeColor);
+            }
+
+            function escapeHtml(str) {
+                if(!str) return '';
+                return String(str).replace(/[&<>]/g, function(m) {
+                    if(m === '&') return '&amp;';
+                    if(m === '<') return '&lt;';
+                    if(m === '>') return '&gt;';
+                    return m;
+                });
+            }
+
+            // Photo handlers
+            photoUploadZone.addEventListener("click", () => photoInput.click());
+
+            photoInput.addEventListener("change", (e) => {
+                if (e.target.files && e.target.files[0]) {
+                    const file = e.target.files[0];
+                    if (file.size > 2 * 1024 * 1024) {
+                        showToast("Photo must be smaller than 2MB.", "error");
+                        return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        photoDataURL = ev.target.result;
+                        photoStatusLabel.innerText = "Photo Selected";
+                        removePhotoBtn.style.display = "block";
+                        saveState();
+                        updateResumePreview();
+                        showToast("Photo uploaded successfully.", "success");
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            removePhotoBtn.addEventListener("click", () => {
+                photoDataURL = "";
+                photoInput.value = "";
+                photoStatusLabel.innerText = "Upload Passport Photo";
+                removePhotoBtn.style.display = "none";
+                saveState();
+                updateResumePreview();
+                showToast("Photo removed.", "info");
+            });
+
+            // Add new custom section
+            addSectionBtn.addEventListener("click", () => {
+                const newId = "sec" + (++sectionIdCounter);
+                sections.push({
+                    id: newId,
+                    name: "New Category Section",
+                    fields: [{
+                        id: "f" + (++fieldIdCounter),
+                        label: "Label Key",
+                        value: "Enter text details here",
+                        type: "text"
+                    }]
+                });
+                saveState();
+                renderFormEditor();
+                updateResumePreview();
+                showToast("Added new category section.", "success");
+            });
+
+            // Style configuration binds
+            templateFormatSelect.addEventListener("change", (e) => {
+                templateFormat = e.target.value;
+                saveState();
+                updateResumePreview();
+            });
+
+            themeColorPicker.addEventListener("input", (e) => {
+                themeColor = e.target.value;
+                saveState();
+                updateResumePreview();
+            });
+
+            headingFontSelect.addEventListener("change", (e) => {
+                headingFont = e.target.value;
+                saveState();
+                updateResumePreview();
+            });
+
+            headingSizeSelect.addEventListener("change", (e) => {
+                headingSize = e.target.value;
+                saveState();
+                updateResumePreview();
+            });
+
+            bodyFontSelect.addEventListener("change", (e) => {
+                bodyFont = e.target.value;
+                saveState();
+                updateResumePreview();
+            });
+
+            bodySizeSelect.addEventListener("change", (e) => {
+                bodySize = e.target.value;
+                saveState();
+                updateResumePreview();
+            });
+
+            // Reset all values to default template
+            resetAllBtn.addEventListener("click", () => {
+                sections = initializeDefaultSections();
+                photoDataURL = "";
+                photoInput.value = "";
+                themeColor = "#166534";
+                headingFont = "'Times New Roman', Times, serif";
+                headingSize = "22px";
+                bodyFont = "'Times New Roman', Times, serif";
+                bodySize = "11px";
+                templateFormat = "classic";
+
+                themeColorPicker.value = "#166534";
+                headingFontSelect.value = "'Times New Roman', Times, serif";
+                headingSizeSelect.value = "22px";
+                bodyFontSelect.value = "'Times New Roman', Times, serif";
+                bodySizeSelect.value = "11px";
+                templateFormatSelect.value = "classic";
+                
+                photoStatusLabel.innerText = "Upload Passport Photo";
+                removePhotoBtn.style.display = "none";
+
+                saveState();
+                renderFormEditor();
+                updateResumePreview();
+                showToast("All data fields reset to standard template.", "info");
+            });
+
+            // Print triggers
+            printBtn.addEventListener("click", () => {
+                window.print();
+            });
+
+            // PDF download triggers
+            downloadPdfBtn.addEventListener("click", async () => {
+                const element = document.getElementById("resumePaper");
+                
+                // Save current inline styles to restore later
+                const originalTransform = element.style.transform;
+                const originalMarginBottom = element.style.marginBottom;
+                const originalTransition = element.style.transition;
+                
+                // Temporarily disable scaling transitions/transforms to capture clean 100% size
+                element.style.transition = "none";
+                element.style.transform = "none";
+                element.style.marginBottom = "0";
+                
+                // Brief delay to allow layout recalculation
+                await new Promise(resolve => setTimeout(resolve, 50));
+                
+                const opt = {
+                    margin: 0,
+                    filename: 'smartservice_resume_' + Date.now() + '.pdf',
+                    image: { type: 'jpeg', quality: 1.0 },
+                    html2canvas: { 
+                        scale: 4, // 4x canvas resolution prevents blurriness when zoomed in
+                        letterRendering: true, 
+                        useCORS: true,
+                        scrollY: 0,
+                        scrollX: 0
+                    },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
+
+                try {
+                    showToast("Compiling PDF document...", "info");
+                    await html2pdf().set(opt).from(element).save();
+                    showToast("PDF downloaded successfully.", "success");
+                } catch(error) {
+                    console.error("PDF generation error:", error);
+                    showToast("Failed to compile PDF. Try using system print instead.", "error");
+                } finally {
+                    // Restore original preview scale
+                    element.style.transition = originalTransition;
+                    element.style.transform = originalTransform;
+                    element.style.marginBottom = originalMarginBottom;
+                }
+            });
+
+            // Load saved state or default
+            loadState();
+
+            // Initial render execution
+            renderFormEditor();
+            updateResumePreview();
+        });
+    </script>
+</body>
+</html>
