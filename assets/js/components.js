@@ -310,6 +310,7 @@ class SiteFooter extends HTMLElement {
                         <ul class="footer-links" style="flex-direction: row; gap: 16px;">
                             <li><a href="privacy.html" class="footer-link">Privacy</a></li>
                             <li><a href="terms.html" class="footer-link">Terms</a></li>
+                            <li><a href="refund.html" class="footer-link">Refund Policy</a></li>
                         </ul>
                     </div>
                 </div>
