@@ -12,6 +12,7 @@ const isLoggedIn = localStorage.getItem("smartservice_logged_in") === "true";
     // Define pages that require login (special services)
     const specialPages = [
         "govt-id-print.html",
+        "passport-print.html",
         "farmer-data-extractor.html",
         "id-card-maker.html"
     ];
@@ -56,14 +57,14 @@ class SiteHeader extends HTMLElement {
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
-                    height: 70px;
+                    height: 60px;
                     max-width: 1280px;
                     margin: 0 auto;
                     padding: 0 24px;
                 }
                 .nav-links {
                     display: flex;
-                    gap: 32px;
+                    gap: 16px;
                     align-items: center;
                 }
                 .nav-link {
@@ -105,10 +106,10 @@ class SiteHeader extends HTMLElement {
                 /* Mobile Menu */
                 .mobile-menu {
                     position: fixed;
-                    top: 70px;
+                    top: 60px;
                     left: -100%;
                     width: 100%;
-                    height: calc(100vh - 70px);
+                    height: calc(100vh - 60px);
                     background: #ffffff;
                     z-index: 999;
                     display: flex;
@@ -152,6 +153,7 @@ class SiteHeader extends HTMLElement {
                     <nav class="nav-links">
                         <a href="index.html" class="nav-link ${currentPath === 'index.html' || currentPath === '' ? 'active' : ''}">Home</a>
                         <a href="govt-id-print.html" class="nav-link ${currentPath === 'govt-id-print.html' ? 'active' : ''}">Govt ID Print</a>
+                        <a href="passport-print.html" class="nav-link ${currentPath === 'passport-print.html' ? 'active' : ''}">Passport Print</a>
                         <a href="farmer-data-extractor.html" class="nav-link ${currentPath === 'farmer-data-extractor.html' ? 'active' : ''}">Farmer Extractor</a>
                         <a href="image-resizer.html" class="nav-link ${currentPath === 'image-resizer.html' ? 'active' : ''}">Image Resizer</a>
                         <a href="whatsapp-direct.html" class="nav-link ${currentPath === 'whatsapp-direct.html' ? 'active' : ''}">WhatsApp Direct</a>
@@ -169,6 +171,7 @@ class SiteHeader extends HTMLElement {
             <div class="mobile-menu no-print" id="mobileDrawer">
                 <a href="index.html" class="nav-link ${currentPath === 'index.html' || currentPath === '' ? 'active' : ''}">Home</a>
                 <a href="govt-id-print.html" class="nav-link ${currentPath === 'govt-id-print.html' ? 'active' : ''}">Govt ID Print</a>
+                <a href="passport-print.html" class="nav-link ${currentPath === 'passport-print.html' ? 'active' : ''}">Passport Print</a>
                 <a href="farmer-data-extractor.html" class="nav-link ${currentPath === 'farmer-data-extractor.html' ? 'active' : ''}">Farmer Extractor</a>
                 <a href="image-resizer.html" class="nav-link ${currentPath === 'image-resizer.html' ? 'active' : ''}">Image Resizer</a>
                 <a href="whatsapp-direct.html" class="nav-link ${currentPath === 'whatsapp-direct.html' ? 'active' : ''}">WhatsApp Direct</a>
@@ -395,6 +398,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // List of pages/queries that require user session
         const protectedHrefs = [
             "govt-id-print.html",
+            "passport-print.html",
             "farmer-data-extractor.html",
             "id-card-maker.html"
         ];

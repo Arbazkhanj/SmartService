@@ -11,9 +11,9 @@
         /* Tool Layout Custom Styles */
         .workspace-grid {
             display: grid;
-            grid-template-columns: 380px 1fr;
-            gap: 32px;
-            margin-top: 40px;
+            grid-template-columns: 500px 1fr;
+            gap: 24px;
+            margin-top: 30px;
         }
         
         .control-panel {
@@ -94,6 +94,7 @@
             position: relative;
             transform-origin: top center;
             transition: transform 0.2s;
+            zoom: 0.85;
         }
 
         /* Standard A4 Paper size in mm for printing: 210mm x 297mm */
@@ -181,6 +182,12 @@
             color: var(--primary);
         }
 
+        .adjustments-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
         @media (max-width: 992px) {
             .workspace-grid {
                 grid-template-columns: 1fr;
@@ -189,13 +196,13 @@
                 padding: 16px;
             }
             .paper-sheet {
-                transform: scale(0.8);
+                zoom: 0.6;
             }
         }
 
         @media (max-width: 600px) {
             .paper-sheet {
-                transform: scale(0.45);
+                zoom: 0.45;
             }
         }
 
@@ -212,6 +219,13 @@
                 background: white !important;
                 margin: 0 !important;
                 padding: 0 !important;
+                height: 100vh !important;
+                overflow: hidden !important;
+            }
+            main, .section-padding, .container {
+                padding: 0 !important;
+                margin: 0 !important;
+                max-width: none !important;
             }
             .workspace-grid {
                 margin: 0 !important;
@@ -225,7 +239,7 @@
             }
             .paper-sheet {
                 box-shadow: none !important;
-                transform: scale(1) !important;
+                zoom: 1 !important;
                 margin: 0 !important;
                 border: none !important;
                 page-break-after: avoid;
@@ -250,8 +264,15 @@
         <!-- Header -->
         <div style="margin-bottom: 24px;" class="no-print">
             <a href="index.html" style="color: var(--primary); font-weight: 600;"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
-            <h1 style="font-size: 2.2rem; margin-top: 12px; color: var(--text-main);"><i class="fas fa-print mr-2 text-primary"></i>Govt ID Card Print Tool</h1>
-            <p style="color: var(--text-muted);">Upload front & back files. Reposition and print on A4/4x6 paper with exact standard size.</p>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
+                <div>
+                    <h1 style="font-size: 2.2rem; margin: 0; color: var(--text-main);"><i class="fas fa-print mr-2 text-primary" style="margin-right: 12px;"></i>Govt ID Card Print</h1>
+                    <p style="color: var(--text-muted); margin-top: 8px;">Upload front & back files. Reposition and print on A4/4x6 paper with exact standard size.</p>
+                </div>
+                <button class="btn btn-primary" onclick="window.print()" style="display: flex; gap: 8px; align-items: center; font-size: 1.1rem; padding: 12px 24px;">
+                    <i class="fas fa-print"></i> Print Document
+                </button>
+            </div>
         </div>
 
         <div class="workspace-grid">
@@ -260,76 +281,155 @@
                 <!-- Step 1: Upload Front & Back -->
                 <h3 style="font-size: 1.1rem; margin-bottom: 16px; color: var(--text-main);"><span style="background: var(--primary-light); color: var(--primary); width: 24px; height: 24px; display: inline-flex; justify-content: center; align-items: center; border-radius: 50%; font-size: 0.8rem; margin-right: 8px;">1</span>Upload ID Card</h3>
                 
-                <input type="file" id="frontFile" accept="image/*" style="display: none;">
-                <div class="upload-slot" onclick="document.getElementById('frontFile').click()">
-                    <i class="fas fa-id-card"></i>
-                    <h5 style="font-size: 0.9rem; margin-bottom: 4px;">Upload Front Side</h5>
-                    <p style="font-size: 0.75rem; color: var(--text-light);" id="frontStatus">JPG, PNG (Max 5MB)</p>
-                </div>
+                <div class="adjustments-grid">
+                    <div>
+                        <input type="file" id="frontFile" accept="image/*" style="display: none;">
+                        <div class="upload-slot" onclick="document.getElementById('frontFile').click()" style="margin-bottom: 0;">
+                            <i class="fas fa-id-card"></i>
+                            <h5 style="font-size: 0.9rem; margin-bottom: 4px;">Upload Front Side</h5>
+                            <p style="font-size: 0.75rem; color: var(--text-light);" id="frontStatus">JPG, PNG (Max 5MB)</p>
+                        </div>
+                    </div>
 
-                <input type="file" id="backFile" accept="image/*" style="display: none;">
-                <div class="upload-slot" onclick="document.getElementById('backFile').click()">
-                    <i class="fas fa-id-card"></i>
-                    <h5 style="font-size: 0.9rem; margin-bottom: 4px;">Upload Back Side</h5>
-                    <p style="font-size: 0.75rem; color: var(--text-light);" id="backStatus">JPG, PNG (Max 5MB)</p>
+                    <div>
+                        <input type="file" id="backFile" accept="image/*" style="display: none;">
+                        <div class="upload-slot" onclick="document.getElementById('backFile').click()" style="margin-bottom: 0;">
+                            <i class="fas fa-id-card"></i>
+                            <h5 style="font-size: 0.9rem; margin-bottom: 4px;">Upload Back Side</h5>
+                            <p style="font-size: 0.75rem; color: var(--text-light);" id="backStatus">JPG, PNG (Max 5MB)</p>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Step 2: Settings -->
                 <h3 style="font-size: 1.1rem; margin: 24px 0 16px 0; color: var(--text-main);"><span style="background: var(--primary-light); color: var(--primary); width: 24px; height: 24px; display: inline-flex; justify-content: center; align-items: center; border-radius: 50%; font-size: 0.8rem; margin-right: 8px;">2</span>Print Setup</h3>
                 
-                <div class="form-group">
-                    <label class="form-label">Card Orientation</label>
-                    <div class="option-group">
-                        <button class="option-btn active" id="orientationLandscape">Landscape</button>
-                        <button class="option-btn" id="orientationPortrait">Portrait</button>
-                    </div>
-                </div>
+                <div class="adjustments-grid">
+                    <div>
+                        <div class="form-group">
+                            <label class="form-label">Card Orientation</label>
+                            <div class="option-group">
+                                <button class="option-btn active" id="orientationLandscape">Landscape</button>
+                                <button class="option-btn" id="orientationPortrait">Portrait</button>
+                            </div>
+                        </div>
 
-                <div class="form-group">
-                    <label class="form-label">Paper Sheet Size</label>
-                    <div class="option-group">
-                        <button class="option-btn active" id="paperA4">A4 Size</button>
-                        <button class="option-btn" id="paper4x6">4" x 6" Photo</button>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Paper Sheet Size</label>
+                            <div class="option-group">
+                                <button class="option-btn active" id="paperA4">A4 Size</button>
+                                <button class="option-btn" id="paper4x6">4" x 6" Photo</button>
+                            </div>
+                        </div>
                     </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Card Corner Radius</label>
-                    <input type="range" id="cardRadius" class="custom-slider" min="0" max="24" value="4">
-                    <div style="display: flex; justify-content: space-between; font-size: 0.75rem; margin-top: 4px; color: var(--text-light);">
-                        <span>0px (Square)</span>
-                        <span>24px (Round)</span>
+                    <div>
+                        <div class="form-group">
+                            <label class="form-label">Card Corner Radius</label>
+                            <input type="range" id="cardRadius" class="custom-slider" min="0" max="24" value="4">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; margin-top: 4px; color: var(--text-light);">
+                                <span>0px (Square)</span>
+                                <span>24px (Round)</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Step 3: Shift / Adjustments -->
                 <h3 style="font-size: 1.1rem; margin: 24px 0 16px 0; color: var(--text-main);"><span style="background: var(--primary-light); color: var(--primary); width: 24px; height: 24px; display: inline-flex; justify-content: center; align-items: center; border-radius: 50%; font-size: 0.8rem; margin-right: 8px;">3</span>Shift Adjust (Edit Side)</h3>
                 
-                <div class="option-group" style="margin-bottom: 12px;">
+                <div class="option-group" style="margin-bottom: 16px;">
                     <button class="option-btn active" id="selectFront">Front Card</button>
                     <button class="option-btn" id="selectBack">Back Card</button>
                 </div>
                 
-                <div class="form-group">
-                    <label class="form-label">Zoom Scale</label>
-                    <input type="range" id="imgScale" class="custom-slider" min="50" max="250" value="100">
-                    <div style="text-align: right; font-size: 0.8rem; margin-top: 4px; font-weight: 600; color: var(--primary);" id="scaleLabel">100%</div>
-                </div>
+                <div class="adjustments-grid">
+                    <!-- Left Column: Zoom, Rotate & Flip -->
+                    <div>
+                        <div class="form-group">
+                            <label class="form-label">Zoom Scale</label>
+                            <input type="range" id="imgScale" class="custom-slider" min="50" max="500" value="100">
+                            <div style="text-align: right; font-size: 0.8rem; margin-top: 4px; font-weight: 600; color: var(--primary);" id="scaleLabel">100%</div>
+                        </div>
 
-                <div class="form-group">
-                    <label class="form-label" style="text-align: center;">Shift Alignment</label>
-                    <div class="pad-grid">
-                        <div></div>
-                        <button class="pad-btn" id="moveUp"><i class="fas fa-arrow-up"></i></button>
-                        <div></div>
-                        
-                        <button class="pad-btn" id="moveLeft"><i class="fas fa-arrow-left"></i></button>
-                        <button class="pad-btn" id="moveCenter"><i class="fas fa-crosshairs"></i></button>
-                        <button class="pad-btn" id="moveRight"><i class="fas fa-arrow-right"></i></button>
-                        
-                        <div></div>
-                        <button class="pad-btn" id="moveDown"><i class="fas fa-arrow-down"></i></button>
-                        <div></div>
+                        <div class="form-group">
+                            <label class="form-label" style="font-weight: 600; color: var(--text-main); font-size: 1rem; margin-bottom: 4px;">Rotate and Flip</label>
+                            
+                            <!-- Rotate Section -->
+                            <div style="margin-bottom: 16px;">
+                                <div style="font-weight: 600; color: var(--text-main); font-size: 0.9rem; border-bottom: 1px solid var(--border-color); padding-bottom: 4px; margin-bottom: 8px;">Rotate</div>
+                                
+                                <div style="display: flex; flex-direction: column; gap: 2px;">
+                                    <button id="rotateLeft" style="display: flex; align-items: center; justify-content: flex-start; gap: 8px; padding: 4px 8px; background: transparent; border: none; color: var(--primary); cursor: pointer; border-radius: 4px; transition: 0.2s;" onmouseover="this.style.background='var(--primary-light)'" onmouseout="this.style.background='transparent'">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                                        <span style="color: var(--primary); font-size: 0.9rem;">Rotate left</span>
+                                    </button>
+                                    <button id="rotateRight" style="display: flex; align-items: center; justify-content: flex-start; gap: 8px; padding: 4px 8px; background: transparent; border: none; color: var(--primary); cursor: pointer; border-radius: 4px; transition: 0.2s;" onmouseover="this.style.background='var(--primary-light)'" onmouseout="this.style.background='transparent'">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
+                                        <span style="color: var(--primary); font-size: 0.9rem;">Rotate right</span>
+                                    </button>
+                                    
+                                    <div style="display: flex; align-items: center; gap: 8px; padding: 4px 8px; margin-top: 4px;">
+                                        <i class="fas fa-sync-alt" style="color: var(--primary); font-size: 0.9rem;"></i> 
+                                        <span style="color: var(--text-main); font-size: 0.9rem;">By degree:</span>
+                                        
+                                        <div style="display: flex; border: 1px solid #a0a0a0; background: white; border-radius: 2px; height: 22px; width: 60px; overflow: hidden;">
+                                            <input type="text" id="imgRotationNum" value="0" style="width: 100%; border: none; padding: 0 4px; font-size: 0.85rem; outline: none;">
+                                            <div style="display: flex; flex-direction: column; width: 16px; border-left: 1px solid #a0a0a0; background: #e1e1e1;">
+                                                <button id="rotUp" style="flex: 1; border: none; background: transparent; cursor: pointer; padding: 0; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #a0a0a0;"><i class="fas fa-caret-up" style="font-size: 0.6rem; color: #333;"></i></button>
+                                                <button id="rotDown" style="flex: 1; border: none; background: transparent; cursor: pointer; padding: 0; display: flex; align-items: center; justify-content: center;"><i class="fas fa-caret-down" style="font-size: 0.6rem; color: #333;"></i></button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Flip Section -->
+                            <div>
+                                <div style="font-weight: 600; color: var(--text-main); font-size: 0.9rem; border-bottom: 1px solid var(--border-color); padding-bottom: 4px; margin-bottom: 8px;">Flip</div>
+                                <div class="option-group" style="margin-bottom: 0;">
+                                    <button class="option-btn" id="flipH"><i class="fas fa-arrows-alt-h"></i> Flip H</button>
+                                    <button class="option-btn" id="flipV"><i class="fas fa-arrows-alt-v"></i> Flip V</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Alignment, Colors -->
+                    <div>
+                        <div class="form-group">
+                            <label class="form-label" style="text-align: center;">Shift Alignment</label>
+                            <div class="pad-grid">
+                                <div></div>
+                                <button class="pad-btn" id="moveUp"><i class="fas fa-arrow-up"></i></button>
+                                <div></div>
+                                
+                                <button class="pad-btn" id="moveLeft"><i class="fas fa-arrow-left"></i></button>
+                                <button class="pad-btn" id="moveCenter"><i class="fas fa-crosshairs"></i></button>
+                                <button class="pad-btn" id="moveRight"><i class="fas fa-arrow-right"></i></button>
+                                
+                                <div></div>
+                                <button class="pad-btn" id="moveDown"><i class="fas fa-arrow-down"></i></button>
+                                <div></div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Brightness</label>
+                            <input type="range" id="imgBrightness" class="custom-slider" min="0" max="200" value="100">
+                            <div style="text-align: right; font-size: 0.8rem; margin-top: 4px; font-weight: 600; color: var(--primary);" id="brightnessLabel">100%</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Contrast</label>
+                            <input type="range" id="imgContrast" class="custom-slider" min="0" max="200" value="100">
+                            <div style="text-align: right; font-size: 0.8rem; margin-top: 4px; font-weight: 600; color: var(--primary);" id="contrastLabel">100%</div>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Saturation</label>
+                            <input type="range" id="imgSaturation" class="custom-slider" min="0" max="200" value="100">
+                            <div style="text-align: right; font-size: 0.8rem; margin-top: 4px; font-weight: 600; color: var(--primary);" id="saturationLabel">100%</div>
+                        </div>
                     </div>
                 </div>
 
@@ -401,6 +501,20 @@
             const selectBack = document.getElementById("selectBack");
             const imgScale = document.getElementById("imgScale");
             const scaleLabel = document.getElementById("scaleLabel");
+            const imgRotationNum = document.getElementById("imgRotationNum");
+            const rotUp = document.getElementById("rotUp");
+            const rotDown = document.getElementById("rotDown");
+            const rotateLeft = document.getElementById("rotateLeft");
+            const rotateRight = document.getElementById("rotateRight");
+            const imgBrightness = document.getElementById("imgBrightness");
+            const brightnessLabel = document.getElementById("brightnessLabel");
+            const imgContrast = document.getElementById("imgContrast");
+            const contrastLabel = document.getElementById("contrastLabel");
+            const imgSaturation = document.getElementById("imgSaturation");
+            const saturationLabel = document.getElementById("saturationLabel");
+
+            const flipH = document.getElementById("flipH");
+            const flipV = document.getElementById("flipV");
 
             const moveUp = document.getElementById("moveUp");
             const moveDown = document.getElementById("moveDown");
@@ -416,24 +530,37 @@
             
             // Image Transform states
             const transforms = {
-                front: { x: 0, y: 0, scale: 100 },
-                back: { x: 0, y: 0, scale: 100 }
+                front: { x: 0, y: 0, scale: 100, rotate: 0, brightness: 100, contrast: 100, saturation: 100, flipH: 1, flipV: 1 },
+                back: { x: 0, y: 0, scale: 100, rotate: 0, brightness: 100, contrast: 100, saturation: 100, flipH: 1, flipV: 1 }
             };
 
             // Helper to apply shifts
             function updateTransforms() {
-                const fTransform = `translate(${transforms.front.x}px, ${transforms.front.y}px) scale(${transforms.front.scale / 100})`;
+                const tf = transforms.front;
+                const fTransform = `translate(${tf.x}px, ${tf.y}px) scale(${tf.scale / 100}) rotate(${tf.rotate}deg) scaleX(${tf.flipH}) scaleY(${tf.flipV})`;
+                const fFilter = `brightness(${tf.brightness}%) contrast(${tf.contrast}%) saturate(${tf.saturation}%)`;
                 imgFront.style.transform = fTransform;
+                imgFront.style.filter = fFilter;
 
-                const bTransform = `translate(${transforms.back.x}px, ${transforms.back.y}px) scale(${transforms.back.scale / 100})`;
+                const tb = transforms.back;
+                const bTransform = `translate(${tb.x}px, ${tb.y}px) scale(${tb.scale / 100}) rotate(${tb.rotate}deg) scaleX(${tb.flipH}) scaleY(${tb.flipV})`;
+                const bFilter = `brightness(${tb.brightness}%) contrast(${tb.contrast}%) saturate(${tb.saturation}%)`;
                 imgBack.style.transform = bTransform;
+                imgBack.style.filter = bFilter;
             }
 
             // Sync slider value
             function syncSlider() {
-                const currentScale = transforms[selectedSide].scale;
-                imgScale.value = currentScale;
-                scaleLabel.innerText = `${currentScale}%`;
+                const current = transforms[selectedSide];
+                imgScale.value = current.scale;
+                scaleLabel.innerText = `${current.scale}%`;
+                imgRotationNum.value = current.rotate;
+                imgBrightness.value = current.brightness;
+                brightnessLabel.innerText = `${current.brightness}%`;
+                imgContrast.value = current.contrast;
+                contrastLabel.innerText = `${current.contrast}%`;
+                imgSaturation.value = current.saturation;
+                saturationLabel.innerText = `${current.saturation}%`;
             }
 
             // Select active side
@@ -466,6 +593,75 @@
                 updateTransforms();
             });
 
+            imgRotationNum.addEventListener("input", (e) => {
+                let rotVal = parseInt(e.target.value) || 0;
+                transforms[selectedSide].rotate = rotVal;
+                updateTransforms();
+            });
+
+            rotUp.addEventListener("click", () => {
+                let rotVal = parseInt(imgRotationNum.value) || 0;
+                rotVal += 1;
+                imgRotationNum.value = rotVal;
+                transforms[selectedSide].rotate = rotVal;
+                updateTransforms();
+            });
+
+            rotDown.addEventListener("click", () => {
+                let rotVal = parseInt(imgRotationNum.value) || 0;
+                rotVal -= 1;
+                imgRotationNum.value = rotVal;
+                transforms[selectedSide].rotate = rotVal;
+                updateTransforms();
+            });
+
+            rotateLeft.addEventListener("click", () => {
+                let currentRot = transforms[selectedSide].rotate;
+                currentRot = (currentRot - 90) % 360;
+                transforms[selectedSide].rotate = currentRot;
+                syncSlider();
+                updateTransforms();
+            });
+
+            rotateRight.addEventListener("click", () => {
+                let currentRot = transforms[selectedSide].rotate;
+                currentRot = (currentRot + 90) % 360;
+                transforms[selectedSide].rotate = currentRot;
+                syncSlider();
+                updateTransforms();
+            });
+
+            imgBrightness.addEventListener("input", (e) => {
+                const brightVal = parseInt(e.target.value);
+                transforms[selectedSide].brightness = brightVal;
+                brightnessLabel.innerText = `${brightVal}%`;
+                updateTransforms();
+            });
+
+            imgContrast.addEventListener("input", (e) => {
+                const conVal = parseInt(e.target.value);
+                transforms[selectedSide].contrast = conVal;
+                contrastLabel.innerText = `${conVal}%`;
+                updateTransforms();
+            });
+
+            imgSaturation.addEventListener("input", (e) => {
+                const satVal = parseInt(e.target.value);
+                transforms[selectedSide].saturation = satVal;
+                saturationLabel.innerText = `${satVal}%`;
+                updateTransforms();
+            });
+
+            flipH.addEventListener("click", () => {
+                transforms[selectedSide].flipH *= -1;
+                updateTransforms();
+            });
+
+            flipV.addEventListener("click", () => {
+                transforms[selectedSide].flipV *= -1;
+                updateTransforms();
+            });
+
             // Adjustments shifting events
             const STEP = 5; // pixels
             moveUp.addEventListener("click", () => {
@@ -488,6 +684,12 @@
                 transforms[selectedSide].x = 0;
                 transforms[selectedSide].y = 0;
                 transforms[selectedSide].scale = 100;
+                transforms[selectedSide].rotate = 0;
+                transforms[selectedSide].brightness = 100;
+                transforms[selectedSide].contrast = 100;
+                transforms[selectedSide].saturation = 100;
+                transforms[selectedSide].flipH = 1;
+                transforms[selectedSide].flipV = 1;
                 syncSlider();
                 updateTransforms();
             });

@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Passport Photo Print Tool - SmartService</title>
+    <link rel="stylesheet" href="assets/css/global.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* Tool Layout Custom Styles */
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: 500px 1fr;
+            gap: 24px;
+            margin-top: 30px;
+        }
+        
+        .control-panel {
+            background: white;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            padding: 24px;
+            box-shadow: var(--shadow-md);
+            height: fit-content;
+        }
+
+        .preview-panel {
+            background: #e2e8f0;
+            border-radius: var(--radius-lg);
+            padding: 32px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 600px;
+            overflow-x: auto;
+        }
+
+        /* Print Canvas Sheets mimicking real paper sizes */
+        .paper-sheet {
+            background: white;
+            box-shadow: var(--shadow-xl);
+            box-sizing: border-box;
+            position: relative;
+            transform-origin: top center;
+            transition: transform 0.2s;
+            zoom: 0.85;
+            padding: 10px; /* Base padding */
+        }
+
+        /* Standard A4 Paper size in mm for printing: 210mm x 297mm */
+        .paper-a4 {
+            width: 210mm;
+            height: 297mm;
+        }
+        
+        /* A5 Paper size */
+        .paper-a5 {
+            width: 148mm;
+            height: 210mm;
+        }
+
+        /* Passport Photo Grid */
+        .photo-row {
+            display: flex;
+            gap: 4mm;
+            width: 100%;
+            justify-content: center;
+            margin-top: 5mm;
+        }
+        .photo-row:first-child {
+            margin-top: 0;
+        }
+
+
+        .passport-photo {
+            width: 31mm; 
+            height: 40mm;
+            border: 1px solid #000;
+            position: relative;
+            overflow: hidden;
+            background-color: #fff;
+            box-sizing: border-box;
+            flex-shrink: 0;
+        }
+        
+        .passport-img-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        
+        .passport-img-container img {
+            position: absolute;
+            width: 100%;
+            max-width: none;
+            max-height: none;
+            cursor: move;
+            transform-origin: center center;
+            transition: filter 0.1s;
+        }
+
+        /* Sliders and controls */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-dark);
+            font-size: 0.95rem;
+        }
+        .custom-slider {
+            width: 100%;
+            accent-color: var(--primary);
+        }
+        
+        .option-group {
+            display: flex;
+            gap: 8px;
+            background: var(--bg-light);
+            padding: 4px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+        }
+        .option-btn {
+            flex: 1;
+            padding: 8px 12px;
+            border: none;
+            background: transparent;
+            border-radius: var(--radius-sm);
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        .option-btn.active {
+            background: white;
+            color: var(--primary);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .upload-slot {
+            border: 2px dashed var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 24px 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            background: var(--bg-light);
+        }
+        .upload-slot:hover {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+        .upload-slot i {
+            font-size: 2rem;
+            color: var(--primary);
+            margin-bottom: 12px;
+        }
+
+        .adjustments-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        /* Crosshair button */
+        .btn-icon {
+            display: flex;
+            .upload-slot.active {
+            border-color: var(--primary);
+            background: var(--bg-main) !important;
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+
+        .custom-slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            outline: none;
+            accent-color: var(--primary);
+        }    cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-main);
+        }
+        .btn-icon:hover {
+            background: var(--primary-light);
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+        
+        .spinbox-group {
+            display: flex;
+            align-items: stretch;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            background: #fff;
+            width: fit-content;
+        }
+        
+        .spinbox-input {
+            width: 50px;
+            border: none;
+            text-align: center;
+            font-size: 0.95rem;
+            font-weight: 500;
+            outline: none;
+            -moz-appearance: textfield;
+        }
+        .spinbox-input::-webkit-outer-spin-button,
+        .spinbox-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .spinbox-btn {
+            background: var(--bg-light);
+            border: none;
+            border-left: 1px solid var(--border-color);
+            padding: 0 10px;
+            cursor: pointer;
+            transition: all 0.1s;
+        }
+        .spinbox-btn:hover {
+            background: #e2e8f0;
+        }
+
+        /* Direction pad */
+        .d-pad {
+            display: grid;
+            grid-template-columns: repeat(3, 40px);
+            grid-template-rows: repeat(3, 40px);
+            gap: 4px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .d-btn {
+            background: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.1s;
+            color: var(--text-main);
+        }
+        .d-btn:active, .d-btn:hover {
+            background: var(--primary-light);
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+        .d-up { grid-column: 2; grid-row: 1; }
+        .d-left { grid-column: 1; grid-row: 2; }
+        .d-center { grid-column: 2; grid-row: 2; background: #e2e8f0; border-radius: 50%; width: 32px; height: 32px; margin: auto; }
+        .d-right { grid-column: 3; grid-row: 2; }
+        .d-down { grid-column: 2; grid-row: 3; }
+
+        @media (max-width: 992px) {
+            .workspace-grid {
+                grid-template-columns: 1fr;
+            }
+            .preview-panel {
+                padding: 16px;
+            }
+            .paper-sheet {
+                zoom: 0.6;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .paper-sheet {
+                zoom: 0.45;
+            }
+        }
+
+        /* Print Media Styles */
+        @media print {
+            .no-print, site-header, site-footer, .control-panel, h2, p, button {
+                display: none !important;
+            }
+            body, html {
+                background: white !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                height: 100vh !important;
+                overflow: hidden !important;
+            }
+            main, .section-padding, .container, .workspace-grid {
+                padding: 0 !important;
+                margin: 0 !important;
+                max-width: none !important;
+                display: block !important;
+            }
+            .preview-panel {
+                background: white !important;
+                padding: 0 !important;
+                display: block !important;
+                min-height: auto !important;
+            }
+            .paper-sheet {
+                position: relative !important;
+                left: 0 !important;
+                top: 0 !important;
+                box-shadow: none !important;
+                zoom: 1 !important;
+                margin: 0 !important;
+                border: none !important;
+                page-break-after: avoid;
+                page-break-inside: avoid;
+                padding: 10mm 2mm !important; 
+            }
+            @page {
+                size: A4 portrait;
+                margin: 0;
+            }
+            .paper-a4 {
+                width: 100% !important;
+                height: 100% !important;
+            }
+            .paper-a5 {
+                width: 148mm !important;
+                height: 210mm !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <site-header></site-header>
+
+    <main class="container section-padding" style="padding-top: 20px;">
+        <div style="margin-bottom: 24px;" class="no-print">
+            <a href="index.html" style="color: var(--primary); font-weight: 600;"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
+                <div>
+                    <h1 style="font-size: 2.2rem; margin: 0; color: var(--text-main);"><i class="fas fa-print mr-2 text-primary" style="margin-right: 12px;"></i>Passport Photo Print (6 Copies)</h1>
+                    <p style="color: var(--text-muted); margin-top: 8px;">Print 6 passport photos in a row on A4 or A5 paper.</p>
+                </div>
+                <button class="btn btn-primary" onclick="window.print()" style="display: flex; gap: 8px; align-items: center; font-size: 1.1rem; padding: 12px 24px;">
+                    <i class="fas fa-print"></i> Print Document
+                </button>
+            </div>
+        </div>
+
+        <div class="workspace-grid">
+            <div class="control-panel">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h3 style="font-size: 1.1rem; margin: 0; color: var(--text-main);"><span style="background: var(--primary-light); color: var(--primary); width: 24px; height: 24px; display: inline-flex; justify-content: center; align-items: center; border-radius: 50%; font-size: 0.8rem; margin-right: 8px;">1</span>Upload Photos</h3>
+                    <button class="btn" id="addRowBtn" style="padding: 4px 12px; font-size: 0.85rem; background: var(--bg-light); border: 1px solid var(--border-color); cursor: pointer;"><i class="fas fa-plus"></i> Add Row</button>
+                </div>
+                
+                <input type="file" id="sharedPhotoInput" accept="image/*" style="display: none;">
+                <div id="uploadSlotsContainer" style="display: flex; flex-direction: column; gap: 12px;">
+                    <!-- dynamic upload slots -->
+                </div>
+
+                <h3 style="font-size: 1.1rem; margin: 24px 0 16px 0; color: var(--text-main);"><span style="background: var(--primary-light); color: var(--primary); width: 24px; height: 24px; display: inline-flex; justify-content: center; align-items: center; border-radius: 50%; font-size: 0.8rem; margin-right: 8px;">2</span>Print Setup</h3>
+                
+                <div class="adjustments-grid" style="margin-bottom: 20px;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Paper Size</label>
+                        <div class="option-group">
+                            <button class="option-btn active" id="paperA4">A4</button>
+                            <button class="option-btn" id="paperA5">A5</button>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">No. of Copies</label>
+                        <div class="option-group">
+                            <button class="option-btn active" id="copies6">6 Copies</button>
+                            <button class="option-btn" id="copies3">3 Copies</button>
+                            <button class="option-btn" id="copies3x2" style="white-space: nowrap;">3+3 Copies</button>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 style="font-size: 1.1rem; margin: 24px 0 16px 0; color: var(--text-main);"><span style="background: var(--primary-light); color: var(--primary); width: 24px; height: 24px; display: inline-flex; justify-content: center; align-items: center; border-radius: 50%; font-size: 0.8rem; margin-right: 8px;">3</span>Adjust Photo</h3>
+                
+                <div class="adjustments-grid">
+                    <div>
+                        <div class="form-group">
+                            <label class="form-label">Zoom Scale</label>
+                            <input type="range" id="imgScale" class="custom-slider" min="50" max="500" value="100">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; margin-top: 4px; color: var(--text-light);">
+                                <span>50%</span>
+                                <span id="scaleValOut">100%</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" style="font-weight: 600; color: var(--text-main); font-size: 1rem; margin-bottom: 4px;">Rotate and Flip</label>
+                            
+                            <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                                <button class="btn-icon" id="rotLeft" title="Rotate -90°"><i class="fas fa-undo"></i></button>
+                                
+                                <div class="spinbox-group">
+                                    <input type="number" id="imgRotationNum" class="spinbox-input" value="0" min="-180" max="180">
+                                    <div style="display: flex; flex-direction: column;">
+                                        <button class="spinbox-btn" id="rotUp" style="padding: 0 6px; height: 50%; border-bottom: 1px solid var(--border-color);"><i class="fas fa-caret-up" style="font-size: 0.7rem;"></i></button>
+                                        <button class="spinbox-btn" id="rotDown" style="padding: 0 6px; height: 50%;"><i class="fas fa-caret-down" style="font-size: 0.7rem;"></i></button>
+                                    </div>
+                                </div>
+
+                                <button class="btn-icon" id="rotRight" title="Rotate +90°"><i class="fas fa-redo"></i></button>
+                            </div>
+                            
+                            <div style="display: flex; gap: 8px;">
+                                <button class="option-btn" id="flipH" style="border: 1px solid var(--border-color); background: var(--bg-light); color: var(--text-main);">Flip H</button>
+                                <button class="option-btn" id="flipV" style="border: 1px solid var(--border-color); background: var(--bg-light); color: var(--text-main);">Flip V</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="form-group" style="text-align: center;">
+                            <label class="form-label" style="text-align: left;">Shift Alignment</label>
+                            <div class="d-pad">
+                                <button class="d-btn d-up" id="moveUp"><i class="fas fa-chevron-up"></i></button>
+                                <button class="d-btn d-left" id="moveLeft"><i class="fas fa-chevron-left"></i></button>
+                                <button class="d-btn d-center" id="moveCenter" title="Reset Position"><i class="fas fa-crosshairs"></i></button>
+                                <button class="d-btn d-right" id="moveRight"><i class="fas fa-chevron-right"></i></button>
+                                <button class="d-btn d-down" id="moveDown"><i class="fas fa-chevron-down"></i></button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Brightness</label>
+                            <input type="range" id="imgBrightness" class="custom-slider" min="0" max="200" value="100">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Contrast</label>
+                            <input type="range" id="imgContrast" class="custom-slider" min="0" max="200" value="100">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Saturation</label>
+                            <input type="range" id="imgSaturation" class="custom-slider" min="0" max="200" value="100">
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="preview-panel">
+                <div class="paper-sheet paper-a4" id="previewSheet">
+                    <div class="photo-row">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <site-footer></site-footer>
+
+    <script src="assets/js/components.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            const MAX_ROWS = 6;
+            let rows = [];
+            let activeRowId = 0;
+            let copiesGlobal = 6;
+            const STEP = 5;
+
+            const uploadSlotsContainer = document.getElementById('uploadSlotsContainer');
+            const previewSheet = document.getElementById('previewSheet');
+            const addRowBtn = document.getElementById('addRowBtn');
+            const sharedPhotoInput = document.getElementById('sharedPhotoInput');
+
+            const createRowState = (id) => ({
+                id,
+                file: null,
+                fileName: 'No file selected',
+                imgX: 0, imgY: 0, imgZoom: 100, imgRot: 0,
+                imgBrightness: 100, imgContrast: 100, imgSaturation: 100,
+                isFlipH: false, isFlipV: false
+            });
+
+            rows.push(createRowState(0));
+
+            window.selectRow = (id) => {
+                activeRowId = id;
+                renderUploadSlots();
+                syncSliders();
+            };
+
+            const renderUploadSlots = () => {
+                uploadSlotsContainer.innerHTML = '';
+                rows.forEach(r => {
+                    uploadSlotsContainer.innerHTML += `
+                        <div class="upload-slot ${r.id === activeRowId ? 'active' : ''}" style="margin-bottom:0; display:flex; justify-content:space-between; align-items:center; text-align:left; padding: 12px 16px; border: ${r.id === activeRowId ? '2px solid var(--primary)' : '2px dashed var(--border-color)'};">
+                            <div onclick="selectRow(${r.id})" style="flex:1; cursor:pointer;">
+                                <h5 style="font-size: 0.9rem; margin-bottom: 4px;"><i class="fas ${r.id === activeRowId ? 'fa-dot-circle text-primary' : 'fa-circle'} " style="margin-right: 8px; color: ${r.id === activeRowId ? 'var(--primary)' : 'var(--text-light)'};"></i>Row ${r.id + 1}</h5>
+                                <p style="font-size: 0.75rem; margin:0; color: ${r.file ? 'var(--primary)' : 'var(--text-light)'};">${r.fileName}</p>
+                            </div>
+                            <button class="btn" onclick="selectRow(${r.id}); document.getElementById('sharedPhotoInput').click();" style="padding: 6px 12px; font-size:0.8rem; background: var(--bg-light); border: 1px solid var(--border-color); cursor:pointer;">Upload</button>
+                        </div>
+                    `;
+                });
+                addRowBtn.style.display = rows.length >= MAX_ROWS ? 'none' : 'block';
+            };
+
+            const renderPreview = () => {
+                previewSheet.innerHTML = '';
+                
+                if (copiesGlobal === '3+3') {
+                    for (let i = 0; i < rows.length; i += 2) {
+                        let r1 = rows[i];
+                        let r2 = rows[i+1];
+                        let photoHTML = '';
+                        
+                        // First 3 photos from r1
+                        for(let j=0; j<3; j++) {
+                            photoHTML += `
+                                <div class="passport-photo">
+                                    <div class="passport-img-container">
+                                        <img src="${r1.file || ''}" id="renderImg_${r1.id}_${j}" style="display: ${r1.file ? 'block' : 'none'};" draggable="false">
+                                    </div>
+                                </div>
+                            `;
+                        }
+                        // Next 3 photos from r2 (if exists)
+                        for(let j=3; j<6; j++) {
+                            if (r2) {
+                                photoHTML += `
+                                    <div class="passport-photo">
+                                        <div class="passport-img-container">
+                                            <img src="${r2.file || ''}" id="renderImg_${r2.id}_${j}" style="display: ${r2.file ? 'block' : 'none'};" draggable="false">
+                                        </div>
+                                    </div>
+                                `;
+                            } else {
+                                photoHTML += `<div class="passport-photo" style="visibility: hidden;"></div>`;
+                            }
+                        }
+                        previewSheet.innerHTML += `<div class="photo-row">${photoHTML}</div>`;
+                    }
+                } else {
+                    rows.forEach(r => {
+                        let photoHTML = '';
+                        for(let i=0; i<6; i++) {
+                            let displayStyle = (i < copiesGlobal) ? 'block' : 'none';
+                            photoHTML += `
+                                <div class="passport-photo" style="display: ${displayStyle};">
+                                    <div class="passport-img-container">
+                                        <img src="${r.file || ''}" id="renderImg_${r.id}_${i}" style="display: ${r.file ? 'block' : 'none'};" draggable="false">
+                                    </div>
+                                </div>
+                            `;
+                        }
+                        previewSheet.innerHTML += `<div class="photo-row" id="photoRow_${r.id}">${photoHTML}</div>`;
+                    });
+                }
+                applyAllTransforms();
+            };
+
+            addRowBtn.addEventListener('click', () => {
+                if(rows.length < MAX_ROWS) {
+                    const newId = rows.length;
+                    rows.push(createRowState(newId));
+                    activeRowId = newId;
+                    renderUploadSlots();
+                    renderPreview();
+                    syncSliders();
+                }
+            });
+
+            sharedPhotoInput.addEventListener('change', (e) => {
+                if(e.target.files && e.target.files[0]) {
+                    const file = e.target.files[0];
+                    const r = rows[activeRowId];
+                    r.file = URL.createObjectURL(file);
+                    r.fileName = file.name;
+                    Object.assign(r, {
+                        imgX: 0, imgY: 0, imgZoom: 100, imgRot: 0,
+                        imgBrightness: 100, imgContrast: 100, imgSaturation: 100,
+                        isFlipH: false, isFlipV: false
+                    });
+                    renderUploadSlots();
+                    renderPreview(); 
+                    syncSliders();
+                }
+                sharedPhotoInput.value = '';
+            });
+
+            const applyAllTransforms = () => {
+                rows.forEach(r => {
+                    const scale = r.imgZoom / 100;
+                    let flipStr = '';
+                    if(r.isFlipH) flipStr += 'scaleX(-1) ';
+                    if(r.isFlipV) flipStr += 'scaleY(-1) ';
+                    
+                    const transformString = `translate(${r.imgX}px, ${r.imgY}px) scale(${scale}) rotate(${r.imgRot}deg) ${flipStr}`;
+                    const filterString = `brightness(${r.imgBrightness}%) contrast(${r.imgContrast}%) saturate(${r.imgSaturation}%)`;
+
+                    for(let i=0; i<6; i++) {
+                        const img = document.getElementById(`renderImg_${r.id}_${i}`);
+                        if(img) {
+                            img.style.transform = transformString;
+                            img.style.filter = filterString;
+                        }
+                    }
+                });
+            };
+
+            const syncSliders = () => {
+                const r = rows[activeRowId];
+                document.getElementById('imgScale').value = r.imgZoom;
+                document.getElementById('scaleValOut').textContent = r.imgZoom + '%';
+                document.getElementById('imgBrightness').value = r.imgBrightness;
+                document.getElementById('imgContrast').value = r.imgContrast;
+                document.getElementById('imgSaturation').value = r.imgSaturation;
+                document.getElementById('imgRotationNum').value = r.imgRot;
+            };
+
+            const updateActiveRow = (updates) => {
+                Object.assign(rows[activeRowId], updates);
+                applyAllTransforms();
+                syncSliders();
+            };
+
+            document.getElementById('moveUp').addEventListener('click', () => { updateActiveRow({imgY: rows[activeRowId].imgY - STEP}); });
+            document.getElementById('moveDown').addEventListener('click', () => { updateActiveRow({imgY: rows[activeRowId].imgY + STEP}); });
+            document.getElementById('moveLeft').addEventListener('click', () => { updateActiveRow({imgX: rows[activeRowId].imgX - STEP}); });
+            document.getElementById('moveRight').addEventListener('click', () => { updateActiveRow({imgX: rows[activeRowId].imgX + STEP}); });
+            document.getElementById('moveCenter').addEventListener('click', () => {
+                updateActiveRow({imgX: 0, imgY: 0, imgZoom: 100, imgRot: 0, imgBrightness: 100, imgContrast: 100, imgSaturation: 100, isFlipH: false, isFlipV: false});
+            });
+
+            document.getElementById('imgScale').addEventListener('input', (e) => { updateActiveRow({imgZoom: parseInt(e.target.value)}); });
+            document.getElementById('imgBrightness').addEventListener('input', (e) => { updateActiveRow({imgBrightness: parseInt(e.target.value)}); });
+            document.getElementById('imgContrast').addEventListener('input', (e) => { updateActiveRow({imgContrast: parseInt(e.target.value)}); });
+            document.getElementById('imgSaturation').addEventListener('input', (e) => { updateActiveRow({imgSaturation: parseInt(e.target.value)}); });
+
+            const imgRotationNum = document.getElementById("imgRotationNum");
+            imgRotationNum.addEventListener('input', (e) => { updateActiveRow({imgRot: parseInt(e.target.value) || 0}); });
+            
+            document.getElementById("rotUp").addEventListener('click', () => {
+                let rot = rows[activeRowId].imgRot + 1;
+                if(rot > 180) rot = 180;
+                updateActiveRow({imgRot: rot});
+            });
+            document.getElementById("rotDown").addEventListener('click', () => {
+                let rot = rows[activeRowId].imgRot - 1;
+                if(rot < -180) rot = -180;
+                updateActiveRow({imgRot: rot});
+            });
+            document.getElementById("rotLeft").addEventListener('click', () => { updateActiveRow({imgRot: rows[activeRowId].imgRot - 90}); });
+            document.getElementById("rotRight").addEventListener('click', () => { updateActiveRow({imgRot: rows[activeRowId].imgRot + 90}); });
+
+            document.getElementById("flipH").addEventListener('click', () => { updateActiveRow({isFlipH: !rows[activeRowId].isFlipH}); });
+            document.getElementById("flipV").addEventListener('click', () => { updateActiveRow({isFlipV: !rows[activeRowId].isFlipV}); });
+
+            const copies6Btn = document.getElementById('copies6');
+            const copies3Btn = document.getElementById('copies3');
+            const copies3x2Btn = document.getElementById('copies3x2');
+            const applyCopies = () => { renderPreview(); };
+
+            copies6Btn.addEventListener('click', () => {
+                copies6Btn.classList.add('active');
+                copies3Btn.classList.remove('active');
+                copies3x2Btn.classList.remove('active');
+                copiesGlobal = 6;
+                applyCopies();
+            });
+            copies3Btn.addEventListener('click', () => {
+                copies3Btn.classList.add('active');
+                copies6Btn.classList.remove('active');
+                copies3x2Btn.classList.remove('active');
+                copiesGlobal = 3;
+                applyCopies();
+            });
+            copies3x2Btn.addEventListener('click', () => {
+                copies3x2Btn.classList.add('active');
+                copies6Btn.classList.remove('active');
+                copies3Btn.classList.remove('active');
+                copiesGlobal = '3+3';
+                applyCopies();
+            });
+
+            const paperA4Btn = document.getElementById('paperA4');
+            const paperA5Btn = document.getElementById('paperA5');
+            paperA4Btn.addEventListener('click', () => {
+                paperA4Btn.classList.add('active');
+                paperA5Btn.classList.remove('active');
+                previewSheet.className = 'paper-sheet paper-a4';
+            });
+            paperA5Btn.addEventListener('click', () => {
+                paperA5Btn.classList.add('active');
+                paperA4Btn.classList.remove('active');
+                previewSheet.className = 'paper-sheet paper-a5';
+            });
+
+            renderUploadSlots();
+            renderPreview();
+            syncSliders();
+        });
+    </script>
+</body>
+</html>
