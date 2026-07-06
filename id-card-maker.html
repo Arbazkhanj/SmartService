@@ -50,7 +50,7 @@
             justify-content: space-between;
         }
         .id-card-header h4 {
-            font-size: 0.8rem;
+            font-size: calc(0.8rem * var(--font-scale, 1));
             text-transform: uppercase;
             font-weight: 800;
             color: white;
@@ -80,7 +80,7 @@
             object-fit: cover;
         }
         .id-details-box {
-            font-size: 0.75rem;
+            font-size: calc(0.75rem * var(--font-scale, 1));
             line-height: 1.4;
         }
         .id-detail-line {
@@ -98,7 +98,7 @@
         }
         .id-card-footer {
             background: #f1f5f9;
-            font-size: 0.65rem;
+            font-size: calc(0.65rem * var(--font-scale, 1));
             display: flex;
             align-items: center;
             justify-content: center;
@@ -124,7 +124,109 @@
             color: black;
             box-shadow: 0 10px 25px rgba(0,0,0,0.2);
         }
-        
+        /* Hospital ID Layout */
+        .hospital-id-element {
+            width: 338px;
+            height: 212px;
+            background: white;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            font-family: Arial, sans-serif;
+            color: #000;
+            border: 1px solid #cbd5e1;
+            box-sizing: border-box;
+        }
+        .hospital-header {
+            background: #2b88f3;
+            color: white;
+            text-align: center;
+            padding: 8px 4px 6px 4px;
+            border-bottom-left-radius: 12px;
+            border-bottom-right-radius: 12px;
+        }
+        .hospital-header h2 {
+            font-family: 'Times New Roman', serif;
+            font-size: calc(14px * var(--font-scale, 1));
+            margin: 0;
+            text-transform: uppercase;
+            font-weight: normal;
+            color: white !important;
+        }
+        .hospital-header h3 {
+            font-family: 'Times New Roman', serif;
+            font-size: calc(16px * var(--font-scale, 1));
+            margin: 2px 0 0 0;
+            font-weight: normal;
+            color: white !important;
+        }
+        .hospital-internship-line {
+            color: #b32121;
+            font-size: calc(10px * var(--font-scale, 1));
+            font-weight: bold;
+            padding: 8px 10px;
+            text-align: center;
+            white-space: nowrap;
+        }
+        .hospital-body {
+            display: flex;
+            padding: 0 12px;
+            gap: 12px;
+            flex: 1;
+        }
+        .hospital-photo-box {
+            width: 70px;
+            height: 85px;
+            border: 2px solid #000;
+            background: #f1f5f9;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+        .hospital-photo-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .hospital-details {
+            font-size: calc(10px * var(--font-scale, 1));
+            font-weight: bold;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            margin-top: 4px;
+            gap: 6px;
+            flex: 1;
+        }
+        .hospital-detail-row {
+            display: flex;
+            align-items: flex-start;
+        }
+        .hospital-detail-label {
+            width: 75px;
+            flex-shrink: 0;
+        }
+        .hospital-detail-sep {
+            margin: 0 4px;
+        }
+        .hospital-detail-val {
+            flex: 1;
+            line-height: 1.2;
+        }
+        .hospital-footer {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 12px 10px 12px;
+            color: #b32121;
+            font-size: calc(10px * var(--font-scale, 1));
+            font-weight: bold;
+        }
+
         @media (max-width: 992px) {
             .id-layout {
                 grid-template-columns: 1fr;
@@ -140,6 +242,8 @@
             body, html {
                 margin: 0 !important;
                 padding: 0 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
             }
             body * {
                 visibility: hidden;
@@ -186,57 +290,122 @@
                 <h3 style="font-size: 1.15rem; margin-bottom: 16px;">Card Settings</h3>
                 
                 <div class="form-group">
-                    <label class="form-label">Card Theme Color</label>
-                    <select class="form-control" id="cardTheme">
-                        <option value="#2563eb">Classic Corporate Blue</option>
-                        <option value="#10b981">Institution Green</option>
-                        <option value="#dc2626">Critical Operations Red</option>
-                        <option value="#8b5cf6">Creative Agency Purple</option>
+                    <label class="form-label">Template Design</label>
+                    <select class="form-control" id="idTemplateType">
+                        <option value="standard">Standard Corporate/Student ID</option>
+                        <option value="hospital">Hospital Internship ID</option>
                     </select>
                 </div>
 
-                <div class="form-group">
-                    <label class="control-label">Institution Name</label>
-                    <input type="text" class="form-control" id="instName" value="D.A.V. PUBLIC SCHOOL, INDORE">
-                </div>
-
                 <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                     <div>
-                        <label class="control-label">Card Holder Name</label>
-                        <input type="text" class="form-control" id="holderName" value="Aditya Verma">
+                        <label class="form-label">Card Theme Color</label>
+                        <select class="form-control" id="cardTheme">
+                            <option value="#2563eb">Classic Corporate Blue</option>
+                            <option value="#10b981">Institution Green</option>
+                            <option value="#dc2626">Critical Operations Red</option>
+                            <option value="#8b5cf6">Creative Agency Purple</option>
+                        </select>
                     </div>
                     <div>
-                        <label class="control-label">Card Type/Role</label>
-                        <input type="text" class="form-control" id="holderRole" value="STUDENT">
-                    </div>
-                </div>
-
-                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                    <div>
-                        <label class="control-label">ID / Roll No</label>
-                        <input type="text" class="form-control" id="holderId" value="DAV-2026-9812">
-                    </div>
-                    <div>
-                        <label class="control-label">Father's Name</label>
-                        <input type="text" class="form-control" id="holderFather" value="Shri R. K. Verma">
+                        <label class="form-label" style="display: flex; justify-content: space-between;">
+                            <span>Font Size</span>
+                            <span id="fontScaleVal" style="font-weight: bold; color: var(--primary);">100%</span>
+                        </label>
+                        <input type="range" class="form-control" id="fontScale" min="70" max="130" value="100" style="padding: 0;">
                     </div>
                 </div>
 
-                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                    <div>
-                        <label class="control-label">Designation / Class</label>
-                        <input type="text" class="form-control" id="holderClass" value="Class XI - B">
+                <!-- STANDARD ID FIELDS -->
+                <div id="standardFieldsGroup">
+                    <div class="form-group">
+                        <label class="control-label">Institution Name</label>
+                        <input type="text" class="form-control" id="instName" value="D.A.V. PUBLIC SCHOOL, INDORE">
                     </div>
+
+                    <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div>
+                            <label class="control-label">Card Holder Name</label>
+                            <input type="text" class="form-control" id="holderName" value="Aditya Verma">
+                        </div>
+                        <div>
+                            <label class="control-label">Card Type/Role</label>
+                            <input type="text" class="form-control" id="holderRole" value="STUDENT">
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div>
+                            <label class="control-label">ID / Roll No</label>
+                            <input type="text" class="form-control" id="holderId" value="DAV-2026-9812">
+                        </div>
+                        <div>
+                            <label class="control-label">Father's Name</label>
+                            <input type="text" class="form-control" id="holderFather" value="Shri R. K. Verma">
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div>
+                            <label class="control-label">Designation / Class</label>
+                            <input type="text" class="form-control" id="holderClass" value="Class XI - B">
+                        </div>
+                        <div>
+                            <label class="control-label">Validity/Expiry</label>
+                            <input type="text" class="form-control" id="holderValidity" value="March 2028">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- HOSPITAL ID FIELDS -->
+                <div id="hospitalFieldsGroup" style="display: none;">
+                    <div class="form-group">
+                        <label class="control-label">Top Header (Line 1)</label>
+                        <input type="text" class="form-control" id="hospLine1" value="OFFICE SUPERINTENDENT IN CHIEF">
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label">Sub Header (Line 2)</label>
+                        <input type="text" class="form-control" id="hospLine2" value="District Hospital - Basti">
+                    </div>
+                    
+                    <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div>
+                            <label class="control-label">Intern's Name</label>
+                            <input type="text" class="form-control" id="hospName" value="Sujeet Kumar">
+                        </div>
+                        <div>
+                            <label class="control-label">Internship ID No.</label>
+                            <input type="text" class="form-control" id="hospId" value="789012">
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div>
+                            <label class="control-label">Duration</label>
+                            <input type="text" class="form-control" id="hospDuration" value="6 Months">
+                        </div>
+                        <div>
+                            <label class="control-label">To (End Date)</label>
+                            <input type="text" class="form-control" id="hospTo" value="15-12-2026">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="control-label">Qualification</label>
+                        <input type="text" class="form-control" id="hospQual" value="B - Pharma">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="control-label">Address</label>
+                        <textarea class="form-control" id="hospAddress" rows="2" style="resize: vertical;">Village Devaria Post Rampur Sonupar Mahson Basti</textarea>
+                    </div>
+                </div>
+
+                <!-- COMMON FIELDS -->
+                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                     <div>
                         <label class="control-label">Mobile Number</label>
-                        <input type="text" class="form-control" id="holderPhone" value="+91 9893098930">
-                    </div>
-                </div>
-
-                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                    <div>
-                        <label class="control-label">Validity/Expiry</label>
-                        <input type="text" class="form-control" id="holderValidity" value="March 2028">
+                        <input type="text" class="form-control" id="holderPhone" value="8948653654">
                     </div>
                     <div>
                         <label class="control-label">Upload Photo</label>
@@ -244,7 +413,7 @@
                     </div>
                 </div>
 
-                <div class="form-group">
+                <div class="form-group" id="barcodeGroup">
                     <label class="control-label">Barcode Value (Numeric/Alpha)</label>
                     <input type="text" class="form-control" id="barcodeVal" value="9812DAV2026">
                 </div>
@@ -301,50 +470,99 @@
             <div class="card-preview-container">
                 <!-- ID CARD PREVIEW MODE -->
                 <div id="idCardPreviewZone" style="display: flex; flex-direction: column; gap: 20px; align-items: center;">
-                    <h4 style="color: white; opacity: 0.8; font-size: 0.9rem;">FRONT SIDE PREVIEW</h4>
-                    <!-- Card Front -->
-                    <div class="id-card-element" id="idCardFront">
-                        <div class="id-card-header" id="idHeaderBg">
-                            <h4 id="pInstName">D.A.V. Public School, Indore</h4>
-                            <i class="fas fa-graduation-cap"></i>
-                        </div>
-                        <div class="id-card-body">
-                            <div class="id-photo-box">
-                                <img id="pPhoto" src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=150&q=80" alt="Cardholder">
+                    
+                    <!-- Standard Template Previews -->
+                    <div id="standardPreview" style="display: flex; flex-direction: column; gap: 20px; align-items: center;">
+                        <h4 style="color: white; opacity: 0.8; font-size: 0.9rem;">FRONT SIDE PREVIEW</h4>
+                        <!-- Card Front -->
+                        <div class="id-card-element" id="idCardFront">
+                            <div class="id-card-header" id="idHeaderBg">
+                                <h4 id="pInstName">D.A.V. Public School, Indore</h4>
+                                <i class="fas fa-graduation-cap"></i>
                             </div>
-                            <div class="id-details-box">
-                                <h3 style="font-size: 0.95rem; font-weight: 800; margin-bottom: 4px; color: var(--primary);" id="pHolderName">Aditya Verma</h3>
-                                <div class="id-detail-line"><span class="id-detail-label">Role:</span><span class="id-detail-val" id="pHolderRole">STUDENT</span></div>
-                                <div class="id-detail-line"><span class="id-detail-label">ID No:</span><span class="id-detail-val" id="pHolderId">DAV-2026-9812</span></div>
-                                <div class="id-detail-line"><span class="id-detail-label">Father:</span><span class="id-detail-val" id="pHolderFather">Shri R. K. Verma</span></div>
-                                <div class="id-detail-line"><span class="id-detail-label">Class:</span><span class="id-detail-val" id="pHolderClass">Class XI - B</span></div>
+                            <div class="id-card-body">
+                                <div class="id-photo-box">
+                                    <img class="sharedPhotoPreview" src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=150&q=80" alt="Cardholder">
+                                </div>
+                                <div class="id-details-box">
+                                    <h3 style="font-size: calc(0.95rem * var(--font-scale, 1)); font-weight: 800; margin-bottom: 4px; color: var(--primary);" id="pHolderName">Aditya Verma</h3>
+                                    <div class="id-detail-line"><span class="id-detail-label">Role:</span><span class="id-detail-val" id="pHolderRole">STUDENT</span></div>
+                                    <div class="id-detail-line"><span class="id-detail-label">ID No:</span><span class="id-detail-val" id="pHolderId">DAV-2026-9812</span></div>
+                                    <div class="id-detail-line"><span class="id-detail-label">Father:</span><span class="id-detail-val" id="pHolderFather">Shri R. K. Verma</span></div>
+                                    <div class="id-detail-line"><span class="id-detail-label">Class:</span><span class="id-detail-val" id="pHolderClass">Class XI - B</span></div>
+                                </div>
+                            </div>
+                            <div class="id-card-footer">
+                                Validity Expiry: &nbsp; <span id="pHolderValidity">March 2028</span>
                             </div>
                         </div>
-                        <div class="id-card-footer">
-                            Validity Expiry: &nbsp; <span id="pHolderValidity">March 2028</span>
+
+                        <!-- Card Back -->
+                        <h4 style="color: white; opacity: 0.8; font-size: 0.9rem; margin-top: 16px;">BACK SIDE PREVIEW</h4>
+                        <div class="id-card-element" id="idCardBack" style="grid-template-rows: 40px 1fr 20px;">
+                            <div class="id-card-header" id="idHeaderBgBack" style="justify-content: center; height: 40px;">
+                                <h4 style="font-size: calc(0.75rem * var(--font-scale, 1));">GENERAL INSTRUCTIONS</h4>
+                            </div>
+                            <div style="padding: 12px; display: flex; flex-direction: column; justify-content: space-between; height: 100%;">
+                                <ol style="font-size: calc(0.6rem * var(--font-scale, 1)); margin-left: 14px; line-height: 1.4; color: var(--text-muted);">
+                                    <li>This identity badge is non-transferable.</li>
+                                    <li>Always wear card visibly while inside campus premises.</li>
+                                    <li>Loss of badge must be reported immediately to administrative office.</li>
+                                </ol>
+                                <!-- Barcode -->
+                                <div style="text-align: center; margin-top: 8px;">
+                                    <svg class="id-barcode-svg" id="barcodeSvg"></svg>
+                                    <div style="font-size: calc(0.55rem * var(--font-scale, 1)); font-weight: bold; letter-spacing: 1px; margin-top: 2px;" id="barcodeText">9812DAV2026</div>
+                                </div>
+                            </div>
+                            <div class="id-card-footer" style="font-size: calc(0.6rem * var(--font-scale, 1));">
+                                Contact Mobile No: &nbsp; <span class="pSharedPhone">+91 9893098930</span>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Card Back -->
-                    <h4 style="color: white; opacity: 0.8; font-size: 0.9rem; margin-top: 16px;">BACK SIDE PREVIEW</h4>
-                    <div class="id-card-element" id="idCardBack" style="grid-template-rows: 40px 1fr 20px;">
-                        <div class="id-card-header" id="idHeaderBgBack" style="justify-content: center; height: 40px;">
-                            <h4 style="font-size: 0.75rem;">GENERAL INSTRUCTIONS</h4>
-                        </div>
-                        <div style="padding: 12px; display: flex; flex-direction: column; justify-content: space-between; height: 100%;">
-                            <ol style="font-size: 0.6rem; margin-left: 14px; line-height: 1.4; color: var(--text-muted);">
-                                <li>This identity badge is non-transferable.</li>
-                                <li>Always wear card visibly while inside campus premises.</li>
-                                <li>Loss of badge must be reported immediately to administrative office.</li>
-                            </ol>
-                            <!-- Barcode -->
-                            <div style="text-align: center; margin-top: 8px;">
-                                <svg class="id-barcode-svg" id="barcodeSvg"></svg>
-                                <div style="font-size: 0.55rem; font-weight: bold; letter-spacing: 1px; margin-top: 2px;" id="barcodeText">9812DAV2026</div>
+                    <!-- Hospital Template Preview -->
+                    <div id="hospitalPreview" style="display: none; flex-direction: column; gap: 20px; align-items: center;">
+                        <h4 style="color: white; opacity: 0.8; font-size: 0.9rem;">HOSPITAL ID PREVIEW</h4>
+                        <div class="hospital-id-element" id="idCardHospital">
+                            <div class="hospital-header" id="hHeaderBg">
+                                <h2 id="phLine1">OFFICE SUPERINTENDENT IN CHIEF</h2>
+                                <h3 id="phLine2">District Hospital - Basti</h3>
                             </div>
-                        </div>
-                        <div class="id-card-footer" style="font-size: 0.6rem;">
-                            Contact Mobile No: &nbsp; <span id="pHolderPhone">+91 9893098930</span>
+                            <div class="hospital-internship-line">
+                                Internship ID No. <span id="phId">789012</span> Duration <span id="phDuration">6 Months</span> To <span id="phTo">15-12-2026</span>
+                            </div>
+                            <div class="hospital-body">
+                                <div class="hospital-photo-box">
+                                    <img class="sharedPhotoPreview" src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=150&q=80" alt="Cardholder">
+                                </div>
+                                <div class="hospital-details">
+                                    <div class="hospital-detail-row">
+                                        <span class="hospital-detail-label">Intern's Name</span>
+                                        <span class="hospital-detail-sep">:</span>
+                                        <span class="hospital-detail-val" id="phName">Sujeet Kumar</span>
+                                    </div>
+                                    <div class="hospital-detail-row">
+                                        <span class="hospital-detail-label">Qualification</span>
+                                        <span class="hospital-detail-sep">:</span>
+                                        <span class="hospital-detail-val" id="phQual">B - Pharma</span>
+                                    </div>
+                                    <div class="hospital-detail-row">
+                                        <span class="hospital-detail-label">Address</span>
+                                        <span class="hospital-detail-sep">:</span>
+                                        <span class="hospital-detail-val" id="phAddress">Village Devaria Post Rampur Sonupar Mahson Basti</span>
+                                    </div>
+                                    <div class="hospital-detail-row">
+                                        <span class="hospital-detail-label">Contact No</span>
+                                        <span class="hospital-detail-sep">:</span>
+                                        <span class="hospital-detail-val pSharedPhone">8948653654</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="hospital-footer">
+                                <div>Apprentice Master</div>
+                                <div>SIC, Dist Hospital, Basti</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -479,6 +697,30 @@
             });
 
             // Handle live card content updates
+            const idTemplateType = document.getElementById("idTemplateType");
+            const standardFieldsGroup = document.getElementById("standardFieldsGroup");
+            const hospitalFieldsGroup = document.getElementById("hospitalFieldsGroup");
+            const standardPreview = document.getElementById("standardPreview");
+            const hospitalPreview = document.getElementById("hospitalPreview");
+            const barcodeGroup = document.getElementById("barcodeGroup");
+
+            idTemplateType.addEventListener("change", (e) => {
+                if (e.target.value === 'hospital') {
+                    standardFieldsGroup.style.display = 'none';
+                    hospitalFieldsGroup.style.display = 'block';
+                    standardPreview.style.display = 'none';
+                    hospitalPreview.style.display = 'flex';
+                    barcodeGroup.style.display = 'none';
+                } else {
+                    standardFieldsGroup.style.display = 'block';
+                    hospitalFieldsGroup.style.display = 'none';
+                    standardPreview.style.display = 'flex';
+                    hospitalPreview.style.display = 'none';
+                    barcodeGroup.style.display = 'block';
+                }
+                updateIdCard();
+            });
+
             const cardTheme = document.getElementById("cardTheme");
             const instName = document.getElementById("instName");
             const holderName = document.getElementById("holderName");
@@ -490,7 +732,18 @@
             const holderValidity = document.getElementById("holderValidity");
             const barcodeVal = document.getElementById("barcodeVal");
 
+            // Hospital fields
+            const hospLine1 = document.getElementById("hospLine1");
+            const hospLine2 = document.getElementById("hospLine2");
+            const hospName = document.getElementById("hospName");
+            const hospId = document.getElementById("hospId");
+            const hospDuration = document.getElementById("hospDuration");
+            const hospTo = document.getElementById("hospTo");
+            const hospQual = document.getElementById("hospQual");
+            const hospAddress = document.getElementById("hospAddress");
+
             function updateIdCard() {
+                // Standard Card
                 document.getElementById("pInstName").innerText = instName.value;
                 document.getElementById("pHolderName").innerText = holderName.value;
                 document.getElementById("pHolderRole").innerText = holderRole.value;
@@ -498,13 +751,33 @@
                 document.getElementById("pHolderFather").innerText = holderFather.value;
                 document.getElementById("pHolderClass").innerText = holderClass.value;
                 document.getElementById("pHolderValidity").innerText = holderValidity.value;
-                document.getElementById("pHolderPhone").innerText = holderPhone.value;
+                
+                // Shared Contact
+                document.querySelectorAll(".pSharedPhone").forEach(el => el.innerText = holderPhone.value);
+
+                // Hospital Card
+                document.getElementById("phLine1").innerText = hospLine1.value;
+                document.getElementById("phLine2").innerText = hospLine2.value;
+                document.getElementById("phName").innerText = hospName.value;
+                document.getElementById("phId").innerText = hospId.value;
+                document.getElementById("phDuration").innerText = hospDuration.value;
+                document.getElementById("phTo").innerText = hospTo.value;
+                document.getElementById("phQual").innerText = hospQual.value;
+                document.getElementById("phAddress").innerText = hospAddress.value;
 
                 // Color Themes
                 const themeColor = cardTheme.value;
                 document.getElementById("idHeaderBg").style.backgroundColor = themeColor;
                 document.getElementById("idHeaderBgBack").style.backgroundColor = themeColor;
                 document.getElementById("pHolderName").style.color = themeColor;
+                document.getElementById("hHeaderBg").style.backgroundColor = themeColor;
+                
+                // Font Scale Update
+                const fontScaleRatio = fontScale.value / 100;
+                document.getElementById("fontScaleVal").innerText = fontScale.value + "%";
+                document.querySelector(".card-preview-container").style.setProperty('--font-scale', fontScaleRatio);
+                const printContainer = document.getElementById("printGridContainer");
+                if(printContainer) printContainer.style.setProperty('--font-scale', fontScaleRatio);
 
                 // Barcode generation using CDN
                 try {
@@ -520,7 +793,11 @@
                 }
             }
 
-            [cardTheme, instName, holderName, holderRole, holderId, holderFather, holderClass, holderPhone, holderValidity, barcodeVal].forEach(el => {
+            const fontScale = document.getElementById("fontScale");
+            const standardInputs = [cardTheme, fontScale, instName, holderName, holderRole, holderId, holderFather, holderClass, holderPhone, holderValidity, barcodeVal];
+            const hospitalInputs = [hospLine1, hospLine2, hospName, hospId, hospDuration, hospTo, hospQual, hospAddress];
+            
+            [...standardInputs, ...hospitalInputs].forEach(el => {
                 el.addEventListener("input", updateIdCard);
                 el.addEventListener("change", updateIdCard);
             });
@@ -534,7 +811,9 @@
                 if (file) {
                     const reader = new FileReader();
                     reader.onload = (event) => {
-                        document.getElementById("pPhoto").src = event.target.result;
+                        document.querySelectorAll(".sharedPhotoPreview").forEach(img => {
+                            img.src = event.target.result;
+                        });
                     };
                     reader.readAsDataURL(file);
                 }
@@ -588,13 +867,20 @@
                 printZone.innerHTML = "";
 
                 if (idCardPreviewZone.style.display !== "none") {
-                    // print ID cards (front & back next to each other)
-                    const frontClone = document.getElementById("idCardFront").cloneNode(true);
-                    const backClone = document.getElementById("idCardBack").cloneNode(true);
-                    frontClone.style.boxShadow = "none";
-                    backClone.style.boxShadow = "none";
-                    printZone.appendChild(frontClone);
-                    printZone.appendChild(backClone);
+                    if (idTemplateType.value === 'hospital') {
+                        // Print Hospital ID 
+                        const hospClone = document.getElementById("idCardHospital").cloneNode(true);
+                        hospClone.style.boxShadow = "none";
+                        printZone.appendChild(hospClone);
+                    } else {
+                        // print standard ID cards (front & back next to each other)
+                        const frontClone = document.getElementById("idCardFront").cloneNode(true);
+                        const backClone = document.getElementById("idCardBack").cloneNode(true);
+                        frontClone.style.boxShadow = "none";
+                        backClone.style.boxShadow = "none";
+                        printZone.appendChild(frontClone);
+                        printZone.appendChild(backClone);
+                    }
                 } else {
                     // print Admit Card
                     const admitClone = document.getElementById("admitCardSheet").cloneNode(true);
