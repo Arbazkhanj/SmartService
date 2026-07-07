@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Combiner & Merger - SmartService</title>
+    <link rel="stylesheet" href="assets/css/global.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- jsPDF CDN for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        .merger-grid {
+            display: grid;
+            grid-template-columns: 420px 1fr;
+            gap: 32px;
+            margin-top: 24px;
+        }
+
+        @media (max-width: 992px) {
+            .merger-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .settings-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            padding: 24px;
+            box-shadow: var(--shadow-md);
+            height: fit-content;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .preview-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            padding: 24px;
+            box-shadow: var(--shadow-md);
+            display: flex;
+            flex-direction: column;
+            min-height: 500px;
+        }
+
+        .canvas-container {
+            background: #0f172a;
+            border-radius: var(--radius-md);
+            padding: 24px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 380px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        #mergeCanvas {
+            max-width: 100%;
+            max-height: 550px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            background: #ffffff;
+            object-fit: contain;
+            display: none;
+        }
+
+        .canvas-placeholder {
+            color: var(--text-light);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .canvas-placeholder i {
+            font-size: 3rem;
+        }
+
+        /* Upload slots side by side */
+        .upload-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .upload-slot {
+            border: 2px dashed var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 20px 12px;
+            text-align: center;
+            cursor: pointer;
+            background: var(--bg-light);
+            transition: var(--transition-fast);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 140px;
+        }
+
+        .upload-slot:hover {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        .upload-slot.has-image {
+            border-style: solid;
+            border-color: var(--secondary);
+            background: var(--secondary-light);
+        }
+
+        .upload-slot i.slot-icon {
+            font-size: 1.8rem;
+            color: var(--text-light);
+        }
+
+        .upload-slot.has-image i.slot-icon {
+            color: var(--secondary);
+        }
+
+        .upload-slot .slot-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            word-break: break-all;
+        }
+
+        .upload-slot img.thumb {
+            width: 100%;
+            height: 80px;
+            object-fit: contain;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            background: white;
+        }
+
+        .btn-remove {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            cursor: pointer;
+            z-index: 10;
+            transition: var(--transition-fast);
+        }
+
+        .btn-remove:hover {
+            transform: scale(1.1);
+            background: #dc2626;
+        }
+
+        /* Toggle Options Buttons */
+        .segmented-control {
+            display: flex;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            background: var(--bg-light);
+        }
+
+        .segmented-btn {
+            flex: 1;
+            padding: 10px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-align: center;
+            color: var(--text-muted);
+            transition: var(--transition-fast);
+        }
+
+        .segmented-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .color-picker-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 6px;
+        }
+
+        .color-swatch {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid var(--border-color);
+            cursor: pointer;
+            transition: var(--transition-fast);
+        }
+
+        .color-swatch.active {
+            border-color: var(--primary);
+            transform: scale(1.1);
+        }
+
+        .color-white { background: #ffffff; }
+        .color-transparent { background: linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%); background-size: 8px 8px; background-position: 0 0, 0 4px, 4px -4px, -4px 0px; }
+        .color-grey { background: #f1f5f9; }
+        .color-black { background: #000000; }
+
+        .dimensions-badge {
+            background: var(--primary-light);
+            color: var(--primary);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            margin-top: 10px;
+            border: 1px solid rgba(37,99,235,0.1);
+        }
+
+        .btn-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+    </style>
+</head>
+<body style="padding-top: 70px;">
+    <site-header></site-header>
+
+    <main class="container section-padding" style="padding-top: 20px;">
+        <!-- Breadcrumb & Header -->
+        <div style="margin-bottom: 24px;">
+            <a href="index.html" style="color: var(--primary); font-weight: 600;"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+            <h1 style="font-size: 2.2rem; margin-top: 12px; color: var(--text-main);"><i class="fas fa-images mr-2 text-primary"></i> Image Combiner & Merger</h1>
+            <p style="color: var(--text-muted);">Merge two images (e.g. Front & Back side of ID Card) onto a single page. Custom layout, spacing, and high-quality export.</p>
+        </div>
+
+        <div class="merger-grid">
+            <!-- Left Side: Controls & Uploads -->
+            <div class="settings-card">
+                <div>
+                    <h3 style="font-size: 1.05rem; margin-bottom: 12px; color: var(--text-main);"><i class="fas fa-cloud-upload-alt mr-2 text-primary"></i> Upload Images</h3>
+                    <div class="upload-wrapper">
+                        <!-- Image 1 Slot -->
+                        <div>
+                            <input type="file" id="imageInput1" accept="image/*" style="display: none;">
+                            <div class="upload-slot" id="dropzone1" onclick="document.getElementById('imageInput1').click()">
+                                <i class="fas fa-image slot-icon"></i>
+                                <span class="slot-title" id="lblImg1">Image 1 (Front/Top)</span>
+                            </div>
+                        </div>
+
+                        <!-- Image 2 Slot -->
+                        <div>
+                            <input type="file" id="imageInput2" accept="image/*" style="display: none;">
+                            <div class="upload-slot" id="dropzone2" onclick="document.getElementById('imageInput2').click()">
+                                <i class="fas fa-image slot-icon"></i>
+                                <span class="slot-title" id="lblImg2">Image 2 (Back/Bottom)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Merge Settings -->
+                <div>
+                    <label class="control-label" style="font-weight: 600; margin-bottom: 8px;">Merge Layout Direction</label>
+                    <div class="segmented-control" id="layoutDirection">
+                        <button class="segmented-btn active" data-value="vertical"><i class="fas fa-arrows-alt-v mr-1"></i> Vertical Stack</button>
+                        <button class="segmented-btn" data-value="horizontal"><i class="fas fa-arrows-alt-h mr-1"></i> Horizontal Side-by-Side</button>
+                    </div>
+                </div>
+
+                <!-- Sizing adjustments -->
+                <div>
+                    <label class="control-label" style="font-weight: 600; margin-bottom: 8px;">Align & Sizing Mode</label>
+                    <div class="segmented-control" id="sizingMode">
+                        <button class="segmented-btn active" data-value="equalize" title="Scales the smaller image to match the larger one for a clean look"><i class="fas fa-balance-scale mr-1"></i> Equalize Size</button>
+                        <button class="segmented-btn" data-value="original" title="Keeps original proportions without matching sizes"><i class="fas fa-compress-arrows-alt mr-1"></i> Original Ratio</button>
+                    </div>
+                </div>
+
+                <!-- Page Format / Canvas bounds -->
+                <div>
+                    <label class="control-label" style="font-weight: 600; margin-bottom: 8px;">Page Layout Template</label>
+                    <select id="pageLayout" class="form-control" style="font-weight: 600; width: 100%; border: 1px solid var(--border-color); padding: 10px; border-radius: var(--radius-sm);">
+                        <option value="fit">Fit Content (Auto size)</option>
+                        <option value="a4-portrait">A4 Sheet - Portrait (Print Ready)</option>
+                        <option value="a4-landscape">A4 Sheet - Landscape (Print Ready)</option>
+                    </select>
+                </div>
+
+                <!-- Layout values: Padding and Gap -->
+                <div class="form-row">
+                    <div>
+                        <label class="control-label" for="gapRange" style="font-weight: 600; margin-bottom: 4px;">Image Gap: <span id="gapVal">10</span>px</label>
+                        <input type="range" id="gapRange" min="0" max="100" value="10" class="control-slider" style="width: 100%;">
+                    </div>
+                    <div>
+                        <label class="control-label" for="paddingRange" style="font-weight: 600; margin-bottom: 4px;">Page Margin: <span id="paddingVal">15</span>px</label>
+                        <input type="range" id="paddingRange" min="0" max="100" value="15" class="control-slider" style="width: 100%;">
+                    </div>
+                </div>
+
+                <!-- Background Color Selection -->
+                <div>
+                    <label class="control-label" style="font-weight: 600; margin-bottom: 4px;">Canvas Background</label>
+                    <div class="color-picker-group">
+                        <div class="color-swatch color-white active" data-color="#ffffff" title="White"></div>
+                        <div class="color-swatch color-transparent" data-color="transparent" title="Transparent"></div>
+                        <div class="color-swatch color-grey" data-color="#f1f5f9" title="Light Grey"></div>
+                        <div class="color-swatch color-black" data-color="#000000" title="Black"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side: Merged Live Preview & Action -->
+            <div class="preview-card">
+                <h3 style="font-size: 1.1rem; margin-bottom: 16px; color: var(--text-main);"><i class="fas fa-eye mr-2 text-primary"></i> Live Output Preview</h3>
+                
+                <div class="canvas-container">
+                    <div class="canvas-placeholder" id="placeholder">
+                        <i class="fas fa-images"></i>
+                        <p>Upload Front and Back side images to generate live combined layout</p>
+                    </div>
+                    <canvas id="mergeCanvas"></canvas>
+                    <div class="dimensions-badge" id="canvasDimensions" style="display: none;">0 x 0 px</div>
+                </div>
+
+                <div class="btn-group">
+                    <button id="btnDownloadJpg" class="btn btn-success" style="font-size: 1.05rem;" disabled>
+                        <i class="fas fa-file-image mr-2"></i> Download JPG
+                    </button>
+                    <button id="btnDownloadPdf" class="btn btn-primary" style="font-size: 1.05rem;" disabled>
+                        <i class="fas fa-file-pdf mr-2"></i> Download PDF Document
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <site-footer></site-footer>
+
+    <script src="assets/js/components.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // DOM Elements
+            const imageInput1 = document.getElementById("imageInput1");
+            const imageInput2 = document.getElementById("imageInput2");
+            const dropzone1 = document.getElementById("dropzone1");
+            const dropzone2 = document.getElementById("dropzone2");
+            const layoutDirection = document.getElementById("layoutDirection");
+            const sizingMode = document.getElementById("sizingMode");
+            const pageLayout = document.getElementById("pageLayout");
+            const gapRange = document.getElementById("gapRange");
+            const gapVal = document.getElementById("gapVal");
+            const paddingRange = document.getElementById("paddingRange");
+            const paddingVal = document.getElementById("paddingVal");
+            const colorSwatches = document.querySelectorAll(".color-swatch");
+            
+            const placeholder = document.getElementById("placeholder");
+            const mergeCanvas = document.getElementById("mergeCanvas");
+            const canvasDimensions = document.getElementById("canvasDimensions");
+            const btnDownloadJpg = document.getElementById("btnDownloadJpg");
+            const btnDownloadPdf = document.getElementById("btnDownloadPdf");
+            
+            const ctx = mergeCanvas.getContext("2d");
+
+            // State
+            let img1 = null;
+            let img2 = null;
+            let img1Name = "";
+            let img2Name = "";
+            
+            let selectedDirection = "vertical";
+            let selectedSizing = "equalize";
+            let selectedBg = "#ffffff";
+
+            // Upload Logic with Drag & Drop helpers
+            function setupFileInput(inputElement, zoneElement, labelId, imageIndex) {
+                // Click handler is handled in HTML via onclick
+                
+                // Dragover
+                zoneElement.addEventListener("dragover", (e) => {
+                    e.preventDefault();
+                    zoneElement.style.borderColor = "var(--primary)";
+                    zoneElement.style.background = "var(--primary-light)";
+                });
+
+                // Dragleave
+                zoneElement.addEventListener("dragleave", () => {
+                    if (imageIndex === 1 && img1) {
+                        zoneElement.style.borderColor = "var(--secondary)";
+                        zoneElement.style.background = "var(--secondary-light)";
+                    } else if (imageIndex === 2 && img2) {
+                        zoneElement.style.borderColor = "var(--secondary)";
+                        zoneElement.style.background = "var(--secondary-light)";
+                    } else {
+                        zoneElement.style.borderColor = "var(--border-color)";
+                        zoneElement.style.background = "var(--bg-light)";
+                    }
+                });
+
+                // Drop
+                zoneElement.addEventListener("drop", (e) => {
+                    e.preventDefault();
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        inputElement.files = files;
+                        processFile(files[0], zoneElement, labelId, imageIndex);
+                    }
+                });
+
+                // Change
+                inputElement.addEventListener("change", (e) => {
+                    const files = e.target.files;
+                    if (files.length > 0) {
+                        processFile(files[0], zoneElement, labelId, imageIndex);
+                    }
+                });
+            }
+
+            function processFile(file, zoneElement, labelId, imageIndex) {
+                if (!file.type.startsWith("image/")) {
+                    showToast("Please upload an image file.", "error");
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        if (imageIndex === 1) {
+                            img1 = img;
+                            img1Name = file.name;
+                        } else {
+                            img2 = img;
+                            img2Name = file.name;
+                        }
+                        
+                        // Update UI slot
+                        zoneElement.classList.add("has-image");
+                        zoneElement.innerHTML = `
+                            <button class="btn-remove" onclick="window.removeImage(event, ${imageIndex})">
+                                <i class="fas fa-times"></i>
+                            </button>
+                            <img src="${e.target.result}" class="thumb">
+                            <span class="slot-title">${file.name.substring(0, 15)}...</span>
+                        `;
+                        
+                        showToast(`Image ${imageIndex} uploaded successfully.`, "success");
+                        renderMerged();
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+
+            // Expose remove function to window for click handlers
+            window.removeImage = (event, index) => {
+                event.stopPropagation();
+                if (index === 1) {
+                    img1 = null;
+                    img1Name = "";
+                    imageInput1.value = "";
+                    resetSlot(dropzone1, "Image 1 (Front/Top)");
+                } else {
+                    img2 = null;
+                    img2Name = "";
+                    imageInput2.value = "";
+                    resetSlot(dropzone2, "Image 2 (Back/Bottom)");
+                }
+                showToast(`Image ${index} removed.`, "info");
+                renderMerged();
+            };
+
+            function resetSlot(zoneElement, label) {
+                zoneElement.classList.remove("has-image");
+                zoneElement.innerHTML = `
+                    <i class="fas fa-image slot-icon"></i>
+                    <span class="slot-title">${label}</span>
+                `;
+            }
+
+            setupFileInput(imageInput1, dropzone1, "lblImg1", 1);
+            setupFileInput(imageInput2, dropzone2, "lblImg2", 2);
+
+            // Toggle logic
+            layoutDirection.addEventListener("click", (e) => {
+                const btn = e.target.closest(".segmented-btn");
+                if (!btn) return;
+                
+                layoutDirection.querySelectorAll(".segmented-btn").forEach(b => b.classList.remove("active"));
+                btn.classList.add("active");
+                selectedDirection = btn.dataset.value;
+                renderMerged();
+            });
+
+            sizingMode.addEventListener("click", (e) => {
+                const btn = e.target.closest(".segmented-btn");
+                if (!btn) return;
+                
+                sizingMode.querySelectorAll(".segmented-btn").forEach(b => b.classList.remove("active"));
+                btn.classList.add("active");
+                selectedSizing = btn.dataset.value;
+                renderMerged();
+            });
+
+            pageLayout.addEventListener("change", renderMerged);
+            gapRange.addEventListener("input", (e) => {
+                gapVal.innerText = e.target.value;
+                renderMerged();
+            });
+            paddingRange.addEventListener("input", (e) => {
+                paddingVal.innerText = e.target.value;
+                renderMerged();
+            });
+
+            colorSwatches.forEach(swatch => {
+                swatch.addEventListener("click", () => {
+                    colorSwatches.forEach(s => s.classList.remove("active"));
+                    swatch.classList.add("active");
+                    selectedBg = swatch.dataset.color;
+                    renderMerged();
+                });
+            });
+
+            // Core Merge Render Logic
+            function renderMerged() {
+                if (!img1 && !img2) {
+                    // Reset layout
+                    placeholder.style.display = "flex";
+                    mergeCanvas.style.display = "none";
+                    canvasDimensions.style.display = "none";
+                    btnDownloadJpg.setAttribute("disabled", "true");
+                    btnDownloadPdf.setAttribute("disabled", "true");
+                    return;
+                }
+
+                // We have at least one image
+                placeholder.style.display = "none";
+                mergeCanvas.style.display = "block";
+                canvasDimensions.style.display = "inline-block";
+                btnDownloadJpg.removeAttribute("disabled");
+                btnDownloadPdf.removeAttribute("disabled");
+
+                const gap = parseInt(gapRange.value);
+                const padding = parseInt(paddingRange.value);
+                const layout = pageLayout.value;
+
+                // Let's create dummy dimensions if one of the images is missing
+                const placeholderW = 800;
+                const placeholderH = 600;
+
+                const i1 = img1 || { width: placeholderW, height: placeholderH, placeholder: true };
+                const i2 = img2 || { width: placeholderW, height: placeholderH, placeholder: true };
+
+                let w1 = i1.width;
+                let h1 = i1.height;
+                let w2 = i2.width;
+                let h2 = i2.height;
+
+                // 1. Apply Sizing Mode adjustments
+                if (selectedSizing === "equalize") {
+                    if (selectedDirection === "vertical") {
+                        // Match width to the larger width
+                        const targetW = Math.max(w1, w2);
+                        h1 = h1 * (targetW / w1);
+                        w1 = targetW;
+                        h2 = h2 * (targetW / w2);
+                        w2 = targetW;
+                    } else {
+                        // Match height to the larger height
+                        const targetH = Math.max(h1, h2);
+                        w1 = w1 * (targetH / h1);
+                        h1 = targetH;
+                        w2 = w2 * (targetH / h2);
+                        h2 = targetH;
+                    }
+                }
+
+                // 2. Calculate bounds of combined images
+                let combinedW = 0;
+                let combinedH = 0;
+
+                if (selectedDirection === "vertical") {
+                    combinedW = Math.max(w1, w2);
+                    combinedH = h1 + h2 + gap;
+                } else {
+                    combinedW = w1 + w2 + gap;
+                    combinedH = Math.max(h1, h2);
+                }
+
+                // Target canvas dimensions
+                let canvasW = 0;
+                let canvasH = 0;
+
+                if (layout === "fit") {
+                    canvasW = combinedW + (padding * 2);
+                    canvasH = combinedH + (padding * 2);
+                } else if (layout === "a4-portrait") {
+                    // Standard A4 Portrait at 300 DPI is 2480 x 3508 px
+                    canvasW = 2480;
+                    canvasH = 3508;
+                } else if (layout === "a4-landscape") {
+                    // Standard A4 Landscape is 3508 x 2480 px
+                    canvasW = 3508;
+                    canvasH = 2480;
+                }
+
+                // Resize canvas
+                mergeCanvas.width = canvasW;
+                mergeCanvas.height = canvasH;
+                canvasDimensions.innerText = `${Math.round(canvasW)} x ${Math.round(canvasH)} px`;
+
+                // Draw background
+                if (selectedBg === "transparent") {
+                    ctx.clearRect(0, 0, canvasW, canvasH);
+                } else {
+                    ctx.fillStyle = selectedBg;
+                    ctx.fillRect(0, 0, canvasW, canvasH);
+                }
+
+                // Calculate scaling factor to draw centered combined images on fixed layouts (A4)
+                let sf = 1;
+                let startX = padding;
+                let startY = padding;
+
+                if (layout !== "fit") {
+                    const availW = canvasW - (padding * 2);
+                    const availH = canvasH - (padding * 2);
+                    
+                    sf = Math.min(availW / combinedW, availH / combinedH);
+                    
+                    const renderedW = combinedW * sf;
+                    const renderedH = combinedH * sf;
+                    
+                    startX = padding + (availW - renderedW) / 2;
+                    startY = padding + (availH - renderedH) / 2;
+                }
+
+                // Draw Image 1
+                const drawW1 = w1 * sf;
+                const drawH1 = h1 * sf;
+                let dx1 = startX;
+                let dy1 = startY;
+
+                if (selectedDirection === "vertical") {
+                    // center horizontally if not equalized
+                    dx1 = startX + ((combinedW * sf - drawW1) / 2);
+                } else {
+                    // center vertically if not equalized
+                    dy1 = startY + ((combinedH * sf - drawH1) / 2);
+                }
+
+                if (!i1.placeholder) {
+                    ctx.drawImage(img1, dx1, dy1, drawW1, drawH1);
+                } else {
+                    // Draw placeholder card
+                    ctx.save();
+                    ctx.strokeStyle = "#94a3b8";
+                    ctx.setLineDash([6, 6]);
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(dx1, dy1, drawW1, drawH1);
+                    ctx.fillStyle = "#94a3b8";
+                    ctx.font = `${Math.max(16, 20 * sf)}px 'Plus Jakarta Sans'`;
+                    ctx.textAlign = "center";
+                    ctx.fillText("Upload Image 1", dx1 + drawW1/2, dy1 + drawH1/2);
+                    ctx.restore();
+                }
+
+                // Draw Image 2
+                const drawW2 = w2 * sf;
+                const drawH2 = h2 * sf;
+                let dx2 = 0;
+                let dy2 = 0;
+
+                if (selectedDirection === "vertical") {
+                    dx2 = startX + ((combinedW * sf - drawW2) / 2);
+                    dy2 = dy1 + drawH1 + (gap * sf);
+                } else {
+                    dx2 = dx1 + drawW1 + (gap * sf);
+                    dy2 = startY + ((combinedH * sf - drawH2) / 2);
+                }
+
+                if (!i2.placeholder) {
+                    ctx.drawImage(img2, dx2, dy2, drawW2, drawH2);
+                } else {
+                    // Draw placeholder card
+                    ctx.save();
+                    ctx.strokeStyle = "#94a3b8";
+                    ctx.setLineDash([6, 6]);
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(dx2, dy2, drawW2, drawH2);
+                    ctx.fillStyle = "#94a3b8";
+                    ctx.font = `${Math.max(16, 20 * sf)}px 'Plus Jakarta Sans'`;
+                    ctx.textAlign = "center";
+                    ctx.fillText("Upload Image 2", dx2 + drawW2/2, dy2 + drawH2/2);
+                    ctx.restore();
+                }
+            }
+
+            // JPG Export
+            btnDownloadJpg.addEventListener("click", () => {
+                if (!img1 && !img2) return;
+                
+                // If background color is transparent, JPEG needs a white background fallback to avoid black fills
+                let downloadCanvas = mergeCanvas;
+                
+                if (selectedBg === "transparent") {
+                    // Create a temp canvas with white background
+                    const tempCanvas = document.createElement("canvas");
+                    tempCanvas.width = mergeCanvas.width;
+                    tempCanvas.height = mergeCanvas.height;
+                    const tempCtx = tempCanvas.getContext("2d");
+                    tempCtx.fillStyle = "#ffffff";
+                    tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+                    tempCtx.drawImage(mergeCanvas, 0, 0);
+                    downloadCanvas = tempCanvas;
+                }
+
+                const url = downloadCanvas.toDataURL("image/jpeg", 0.9);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `merged_images_${Date.now()}.jpg`;
+                a.click();
+                showToast("Images merged and downloaded as JPG.", "success");
+            });
+
+            // PDF Export
+            btnDownloadPdf.addEventListener("click", () => {
+                if (!img1 && !img2) return;
+                
+                const { jsPDF } = window.jspdf;
+                
+                const canvasW = mergeCanvas.width;
+                const canvasH = mergeCanvas.height;
+                const orientation = canvasW > canvasH ? "l" : "p";
+                
+                // Keep background clean
+                let pdfDataUrl;
+                if (selectedBg === "transparent") {
+                    const tempCanvas = document.createElement("canvas");
+                    tempCanvas.width = canvasW;
+                    tempCanvas.height = canvasH;
+                    const tempCtx = tempCanvas.getContext("2d");
+                    tempCtx.fillStyle = "#ffffff";
+                    tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+                    tempCtx.drawImage(mergeCanvas, 0, 0);
+                    pdfDataUrl = tempCanvas.toDataURL("image/jpeg", 0.9);
+                } else {
+                    pdfDataUrl = mergeCanvas.toDataURL("image/jpeg", 0.9);
+                }
+
+                // If output format is FIT, create custom sized PDF page
+                const layout = pageLayout.value;
+                let doc;
+
+                if (layout === "fit") {
+                    // Convert pixels to mm roughly (1 px = 0.264583 mm at 96 DPI, or we can use custom sizing)
+                    // Let's use pixel dimensions directly in jsPDF by specifying 'px' unit
+                    doc = new jsPDF({
+                        orientation: orientation,
+                        unit: 'px',
+                        format: [canvasW, canvasH]
+                    });
+                    doc.addImage(pdfDataUrl, 'JPEG', 0, 0, canvasW, canvasH);
+                } else {
+                    // A4 standard sizes: portrait is A4, landscape is A4 landscape
+                    doc = new jsPDF({
+                        orientation: orientation,
+                        unit: 'mm',
+                        format: 'a4'
+                    });
+                    
+                    const pageWidth = doc.internal.pageSize.getWidth();
+                    const pageHeight = doc.internal.pageSize.getHeight();
+                    
+                    doc.addImage(pdfDataUrl, 'JPEG', 0, 0, pageWidth, pageHeight);
+                }
+
+                doc.save(`merged_document_${Date.now()}.pdf`);
+                showToast("Images merged and downloaded as PDF document.", "success");
+            });
+
+            // Trigger initial render
+            renderMerged();
+        });
+    </script>
+</body>
+</html>

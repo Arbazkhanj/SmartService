@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 140" width="280" height="140">
+    <defs>
+        <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#eff6ff" />
+            <stop offset="100%" stop-color="#dbeafe" />
+        </linearGradient>
+        <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+            <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#0f172a" flood-opacity="0.08" />
+        </filter>
+    </defs>
+    
+    <rect width="280" height="140" fill="url(#bgGrad)" />
+    
+    <g opacity="0.06">
+        <pattern id="grid-blue" width="16" height="16" patternUnits="userSpaceOnUse">
+            <path d="M 16 0 L 0 0 0 16" fill="none" stroke="#2563eb" stroke-width="1"/>
+        </pattern>
+        <rect width="280" height="140" fill="url(#grid-blue)" />
+    </g>
+    
+    <!-- Abstract background circles -->
+    <circle cx="35" cy="35" r="25" fill="none" stroke="#2563eb" stroke-width="1" opacity="0.1" />
+    <circle cx="240" cy="100" r="35" fill="none" stroke="#2563eb" stroke-width="1" opacity="0.1" />
+    
+    <!-- Central Content Group -->
+    <g filter="url(#shadow)" transform="translate(60, 20)">
+        <!-- Photo 1 (Front/Left) -->
+        <rect x="0" y="25" width="65" height="50" rx="4" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5" />
+        <rect x="5" y="30" width="55" height="30" rx="2" fill="#f8fafc" />
+        <!-- Miniature landscape in Photo 1 -->
+        <circle cx="45" cy="40" r="4" fill="#cbd5e1" />
+        <path d="M 5 55 L 20 42 L 35 52 L 48 45 L 60 55 Z" fill="#cbd5e1" />
+        
+        <!-- Photo 2 (Back/Right) -->
+        <rect x="95" y="25" width="65" height="50" rx="4" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5" />
+        <rect x="100" y="30" width="55" height="30" rx="2" fill="#f8fafc" />
+        <!-- Miniature landscape in Photo 2 -->
+        <circle cx="140" cy="40" r="4" fill="#cbd5e1" />
+        <path d="M 100 55 L 115 45 L 130 52 L 145 42 L 155 55 Z" fill="#cbd5e1" />
+
+        <!-- Arrow pointing from Photo 1 to Merge Card -->
+        <path d="M 72 50 L 88 50 M 83 45 L 88 50 L 83 55" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+        
+        <!-- Merged Result Card (Centered & Stacked) -->
+        <rect x="42" y="0" width="75" height="95" rx="6" fill="#ffffff" stroke="#2563eb" stroke-width="2" />
+        <!-- Divider line showing split merged layout -->
+        <line x1="45" y1="47" x2="114" y2="47" stroke="#3b82f6" stroke-width="1" stroke-dasharray="2,2" />
+        <!-- Top Half image preview -->
+        <rect x="48" y="6" width="63" height="36" rx="2" fill="#eff6ff" />
+        <path d="M 48 38 L 60 28 L 75 35 L 90 25 L 111 38 Z" fill="#3b82f6" opacity="0.3" />
+        <!-- Bottom Half image preview -->
+        <rect x="48" y="52" width="63" height="36" rx="2" fill="#eff6ff" />
+        <path d="M 48 84 L 65 72 L 80 80 L 95 70 L 111 84 Z" fill="#3b82f6" opacity="0.3" />
+
+        <!-- Small checkmark/merge badge -->
+        <circle cx="115" cy="85" r="10" fill="#10b981" />
+        <path d="M 111 85 L 114 88 L 119 82" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    </g>
+</svg>

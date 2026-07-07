@@ -156,6 +156,7 @@ class SiteHeader extends HTMLElement {
                         <a href="passport-print.html" class="nav-link ${currentPath === 'passport-print.html' ? 'active' : ''}">Passport Print</a>
                         <a href="farmer-data-extractor.html" class="nav-link ${currentPath === 'farmer-data-extractor.html' ? 'active' : ''}">Farmer Extractor</a>
                         <a href="image-resizer.html" class="nav-link ${currentPath === 'image-resizer.html' ? 'active' : ''}">Image Resizer</a>
+                        <a href="merge-images.html" class="nav-link ${currentPath === 'merge-images.html' ? 'active' : ''}">Image Merger</a>
                         <a href="whatsapp-direct.html" class="nav-link ${currentPath === 'whatsapp-direct.html' ? 'active' : ''}">WhatsApp Direct</a>
                         <a href="about.html" class="nav-link ${currentPath === 'about.html' ? 'active' : ''}">About Us</a>
                         <a href="contact.html" class="nav-link ${currentPath === 'contact.html' ? 'active' : ''}">Contact</a>
@@ -174,6 +175,7 @@ class SiteHeader extends HTMLElement {
                 <a href="passport-print.html" class="nav-link ${currentPath === 'passport-print.html' ? 'active' : ''}">Passport Print</a>
                 <a href="farmer-data-extractor.html" class="nav-link ${currentPath === 'farmer-data-extractor.html' ? 'active' : ''}">Farmer Extractor</a>
                 <a href="image-resizer.html" class="nav-link ${currentPath === 'image-resizer.html' ? 'active' : ''}">Image Resizer</a>
+                <a href="merge-images.html" class="nav-link ${currentPath === 'merge-images.html' ? 'active' : ''}">Image Merger</a>
                 <a href="whatsapp-direct.html" class="nav-link ${currentPath === 'whatsapp-direct.html' ? 'active' : ''}">WhatsApp Direct</a>
                 <a href="about.html" class="nav-link ${currentPath === 'about.html' ? 'active' : ''}">About Us</a>
                 <a href="contact.html" class="nav-link ${currentPath === 'contact.html' ? 'active' : ''}">Contact</a>
@@ -302,6 +304,7 @@ class SiteFooter extends HTMLElement {
                         <ul class="footer-links">
                             <li><a href="govt-id-print.html" class="footer-link">Govt ID Card Print</a></li>
                             <li><a href="image-resizer.html" class="footer-link">Image Resizer</a></li>
+                            <li><a href="merge-images.html" class="footer-link">Image Merger</a></li>
                             <li><a href="whatsapp-direct.html" class="footer-link">WhatsApp Direct</a></li>
                         </ul>
                     </div>
