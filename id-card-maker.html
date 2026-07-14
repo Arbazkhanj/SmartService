@@ -367,6 +367,11 @@
                         <label class="control-label">Sub Header (Line 2)</label>
                         <input type="text" class="form-control" id="hospLine2" value="District Hospital - Basti">
                     </div>
+
+                    <div class="form-group">
+                        <label class="control-label">Upload Hospital Logo <span style="color: var(--text-muted); font-weight: 400;">(Shows top-left of header)</span></label>
+                        <input type="file" class="form-control" id="hospLogo" accept="image/*">
+                    </div>
                     
                     <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                         <div>
@@ -525,9 +530,15 @@
                     <div id="hospitalPreview" style="display: none; flex-direction: column; gap: 20px; align-items: center;">
                         <h4 style="color: white; opacity: 0.8; font-size: 0.9rem;">HOSPITAL ID PREVIEW</h4>
                         <div class="hospital-id-element" id="idCardHospital">
-                            <div class="hospital-header" id="hHeaderBg">
-                                <h2 id="phLine1">OFFICE SUPERINTENDENT IN CHIEF</h2>
-                                <h3 id="phLine2">District Hospital - Basti</h3>
+                            <div class="hospital-header" id="hHeaderBg" style="display: flex; align-items: center; gap: 8px; padding: 6px 8px;">
+                                <div id="hospLogoBox" style="width: 44px; height: 44px; flex-shrink: 0; border-radius: 4px; overflow: hidden; background: rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center;">
+                                    <img id="hospLogoImg" src="" alt="Logo" style="width: 100%; height: 100%; object-fit: contain; display: none;">
+                                    <span id="hospLogoPlaceholder" style="font-size: 9px; color: rgba(255,255,255,0.7); text-align: center; line-height: 1.2;">LOGO<br>HERE</span>
+                                </div>
+                                <div style="flex: 1; text-align: center;">
+                                    <h2 id="phLine1" style="margin: 0;">OFFICE SUPERINTENDENT IN CHIEF</h2>
+                                    <h3 id="phLine2" style="margin: 2px 0 0 0;">District Hospital - Basti</h3>
+                                </div>
                             </div>
                             <div class="hospital-internship-line">
                                 Internship ID No. <span id="phId">789012</span> Duration <span id="phDuration">6 Months</span> To <span id="phTo">15-12-2026</span>
@@ -814,6 +825,22 @@
                         document.querySelectorAll(".sharedPhotoPreview").forEach(img => {
                             img.src = event.target.result;
                         });
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // Handle Logo upload for Hospital ID card
+            document.getElementById("hospLogo").addEventListener("change", (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const logoImg = document.getElementById("hospLogoImg");
+                        const logoPlaceholder = document.getElementById("hospLogoPlaceholder");
+                        logoImg.src = event.target.result;
+                        logoImg.style.display = "block";
+                        logoPlaceholder.style.display = "none";
                     };
                     reader.readAsDataURL(file);
                 }
